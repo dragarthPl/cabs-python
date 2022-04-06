@@ -1,14 +1,25 @@
 from datetime import datetime
+from typing import Optional
 
-from sqlalchemy import Column, DateTime, Binary
+from entity import Claim
+from sqlalchemy import Column, DateTime, LargeBinary
 from sqlmodel import Field
 
-from src.main.common.base_entity import BaseEntity
-from entity import Claim
+from common.base_entity import BaseEntity
 
 
 class ClaimAttachment(BaseEntity, table=True):
-    _claim: Claim = Field(foreign_key="claim.id")
-    _creation_date: datetime = Field(sa_column=Column(DateTime, nullable=False))
-    description: str
-    _data: bytes = Field(sa_column=Column('data', Binary))
+    # @ManyToOne
+    claim: Optional[Claim] = Field(foreign_key="claim.id")
+    # @Column(nullable = false)
+    creation_date: datetime = Field(sa_column=Column(DateTime, nullable=False))
+    description: Optional[str]
+
+    # @Lob
+    # @Column(name = "data", columnDefinition="BLOB")
+    data: Optional[bytes] = Field(sa_column=Column('data', LargeBinary))
+
+    def __eq__(self, o):
+        if not isinstance(o, ClaimAttachment):
+            return False
+        return self.id is not None and self.id == o.id

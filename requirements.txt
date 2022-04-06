@@ -1,7 +1,10 @@
 sqlmodel
 pydantic
 pydantic[dotenv]
-fastapi
+fastapi[all]
 fastapi-utils
 uvicorn[standard]
 pythondi
+pytz
+python-dateutil
+pytest

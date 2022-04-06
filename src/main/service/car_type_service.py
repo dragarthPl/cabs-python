@@ -1,8 +1,9 @@
-from fastapi import Depends
+from typing import List
 
-from config.app_properties import get_app_properties, AppProperties
+from config.app_properties import AppProperties, get_app_properties
 from dto.car_type_dto import CarTypeDTO
 from entity.car_type import CarType
+from fastapi import Depends
 from repository.car_type_repository import CarTypeRepositoryImp
 
 
@@ -34,9 +35,9 @@ class CarTypeService:
         by_car_class: CarType = self.car_type_repository.find_by_car_class(car_type_dto.car_class)
         if by_car_class is None:
             car_type: CarType = CarType(
-                car_type_dto.car_class,
-                car_type_dto.description,
-                self.__get_min_number_of_cars(car_type_dto.car_class)
+                car_class=car_type_dto.car_class,
+                description=car_type_dto.description,
+                min_no_of_cars_to_activate_class=self.__get_min_number_of_cars(car_type_dto.car_class)
             )
             return self.car_type_repository.save(car_type)
         else:
@@ -80,7 +81,11 @@ class CarTypeService:
         self.car_type_repository.save(car_type)
 
     # @Transactional
-    # public List<CarClass> findActiveCarClasses() {
+    def find_active_car_classes(self) -> List[CarType.CarClass]:
+        return list(map(
+            lambda car_type: car_type.car_class,
+            self.car_type_repository.find_by_status(CarType.Status.ACTIVE),
+        ))
 
     def __get_min_number_of_cars(self, car_class: CarType.CarClass) -> int:
         if car_class == CarType.CarClass.ECO:
@@ -97,7 +102,7 @@ class CarTypeService:
     def __find_by_car_class(self, car_class: CarType.CarClass) -> CarType:
         by_car_class = self.car_type_repository.find_by_car_class(car_class)
         if by_car_class is None:
-            raise AttributeError("Car class does not exist: " + car_class)
+            raise AttributeError("Car class does not exist: " + str(car_class))
         return by_car_class
 
 

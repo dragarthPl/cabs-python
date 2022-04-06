@@ -1,10 +1,13 @@
-from functools import lru_cache
 from typing import Iterator
 
 from pydantic import BaseSettings
-
-from sqlmodel import create_engine, Session, SQLModel
 from sqlalchemy.future import Engine
+from sqlmodel import Session, SQLModel, create_engine
+from sqlmodel.sql.expression import Select, SelectOfScalar
+
+
+SelectOfScalar.inherit_cache = True  # type: ignore
+Select.inherit_cache = True  # type: ignore
 
 
 class DBSettings(BaseSettings):
@@ -26,6 +29,6 @@ def create_db_and_tables():
 def get_engine() -> Engine:
     return engine
 
-def get_session() -> Session:
+def get_session() -> Iterator[Session]:
     with Session(engine) as session:
         yield session

@@ -1,17 +1,31 @@
+from __future__ import annotations
+
 import calendar
 import enum
 from datetime import datetime
-from decimal import Decimal, Context, ROUND_HALF_UP
-from sqlalchemy import Column, Enum, PickleType, Float
-from sqlalchemy.orm import relationship, backref
-from sqlmodel import Field, Relationship
-from typing import Set, Optional
+from decimal import ROUND_HALF_UP, Context, Decimal
+from typing import Optional, Set
 
 import pytz
-
 from common.base_entity import BaseEntity
-from entity import Address
-from entity import CarType
+from entity import Address, CarType
+from sqlalchemy import Column, Enum, Float, ForeignKey, Table, DateTime
+from sqlalchemy.orm import backref, relationship
+from sqlmodel import Field, Relationship, SQLModel
+
+drivers_rejections_link = Table(
+    'drivers_rejections_link',
+    SQLModel.metadata,
+    Column('transit_id', ForeignKey('transit.id')),
+    Column('driver_id', ForeignKey('driver.id'))
+)
+
+proposed_drivers_link = Table(
+    'proposed_drivers_link',
+    SQLModel.metadata,
+    Column('transit_id', ForeignKey('transit.id')),
+    Column('driver_id', ForeignKey('driver.id'))
+)
 
 
 class Transit(BaseEntity, table=True):
@@ -37,62 +51,77 @@ class Transit(BaseEntity, table=True):
         PAID = 2
         RETURNED = 3
 
-    driver_payment_status: DriverPaymentStatus = Field(sa_column=Column(Enum(DriverPaymentStatus)))
-    client_payment_status: ClientPaymentStatus = Field(sa_column=Column(Enum(ClientPaymentStatus)))
-    payment_type: 'Client.PaymentType' = Field(sa_column=Column(Enum('Client.PaymentType')))
-    status: Status = Field(sa_column=Column(Enum(Status)))
-    date: datetime
+    driver_payment_status: Optional[DriverPaymentStatus] = Field(sa_column=Column(Enum(DriverPaymentStatus)))
+    client_payment_status: Optional[ClientPaymentStatus] = Field(sa_column=Column(Enum(ClientPaymentStatus)))
+    payment_type: Optional['Client.PaymentType'] = Field(sa_column=Column(Enum('Client.PaymentType')))
+    status: Optional[Status] = Field(sa_column=Column(Enum(Status)))
+    date: Optional[datetime] = Field(default=None, sa_column=Column(DateTime, nullable=True))
+
+    # @OneToOne
     address_from_id: Optional[int] = Field(default=None, foreign_key="address.id")
     address_from: Optional[Address] = Relationship(
-        sa_relationship_kwargs=dict(foreign_keys="[Transit.address_from_id]")
+        sa_relationship=relationship("Address", foreign_keys="[Transit.address_from_id]"),
     )
+
+    # @OneToOne
     address_to_id: Optional[int] = Field(default=None, foreign_key="address.id")
     address_to: Optional[Address] = Relationship(
-        sa_relationship_kwargs=dict(foreign_keys="[Transit.address_to_id]")
+        sa_relationship=relationship("Address", foreign_keys="[Transit.address_to_id]"),
     )
-    pickup_address_change_counter: int = 0
-    driver: 'driver.Driver' = Field(sa_column=Column(PickleType))
-    accepted_at: datetime
-    started: datetime
-    drivers_rejections: Set["Driver"] = Field(sa_column=Column(PickleType))
-    proposed_drivers: Set["Driver"] = Field(sa_column=Column(PickleType))
-    awaiting_drivers_responses: int = 0
-    factor: int
-    km: float = Field(default=0.0, sa_column=Column(Float))
+    pickup_address_change_counter: Optional[int] = 0
 
-    price: int
-    estimated_price: int
-    drivers_fee: int
+    # @ManyToOne
+    driver_id: Optional[int] = Field(default=None, foreign_key="driver.id")
+    driver: Optional[Driver] = Relationship(
+        sa_relationship=relationship(
+            "entity.driver.Driver", back_populates="transits")
+    )
 
-    date_time: datetime
+    accepted_at: Optional[datetime] = Field(default=None, sa_column=Column(DateTime, nullable=True))
+    started: Optional[datetime] = Field(default=None, sa_column=Column(DateTime, nullable=True))
+    # @ManyToMany
+    drivers_rejections: Set[Driver] = Relationship(
+        sa_relationship=relationship(
+            "entity.driver.Driver", secondary=drivers_rejections_link)
+    )
+    # @ManyToMany
+    proposed_drivers: Set[Driver] = Relationship(
+        sa_relationship=relationship(
+            "entity.driver.Driver", secondary=proposed_drivers_link)
+    )
+    awaiting_drivers_responses: Optional[int] = 0
+    factor: Optional[int] = 0
+    km: Optional[float] = Field(default=0.0, sa_column=Column(Float))
 
-    published: datetime
+    price: Optional[int] = 0
+    estimated_price: Optional[int] = 0
+    drivers_fee: Optional[int] = 0
 
-    BASE_FEE: int = 8
+    date_time: Optional[datetime] = Field(default=None, sa_column=Column(DateTime, nullable=True))
 
+    published: Optional[datetime] = Field(default=None, sa_column=Column(DateTime, nullable=True))
+
+    BASE_FEE: Optional[int] = 8
+
+    # @OneToOne
     client_id: Optional[int] = Field(default=None, foreign_key="client.id")
     client: Optional['Client'] = Relationship(
         sa_relationship=relationship(
             "entity.client.Client",
             backref=backref("transit", uselist=False))
     )
-    car_type: CarType.CarClass = Field(sa_column=Column(Enum(CarType.CarClass)))
-    complete_at: datetime
+    car_type: Optional[CarType.CarClass] = Field(sa_column=Column(Enum(CarType.CarClass)))
+    complete_at: Optional[datetime] = Field(default=None, sa_column=Column(DateTime, nullable=True))
 
-    # @property
-    # def km(self) -> float:
-    #     return self._km
-    #
-    # @km.setter
-    # def km(self, km):
-    #     self._km = km
-    #     self.estimate_cost()
+    def set_km(self, km) -> None:
+        self.km = km
+        self.estimate_cost()
 
     def estimate_cost(self) -> int:
         if self.status == self.Status.COMPLETED:
             raise ValueError(f"Estimating cost for completed transit is forbidden, id = {self.id}")
 
-        estimated: int = self.calculate_cost()
+        estimated: int = self.__calculate_cost()
 
         self.estimated_price = estimated
         self.price = None
@@ -101,16 +130,16 @@ class Transit(BaseEntity, table=True):
 
     def calculate_final_costs(self) -> int:
         if self.status == self.Status.COMPLETED:
-            return self.calculate_cost()
+            return self.__calculate_cost()
         else:
             raise ValueError("Cannot calculate final cost if the transit is not completed")
 
-    def calculate_cost(self) -> int:
+    def __calculate_cost(self) -> int:
         base_fee: int = self.BASE_FEE
         factor_to_calculate: int = self.factor
         if factor_to_calculate is None:
             factor_to_calculate = 1
-        km_rate: float = None
+        km_rate: Optional[float] = None
         day: datetime = datetime.now(pytz.utc)
         # wprowadzenie nowych cennikow  od 1.01.2019
         if day.year <= 2018:
@@ -138,9 +167,14 @@ class Transit(BaseEntity, table=True):
                         base_fee += 1
 
         price_big_decimal: Decimal = Decimal(
-            self._km * km_rate * factor_to_calculate + base_fee,
+            self.km * km_rate * factor_to_calculate + base_fee,
             context=Context(prec=2, rounding=ROUND_HALF_UP)
         )
         final_price: int = int(str(price_big_decimal).replace(".", ""))
         self.price = final_price
         return self.price
+
+    def __eq__(self, o):
+        if not isinstance(o, Transit):
+            return False
+        return self.id is not None and self.id == o.id

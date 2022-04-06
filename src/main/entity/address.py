@@ -1,22 +1,25 @@
-from sqlmodel import Field
+import hashlib
+from typing import Optional
 
 from sqlalchemy import Column, String
+from sqlmodel import Field
 
-from src.main.common.base_entity import BaseEntity
-
+from common.base_entity import BaseEntity
+import logging
+logger = logging.getLogger(__name__)
 
 class Address(BaseEntity, table=True):
     __table_args__ = {'extend_existing': True}
-    country: str
-    district: str
-    city: str
-    street: str
-    building_number: int
-    additional_number: int
-    postal_code: str
-    name: str
+    country: Optional[str]
+    district: Optional[str]
+    city: Optional[str]
+    street: Optional[str]
+    building_number: Optional[int]
+    additional_number: Optional[int]
+    postal_code: Optional[str]
+    name: Optional[str]
     #@Column(unique=true)
-    hash: int = Field(sa_column=Column("email", String, unique=True))
+    hash: str = Field(sa_column=Column("hash", String, unique=True))
 
     def __str__(self):
         return (f"Address{{"
@@ -32,4 +35,22 @@ class Address(BaseEntity, table=True):
                 f'}}'
                 )
 
-    #TODO hash
+    def gen_hash(self) -> None:
+        m = hashlib.md5()
+        for s in (
+            self.country,
+            self.district,
+            self.city,
+            self.street,
+            self.building_number,
+            self.additional_number,
+            self.postal_code,
+            self.name
+        ):
+            m.update(str(s).encode('utf-8'))
+        self.hash = str(int(m.hexdigest(), 16))
+
+    def __eq__(self, o):
+        if not isinstance(o, Address):
+            return False
+        return self.id is not None and self.id == o.id

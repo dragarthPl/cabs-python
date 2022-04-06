@@ -1,10 +1,17 @@
-from enum import Enum
+from __future__ import annotations
 
-from entity import Driver
+import enum
+from typing import Optional
+
+from sqlalchemy import Column, Enum
+from sqlalchemy.orm import relationship
+from sqlmodel import Field, Relationship, SQLModel
 
 
-class DriverAttribute:
-    class DriverAttributeName(Enum):
+class DriverAttribute(SQLModel, table=True):
+    __table_args__ = {'extend_existing': True}
+
+    class DriverAttributeName(enum.Enum):
         PENALTY_POINTS = 1
         NATIONALITY = 2
         YEARS_OF_EXPERIENCE = 3
@@ -14,12 +21,14 @@ class DriverAttribute:
         BIRTHPLACE = 7
         COMPANY_NAME = 8
 
-    _id: int
-    name: DriverAttributeName
-    value: str
-    driver: Driver
+    id: Optional[int] = Field(default=None, primary_key=True)
+    name: Optional[DriverAttributeName] = Field(sa_column=Column(Enum(DriverAttributeName)))
+    value: Optional[str]
 
-    def __init__(self, driver: Driver, attr: DriverAttributeName, value: str):
-        self.driver = driver
-        self.value = value
-        self.name = attr
+    # @ManyToOne
+    # @JoinColumn(name = "DRIVER_ID")
+    driver_id: Optional[int] = Field(default=None, foreign_key="driver.id")
+    driver: Optional[Driver] = Relationship(
+        sa_relationship=relationship(
+            "entity.driver.Driver", back_populates="attributes")
+    )

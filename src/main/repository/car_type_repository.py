@@ -1,11 +1,9 @@
 from abc import ABCMeta, abstractmethod
-from typing import Optional, List
-
-from fastapi import Depends
+from typing import List, Optional
 
 from core.database import get_session
 from entity.car_type import CarType
-
+from fastapi import Depends
 from sqlmodel import Session, select
 
 
@@ -34,3 +32,6 @@ class CarTypeRepositoryImp:
     def delete(self, car_type) -> None:
         self.session.delete(car_type)
         self.session.commit()
+
+    def find_by_status(self, status: CarType.Status) -> List[CarType]:
+        return self.session.query(CarType).where(CarType.status == status).all()

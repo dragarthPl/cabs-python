@@ -1,6 +1,5 @@
-from fastapi import Depends
-
 from entity.claim import Claim
+from fastapi import Depends
 from repository.claim_repository import ClaimRepositoryImp
 
 
@@ -18,4 +17,4 @@ class ClaimNumberGenerator:
         prefix = count
         if count == 0:
             prefix = 1
-        return count + "---" + claim.creation_date.strftime("%d/%m/%Y")
+        return str(count) + "---" + claim.creation_date.strftime("%d/%m/%Y")

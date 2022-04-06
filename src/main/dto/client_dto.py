@@ -1,18 +1,13 @@
+from typing import Optional
+
 from entity import Client
+from pydantic import BaseModel
 
 
-class ClientDTO:
-    _id: int
-    type: Client.Type
-    name: str
-    last_name: str
-    default_payment_type: Client.PaymentType
-    client_type: Client.ClientType
-
-    def __init__(self, client: Client):
-        self._id = client.get_id()
-        self.type = client.a_type
-        self.name = client.name
-        self.last_name = client.last_name
-        self.default_payment_type = client.default_payment_type
-        self.client_type = client.client_type
+class ClientDTO(BaseModel):
+    id: Optional[int]
+    type: Optional[Client.Type]
+    name: Optional[str]
+    last_name: Optional[str]
+    default_payment_type: Optional[Client.PaymentType]
+    client_type: Optional[Client.ClientType]

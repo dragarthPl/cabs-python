@@ -1,12 +1,14 @@
 from decimal import Decimal
+from typing import Optional
 
-from src.main.common.base_entity import BaseEntity
+from common.base_entity import BaseEntity
 
 
 class Invoice(BaseEntity, table=True):
-    amount: Decimal
-    subject_name: str
+    amount: Optional[Decimal]
+    subject_name: Optional[str]
 
-    def __init__(self, amount: Decimal, subject_name: str):
-        self.amount = amount
-        self.subject_name = subject_name
+    def __eq__(self, o):
+        if not isinstance(o, Invoice):
+            return False
+        return self.id is not None and self.id == o.id
