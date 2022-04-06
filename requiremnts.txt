@@ -1,0 +1,7 @@
+sqlmodel
+pydantic
+pydantic[dotenv]
+fastapi
+fastapi-utils
+uvicorn[standard]
+pythondi
