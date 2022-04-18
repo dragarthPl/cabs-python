@@ -26,6 +26,9 @@ engine = create_engine(database_uri, echo=True, connect_args=connect_args)
 def create_db_and_tables():
     SQLModel.metadata.create_all(engine)
 
+def drop_db_and_tables():
+    SQLModel.metadata.drop_all(engine)
+
 def get_engine() -> Engine:
     return engine
 
