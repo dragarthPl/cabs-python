@@ -6,7 +6,7 @@ from functools import reduce
 from typing import Dict
 
 from dto.driver_dto import DriverDTO
-from entity import Driver, DriverAttribute
+from entity import Driver, DriverAttribute, DriverLicense
 from fastapi import Depends
 from repository.driver_attribute_repository import DriverAttributeRepositoryImp
 from repository.driver_repository import DriverRepositoryImp
@@ -42,7 +42,7 @@ class DriverService:
 
     def create_driver(
             self,
-            license: str,
+            driver_license: str,
             last_name: str,
             first_name: str,
             a_type: Driver.Type,
@@ -51,10 +51,10 @@ class DriverService:
     ) -> Driver:
         driver = Driver()
         if status == Driver.Status.ACTIVE:
-            license_regexp = re.compile(self.DRIVER_LICENSE_REGEX)
-            if license is None or license == "" or not license_regexp.match(license):
-                raise AttributeError("Illegal license no = " + str(license))
-        driver.driver_license = license
+            driver.set_driver_license(DriverLicense.with_license(driver_license))
+        else:
+            driver.set_driver_license(DriverLicense.without_validation(driver_license))
+
         driver.last_name = last_name
         driver.first_name = first_name
         driver.status = status
@@ -71,12 +71,10 @@ class DriverService:
         if driver is None:
             raise AttributeError("Driver does not exists, id = " + str(driver_id))
         license_regexp = re.compile(self.DRIVER_LICENSE_REGEX)
-        if new_license is None or new_license == "" or not license_regexp.match(new_license):
-            raise AttributeError("Illegal license no = " + str(new_license))
+        driver.set_driver_license(DriverLicense.with_license(new_license))
         if not driver.status == Driver.Status.ACTIVE:
             raise AttributeError("Driver is not active, cannot change license")
 
-        driver.driver_license = new_license
         self.driver_repository.save(driver)
 
     def change_driver_status(self, driver_id: int, status: Driver.Status) -> None:
@@ -84,10 +82,10 @@ class DriverService:
         if driver is None:
             raise AttributeError("Driver does not exists, id = " + str(driver_id))
         if status == Driver.Status.ACTIVE:
-            license = driver.driver_license
-            license_regexp = re.compile(self.DRIVER_LICENSE_REGEX)
-            if license is None or license == "" or not license_regexp.match(license):
-                raise AttributeError("Status cannot be ACTIVE. Illegal license no = " + str(license))
+            try:
+                driver.set_driver_license(DriverLicense.with_license(driver.get_driver_license().as_string()))
+            except AttributeError as exception:
+                raise ValueError(exception)
         driver.status = status
         self.driver_repository.save(driver)
 
