@@ -3,7 +3,7 @@ from typing import Optional
 from core.database import get_session
 from entity import Address
 from fastapi import Depends
-from sqlmodel import Session, select
+from sqlmodel import Session
 
 
 class AddressRepositoryImp:

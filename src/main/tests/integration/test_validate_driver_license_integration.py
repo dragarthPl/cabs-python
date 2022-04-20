@@ -6,11 +6,13 @@ from core.database import create_db_and_tables, drop_db_and_tables
 from dto.driver_dto import DriverDTO
 from entity import Driver
 from service.driver_service import DriverService
-from tests.fixtures import resolve_dependency
+from tests.fixtures import DependencyResolver
+
+dependency_resolver = DependencyResolver()
 
 
 class TestValidateDriverLicenseIntegration(TestCase):
-    driver_service: DriverService = resolve_dependency(Depends(DriverService))
+    driver_service: DriverService = dependency_resolver.resolve_dependency(Depends(DriverService))
 
     def setUp(self):
         create_db_and_tables()

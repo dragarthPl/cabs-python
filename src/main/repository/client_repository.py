@@ -13,9 +13,9 @@ class ClientRepositoryImp:
         self.session = session
 
     def get_one(self, client_id: int) -> Optional[Client]:
-        statement = select(Client).where(Client.id == client_id)
+        statement = self.session.query(Client).where(Client.id == client_id)
         results = self.session.exec(statement)
-        return results.first()
+        return results.scalar_one_or_none()
 
     def save(self, client: Client) -> Optional[Client]:
         self.session.add(client)
