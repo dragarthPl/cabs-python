@@ -3,7 +3,7 @@ from typing import List, Optional
 from core.database import get_session
 from entity import Driver
 from fastapi import Depends
-from sqlmodel import Session, select
+from sqlmodel import Session
 
 
 class DriverRepositoryImp:
@@ -19,6 +19,6 @@ class DriverRepositoryImp:
         return driver
 
     def get_one(self, driver_id: int) -> Optional[Driver]:
-        statement = select(Driver).where(Driver.id == driver_id)
+        statement = self.session.query(Driver).where(Driver.id == driver_id)
         results = self.session.exec(statement)
-        return results.first()
+        return results.scalar_one_or_none()

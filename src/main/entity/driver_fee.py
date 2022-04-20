@@ -17,7 +17,7 @@ class DriverFee(BaseEntity, table=True):
         FLAT = 1
         PERCENTAGE = 2
 
-    fee_type: FeeType = Field(sa_column=Column(Enum, nullable=False))
+    fee_type: FeeType = Field(sa_column=Column(Enum(FeeType), nullable=False))
     # @OneToOne
     driver_id: Optional[int] = Field(default=None, foreign_key="driver.id")
     driver: Optional[Driver] = Relationship(
