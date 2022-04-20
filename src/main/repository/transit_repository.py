@@ -6,7 +6,7 @@ from sqlalchemy import desc
 from core.database import get_session
 from entity import Address, Client, Driver, Transit
 from fastapi import Depends
-from sqlmodel import Session, select
+from sqlmodel import Session
 
 
 class TransitRepositoryImp:
@@ -16,8 +16,7 @@ class TransitRepositoryImp:
         self.session = session
 
     def get_one(self, transit_id: int) -> Optional[Transit]:
-        with self.session.no_autoflush:
-            return self.session.query(Transit).where(Transit.id == transit_id).first()
+        return self.session.query(Transit).where(Transit.id == transit_id).first()
 
     def find_by_client(self, owner: Client) -> List[Transit]:
         return self.session.query(Transit).filter(Transit.client == owner).all()

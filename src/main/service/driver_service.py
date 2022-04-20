@@ -109,9 +109,11 @@ class DriverService:
         from_date = datetime(year, month, 1)
         to_date = datetime(year, month, calendar.monthrange(year, month)[1])
 
-        transit_list = self.transit_repository.find_all_by_driver_and_date_time_between(driver_id, from_date, to_date)
+        transit_list = self.transit_repository.find_all_by_driver_and_date_time_between(driver, from_date, to_date)
 
-        sum = reduce(lambda a, b: a + b, map(self.driver_fee_service.calculate_driver_fee, transit_list))
+        sum = reduce(
+            lambda a, b: a + b, map(lambda t: self.driver_fee_service.calculate_driver_fee(t.id), transit_list), 0
+        )
 
         return sum
 
