@@ -137,10 +137,10 @@ class Transit(BaseEntity, table=True):
     def __calculate_cost(self) -> int:
         base_fee: int = self.BASE_FEE
         factor_to_calculate: int = self.factor
-        if factor_to_calculate is None:
+        if not factor_to_calculate:
             factor_to_calculate = 1
         km_rate: Optional[float] = None
-        day: datetime = datetime.now(pytz.utc)
+        day: datetime = self.date_time
         # wprowadzenie nowych cennikow  od 1.01.2019
         if day.year <= 2018:
             km_rate = 1.0
@@ -152,7 +152,8 @@ class Transit(BaseEntity, table=True):
                 base_fee += 3
             else:
                 # piątek i sobota po 17 do 6 następnego dnia
-                if ((day.weekday() == calendar.FRIDAY and day.hour >= 17) or (day.weekday() == calendar.SATURDAY and day.hour <= 6) or
+                if ((day.weekday() == calendar.FRIDAY and day.hour >= 17) or
+                (day.weekday() == calendar.SATURDAY and day.hour <= 6) or
                 (day.weekday() == calendar.SATURDAY and day.hour >= 17) or
                 (day.weekday() == calendar.SUNDAY and day.hour <= 6)):
                     km_rate = 2.50
@@ -167,9 +168,8 @@ class Transit(BaseEntity, table=True):
                         base_fee += 1
 
         price_big_decimal: Decimal = Decimal(
-            self.km * km_rate * factor_to_calculate + base_fee,
-            context=Context(prec=2, rounding=ROUND_HALF_UP)
-        )
+            self.km * km_rate * factor_to_calculate + base_fee
+        ).quantize(Decimal('.01'), rounding=ROUND_HALF_UP)
         final_price: int = int(str(price_big_decimal).replace(".", ""))
         self.price = final_price
         return self.price

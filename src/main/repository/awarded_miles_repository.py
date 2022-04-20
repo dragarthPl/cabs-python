@@ -3,7 +3,7 @@ from typing import List, Optional
 from core.database import get_session
 from entity import AwardedMiles, Client
 from fastapi import Depends
-from sqlmodel import Session, select
+from sqlmodel import Session
 
 
 class AwardedMilesRepositoryImp:
@@ -13,7 +13,7 @@ class AwardedMilesRepositoryImp:
         self.session = session
 
     def find_all_by_client(self, client: Client) -> List[AwardedMiles]:
-        statement = select(AwardedMiles).where(AwardedMiles.client.id == client.id)
+        statement = self.session.query(AwardedMiles).where(AwardedMiles.client.id == client.id)
         results = self.session.exec(statement)
         return results.all()
 

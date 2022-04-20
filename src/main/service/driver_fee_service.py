@@ -20,7 +20,7 @@ class DriverFeeService:
         transit = self.transit_repository.get_one(transit_id)
         if transit is None:
             raise AttributeError("transit does not exist, id = " + str(transit_id))
-        if transit.drivers_fee is not None:
+        if transit.drivers_fee:
             return transit.drivers_fee
         transit_price = transit.price
         driver_fee = self.driver_fee_repository.find_by_driver(transit.driver)
@@ -32,4 +32,4 @@ class DriverFeeService:
         else:
             final_fee = transit_price * driver_fee.amount / 100
 
-        return max(final_fee, 0 if driver_fee.min else driver_fee.min)
+        return max(final_fee, 0 if not driver_fee.min else driver_fee.min)

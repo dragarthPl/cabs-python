@@ -4,7 +4,7 @@ from core.database import get_session
 from entity import Client
 from entity.awards_account import AwardsAccount
 from fastapi import Depends
-from sqlmodel import Session, select
+from sqlmodel import Session
 
 
 class AwardsAccountRepositoryImp:
@@ -14,9 +14,9 @@ class AwardsAccountRepositoryImp:
         self.session = session
 
     def find_by_client(self, client: Client) -> AwardsAccount:
-        statement = select(AwardsAccount).where(AwardsAccount.client.id == client.id)
+        statement = self.session.query(AwardsAccount).where(AwardsAccount.client.id == client.id)
         results = self.session.exec(statement)
-        return results.first()
+        return results.scalar_one_or_none()
 
     def save(self, awards_account: AwardsAccount) -> Optional[AwardsAccount]:
         self.session.add(awards_account)

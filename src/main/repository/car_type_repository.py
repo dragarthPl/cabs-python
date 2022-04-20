@@ -4,7 +4,7 @@ from typing import List, Optional
 from core.database import get_session
 from entity.car_type import CarType
 from fastapi import Depends
-from sqlmodel import Session, select
+from sqlmodel import Session
 
 
 class CarTypeRepositoryImp:
@@ -20,14 +20,14 @@ class CarTypeRepositoryImp:
         return car_type
 
     def find_by_car_class(self, car_class: CarType.CarClass) -> Optional[CarType]:
-        statement = select(CarType).where(CarType.car_class == car_class)
+        statement = self.session.query(CarType).where(CarType.car_class == car_class)
         results = self.session.exec(statement)
-        return results.first()
+        return results.scalar_one_or_none()
 
     def get_one(self, car_type_id: int) -> Optional[CarType]:
-        statement = select(CarType).where(CarType.id == car_type_id)
+        statement = self.session.query(CarType).where(CarType.id == car_type_id)
         results = self.session.exec(statement)
-        return results.first()
+        return results.scalar_one_or_none()
 
     def delete(self, car_type) -> None:
         self.session.delete(car_type)
