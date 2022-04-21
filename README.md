@@ -36,3 +36,10 @@ $ python cabs_application.py
 $ cd src/main/
 $ pytest
 ```
+
+Minimalny output z pytest:
+
+```bash
+$ cd src/main/
+$ pytest --show-capture=no --disable-warnings --tb=no
+```
