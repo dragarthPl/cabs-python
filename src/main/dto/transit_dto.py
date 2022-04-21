@@ -45,11 +45,11 @@ class TransitDTO(BaseModel):
         super().__init__(**data)
         if transit is not None:
             if transit.get_price():
-                self.price = Decimal(transit.get_price().to_int())
+                self.price = Decimal(transit.get_price().to_int() or 0)
             if transit.get_drivers_fee():
-                self.drivers_fee = Decimal(transit.get_drivers_fee().to_int())
+                self.driver_fee = Decimal(transit.get_drivers_fee().to_int() or 0)
             if transit.get_estimated_price():
-                self.estimated_price = Decimal(transit.get_estimated_price().to_int())
+                self.estimated_price = Decimal(transit.get_estimated_price().to_int() or 0)
 
             if transit.address_from:
                 self.address_from = AddressDTO(**transit.address_from.dict())
@@ -61,6 +61,7 @@ class TransitDTO(BaseModel):
                 self.proposed_drivers = []
                 for driver in transit.proposed_drivers:
                     self.proposed_drivers.append(DriverDTO(**driver.dict()))
+            self.distance = transit.km
         self.set_tariff(transit)
 
     def set_tariff(self, transit: Transit) -> None:
