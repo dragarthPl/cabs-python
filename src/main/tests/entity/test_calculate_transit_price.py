@@ -2,6 +2,7 @@ from datetime import datetime
 from unittest import TestCase
 
 from entity import Transit
+from money import Money
 
 
 class TestCalculateTransitPrice(TestCase):
@@ -29,9 +30,9 @@ class TestCalculateTransitPrice(TestCase):
         # friday
         self.transit_was_on_done_on_friday(transit)
         # when
-        price: int = transit.calculate_final_costs()
+        price: Money = transit.calculate_final_costs()
 
-        self.assertEqual(2900, price)
+        self.assertEqual(Money(2900), price)
 
     def test_estimate_price_on_regular_day(self):
         # given
@@ -40,10 +41,10 @@ class TestCalculateTransitPrice(TestCase):
         # friday
         self.transit_was_on_done_on_friday(transit)
         # when
-        price: int = transit.estimate_cost()
+        price: Money = transit.estimate_cost()
 
         # then
-        self.assertEqual(2900, price)
+        self.assertEqual(Money(2900), price)
 
     def transit(self, status: Transit.Status, km: int) -> Transit:
         transit = Transit()

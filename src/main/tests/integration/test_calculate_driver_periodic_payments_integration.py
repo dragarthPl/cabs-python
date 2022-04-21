@@ -8,6 +8,7 @@ from fastapi.params import Depends
 from core.const import Month
 from core.database import create_db_and_tables, drop_db_and_tables
 from entity import Driver, Transit, DriverFee
+from money import Money
 from repository.address_repository import AddressRepositoryImp
 from repository.client_repository import ClientRepositoryImp
 from repository.driver_fee_repository import DriverFeeRepositoryImp
@@ -44,17 +45,17 @@ class TestCalculateDriverPeriodicPaymentsIntegration(TestCase):
         # When
         fee_october = self.driver_service.calculate_driver_monthly_payment(driver.id, 2000, 10)
         # Then
-        self.assertEqual(180, fee_october)
+        self.assertEqual(Money(180), fee_october)
 
         # when
         fee_october = self.driver_service.calculate_driver_monthly_payment(driver.id, 2000, 11)
         # then
-        self.assertEqual(70, fee_october)
+        self.assertEqual(Money(70), fee_october)
 
         # when
         fee_october = self.driver_service.calculate_driver_monthly_payment(driver.id, 2000, 12)
         # then
-        self.assertEqual(5, fee_october)
+        self.assertEqual(Money(5), fee_october)
 
     def test_calculate_yearly_payment(self):
         # Given
@@ -71,21 +72,21 @@ class TestCalculateDriverPeriodicPaymentsIntegration(TestCase):
         self.driver_has_fee(driver, DriverFee.FeeType.FLAT, 10)
 
         # when
-        payments: Dict[int, int] = self.driver_service.calculate_driver_yearly_payment(driver.id, 2000)
+        payments: Dict[int, Money] = self.driver_service.calculate_driver_yearly_payment(driver.id, 2000)
 
         # then
-        self.assertEqual(0, payments.get(Month.JANUARY))
-        self.assertEqual(0, payments.get(Month.FEBRUARY))
-        self.assertEqual(0, payments.get(Month.MARCH))
-        self.assertEqual(0, payments.get(Month.APRIL))
-        self.assertEqual(0, payments.get(Month.MAY))
-        self.assertEqual(0, payments.get(Month.JUNE))
-        self.assertEqual(0, payments.get(Month.JULY))
-        self.assertEqual(0, payments.get(Month.AUGUST))
-        self.assertEqual(0, payments.get(Month.SEPTEMBER))
-        self.assertEqual(180, payments.get(Month.OCTOBER))
-        self.assertEqual(70, payments.get(Month.NOVEMBER))
-        self.assertEqual(5, payments.get(Month.DECEMBER))
+        self.assertEqual(Money.ZERO, payments.get(Month.JANUARY))
+        self.assertEqual(Money.ZERO, payments.get(Month.FEBRUARY))
+        self.assertEqual(Money.ZERO, payments.get(Month.MARCH))
+        self.assertEqual(Money.ZERO, payments.get(Month.APRIL))
+        self.assertEqual(Money.ZERO, payments.get(Month.MAY))
+        self.assertEqual(Money.ZERO, payments.get(Month.JUNE))
+        self.assertEqual(Money.ZERO, payments.get(Month.JULY))
+        self.assertEqual(Money.ZERO, payments.get(Month.AUGUST))
+        self.assertEqual(Money.ZERO, payments.get(Month.SEPTEMBER))
+        self.assertEqual(Money(180), payments.get(Month.OCTOBER))
+        self.assertEqual(Money(70), payments.get(Month.NOVEMBER))
+        self.assertEqual(Money(5), payments.get(Month.DECEMBER))
 
     def a_transit(self, driver: Driver, price: int, when: datetime) -> Transit:
         transit: Transit = Transit()

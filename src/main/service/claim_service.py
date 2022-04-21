@@ -101,7 +101,7 @@ class ClaimService:
             self.client_notification_service.notify_client_about_refund(claim.claim_no, claim.owner.id)
             return claim
         if claim.owner.type == Client.Type.VIP:
-            if claim.transit.price < self.app_properties.automatic_refund_for_vip_threshold:
+            if claim.transit.get_price().to_int() < self.app_properties.automatic_refund_for_vip_threshold:
                 claim.status = Claim.Status.REFUNDED
                 claim.completion_date = datetime.now()
                 claim.change_date = datetime.now()
@@ -117,7 +117,7 @@ class ClaimService:
                     claim.claim_no, claim.transit.driver.id)
         else:
             if len(self.transit_repository.find_by_client(claim.owner)) >= self.app_properties.no_of_transits_for_claim_automatic_refund:
-                if claim.transit.price < self.app_properties.automatic_refund_for_vip_threshold:
+                if claim.transit.get_price().to_int() < self.app_properties.automatic_refund_for_vip_threshold:
                     claim.status = Claim.Status.REFUNDED
                     claim.completion_date = datetime.now()
                     claim.change_date = datetime.now()

@@ -5,6 +5,7 @@ import pytz
 from fastapi.params import Depends
 from core.database import create_db_and_tables, drop_db_and_tables
 from entity import Driver, Transit, DriverFee
+from money import Money
 
 from repository.driver_fee_repository import DriverFeeRepositoryImp
 from repository.transit_repository import TransitRepositoryImp
@@ -34,10 +35,10 @@ class TestCalculateDriverFeeIntegration(TestCase):
         self.driver_has_fee(driver, DriverFee.FeeType.FLAT, 10)
 
         # when
-        fee: int = self.driver_fee_service.calculate_driver_fee(transit.id)
+        fee: Money = self.driver_fee_service.calculate_driver_fee(transit.id)
 
         # then
-        self.assertEqual(50, fee)
+        self.assertEqual(Money(50), fee)
 
     def test_should_calculate_drivers_percentage_fee(self):
         # given
@@ -48,10 +49,10 @@ class TestCalculateDriverFeeIntegration(TestCase):
         self.driver_has_fee(driver, DriverFee.FeeType.PERCENTAGE, 50)
 
         # when
-        fee: int = self.driver_fee_service.calculate_driver_fee(transit.id)
+        fee: Money = self.driver_fee_service.calculate_driver_fee(transit.id)
 
         # then
-        self.assertEqual(fee, 40)
+        self.assertEqual(Money(40), fee)
 
     def test_should_use_minimum_fee(self):
         # given
@@ -62,10 +63,10 @@ class TestCalculateDriverFeeIntegration(TestCase):
         self._driver_has_fee(driver, DriverFee.FeeType.PERCENTAGE, 7, 5)
 
         # when
-        fee: int = self.driver_fee_service.calculate_driver_fee(transit.id)
+        fee: Money = self.driver_fee_service.calculate_driver_fee(transit.id)
 
         # then
-        self.assertEqual(5, fee)
+        self.assertEqual(Money(5), fee)
 
     def a_driver(self) -> Driver:
         return self.driver_service.create_driver(

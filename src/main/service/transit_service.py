@@ -8,6 +8,8 @@ from dto.driver_position_dtov_2 import DriverPositionDTOV2
 from dto.transit_dto import TransitDTO
 from entity import Address, CarType, Driver, Transit
 from fastapi import Depends
+
+from money import Money
 from repository.address_repository import AddressRepositoryImp
 from repository.client_repository import ClientRepositoryImp
 from repository.driver_position_repository import DriverPositionRepositoryImp
@@ -404,12 +406,12 @@ class TransitService:
             transit.calculate_final_costs()
             driver.is_occupied = False
             transit.complete_at = datetime.now()
-            driver_fee = self.driver_fee_service.calculate_driver_fee(transit_id)
+            driver_fee: Money = self.driver_fee_service.calculate_driver_fee(transit_id)
             transit.drivers_fee = driver_fee
             self.driver_repository.save(driver)
             self.awards_service.register_miles(transit.client.id, transit_id)
             self.transit_repository.save(transit)
-            self.invoice_generator.generate(transit.price, transit.client.name + " " + transit.client.last_name)
+            self.invoice_generator.generate(transit.get_price().to_int(), transit.client.name + " " + transit.client.last_name)
         else:
             raise AttributeError("Cannot complete Transit, id = " + str(transit_id))
 
