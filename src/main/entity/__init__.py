@@ -1,4 +1,5 @@
 from .driver_license import DriverLicense
+from .tariff import Tariff
 
 from .address import Address
 from .car_type import CarType
@@ -28,4 +29,5 @@ __all__ = [
     "Contract",
     "ContractAttachment",
     "DriverLicense",
+    "Tariff",
 ]
