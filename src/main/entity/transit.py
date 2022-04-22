@@ -6,6 +6,9 @@ from datetime import datetime
 from decimal import ROUND_HALF_UP, Decimal
 from typing import Optional, Set, Any
 
+import pytz
+from tzlocal import get_localzone
+
 from common.base_entity import BaseEntity
 from entity import Address, CarType
 from sqlalchemy import Column, Enum, Float, ForeignKey, Table, DateTime
@@ -151,14 +154,14 @@ class Transit(BaseEntity, table=True):
         if not factor_to_calculate:
             factor_to_calculate = 1
         km_rate: Optional[float] = None
-        day: datetime = self.date_time
+        day: datetime = self.date_time.astimezone(get_localzone())
         # wprowadzenie nowych cennikow  od 1.01.2019
         if day.year <= 2018:
             km_rate = 1.0
             base_fee += 1
         else:
 
-            if (day.month == 2 and day.day == 31) or (day.month == 1 and day.day == 1 and day.hour <= 6):
+            if (day.month == 12 and day.day == 31) or (day.month == 1 and day.day == 1 and day.hour <= 6):
                 km_rate = 3.50
                 base_fee += 3
             else:

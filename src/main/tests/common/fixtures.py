@@ -5,8 +5,10 @@ from typing import Any, Dict
 import pytz
 from fastapi.params import Depends
 
-from entity import Driver, Transit, DriverFee
+from entity import Driver, Transit, DriverFee, Address, Client
 from money import Money
+from repository.address_repository import AddressRepositoryImp
+from repository.client_repository import ClientRepositoryImp
 from repository.driver_fee_repository import DriverFeeRepositoryImp
 from repository.transit_repository import TransitRepositoryImp
 from service.driver_service import DriverService
@@ -45,16 +47,25 @@ class Fixtures:
     transit_repository: TransitRepositoryImp
     fee_repository: DriverFeeRepositoryImp
     driver_service: DriverService
+    client_repository: ClientRepositoryImp
+    address_repository: AddressRepositoryImp
 
     def __init__(
         self,
         transit_repository: TransitRepositoryImp = Depends(TransitRepositoryImp),
         fee_repository: DriverFeeRepositoryImp = Depends(DriverFeeRepositoryImp),
         driver_service: DriverService = Depends(DriverService),
+        client_repository: ClientRepositoryImp = Depends(ClientRepositoryImp),
+        address_repository: AddressRepositoryImp = Depends(AddressRepositoryImp),
     ):
         self.transit_repository = transit_repository
         self.fee_repository = fee_repository
         self.driver_service = driver_service
+        self.client_repository = client_repository
+        self.address_repository = address_repository
+
+    def a_client(self) -> Client:
+        return self.client_repository.save(Client())
 
     def a_transit(self, driver: Driver, price: int, when: datetime) -> Transit:
         transit: Transit = Transit()
@@ -86,4 +97,16 @@ class Fixtures:
             Driver.Status.ACTIVE,
             "",
         )
+
+    def a_completed_transit_at(self, price: int, when: datetime):
+        transit = self.a_transit_now(None, price)
+        transit.date_time = when
+        transit.address_to = self.address_repository.save(
+            Address(country="Polska", city="Warszawa", street="Zytnia", building_number=20)
+        )
+        transit.address_from = self.address_repository.save(
+            Address(country="Polska", city="Warszawa", street="Młynarska", building_number=20)
+        )
+        transit.client = self.a_client()
+        return self.transit_repository.save(transit)
 

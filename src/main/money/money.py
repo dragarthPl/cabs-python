@@ -38,3 +38,6 @@ class Money:
     def to_string(self):
         value: float = self.value / 100.0
         return f'{value:.2f}'
+
+    def __repr__(self) -> str:
+        return self.to_string()

@@ -61,11 +61,13 @@ class TransitDTO(BaseModel):
                 self.proposed_drivers = []
                 for driver in transit.proposed_drivers:
                     self.proposed_drivers.append(DriverDTO(**driver.dict()))
+            if transit.date_time:
+                self.date = transit.date_time
             self.distance = transit.km
         self.set_tariff(transit)
 
     def set_tariff(self, transit: Transit) -> None:
-        day = datetime.now()
+        day = self.date
 
         # wprowadzenie nowych cennikow od 1.01.2019
         if day.year <= 2018:
