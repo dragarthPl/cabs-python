@@ -1,12 +1,21 @@
 import hashlib
 import math
+from typing import Any
+
+from pydantic import BaseModel
 
 
-class Distance:
+class Distance(BaseModel):
     MILES_TO_KILOMETERS_RATIO = 1.609344
     km: float = 0
 
-    def __init__(self, km: float):
+    @classmethod
+    @property
+    def ZERO(cls):
+        return cls.of_km(0)
+
+    def __init__(self, km: float, **data: Any):
+        super().__init__(**data)
         self.km = km
 
     @staticmethod
