@@ -10,6 +10,8 @@ from .driver_attribute import DriverAttribute
 from .contract import Contract
 from .contract_attachment import ContractAttachment
 
+from .driver_license import DriverLicense
+
 
 __all__ = [
     "Address",
@@ -23,4 +25,5 @@ __all__ = [
     "DriverFee",
     "Contract",
     "ContractAttachment",
+    "DriverLicense",
 ]
