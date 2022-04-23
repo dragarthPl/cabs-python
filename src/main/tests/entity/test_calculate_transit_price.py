@@ -3,6 +3,7 @@ from unittest import TestCase
 
 import pytz
 
+from distance.distance import Distance
 from entity import Transit
 from money import Money
 
@@ -101,7 +102,7 @@ class TestCalculateTransitPrice(TestCase):
         transit = Transit()
         transit.set_date_time(datetime.now())
         transit.status = Transit.Status.DRAFT
-        transit.set_km(km)
+        transit.set_km(Distance.of_km(km))
         transit.status = status
         return transit
 

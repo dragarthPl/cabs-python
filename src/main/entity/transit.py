@@ -136,9 +136,12 @@ class Transit(BaseEntity, table=True):
             self.tariff_base_fee = tariff.base_fee
             self.tariff_km_rate = tariff.km_rate
 
-    def set_km(self, km) -> None:
-        self.km = km
+    def set_km(self, km: Distance) -> None:
+        self.km = km.to_km_in_float()
         self.estimate_cost()
+
+    def get_km(self) -> Distance:
+        return Distance.of_km(self.km)
 
     def estimate_cost(self) -> Money:
         if self.status == self.Status.COMPLETED:

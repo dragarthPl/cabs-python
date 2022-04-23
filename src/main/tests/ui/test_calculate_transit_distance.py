@@ -1,6 +1,7 @@
 from datetime import datetime
 from unittest import TestCase
 
+from distance.distance import Distance
 from dto.transit_dto import TransitDTO
 from entity import Transit, Address, Client
 from money import Money
@@ -36,6 +37,6 @@ class TestCalculateTransitDistance(TestCase):
         t.address_to = Address()
         t.address_from = Address()
         t.status = Transit.Status.DRAFT
-        t.set_km(km)
+        t.set_km(Distance.of_km(km))
         t.client = Client()
         return TransitDTO(transit=t)

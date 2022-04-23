@@ -3,6 +3,8 @@ from datetime import datetime
 from typing import List
 
 from dateutil.relativedelta import relativedelta
+
+from distance.distance import Distance
 from dto.address_dto import AddressDTO
 from dto.driver_position_dtov_2 import DriverPositionDTOV2
 from dto.transit_dto import TransitDTO
@@ -98,7 +100,11 @@ class TransitService:
         transit.car_type = car_class
         transit.status = Transit.Status.DRAFT
         transit.date_time = datetime.now()
-        transit.set_km(float(self.distance_calculator.calculate_by_map(geo_from[0], geo_from[1], geo_to[0], geo_to[1])))
+        transit.set_km(Distance.of_km(
+            float(
+                self.distance_calculator.calculate_by_map(geo_from[0], geo_from[1], geo_to[0], geo_to[1])
+            )
+        ))
 
         return self.transit_repository.save(transit)
 
@@ -144,8 +150,9 @@ class TransitService:
             raise AttributeError("Address 'from' cannot be changed, id = " + str(transit_id))
 
         transit.address_from = new_address
-        transit.set_km(float(
-            self.distance_calculator.calculate_by_map(geo_from_new[0], geo_from_new[1], geo_to_new[0], geo_to_new[1])))
+        transit.set_km(Distance.of_km(float(
+            self.distance_calculator.calculate_by_map(geo_from_new[0], geo_from_new[1], geo_to_new[0], geo_to_new[1])
+        )))
         transit.pickup_address_change_counter = transit.pickup_address_change_counter + 1
         self.transit_repository.save(transit)
 
@@ -172,7 +179,9 @@ class TransitService:
         geo_to: List[float] = self.geocoding_service.geocode_address(new_address)
 
         transit.address_to = new_address
-        transit.set_km(float(self.distance_calculator.calculate_by_map(geo_from[0], geo_from[1], geo_to[0], geo_to[1])))
+        transit.set_km(Distance.of_km(
+            float(self.distance_calculator.calculate_by_map(geo_from[0], geo_from[1], geo_to[0], geo_to[1]))
+        ))
         self.transit_repository.save(transit)
 
         if transit.driver is not None:
@@ -184,7 +193,7 @@ class TransitService:
         if transit is None:
             raise AttributeError("Transit does not exist, id = " + str(transit_id))
 
-        if not transit.status in (
+        if transit.status not in (
             Transit.Status.DRAFT, Transit.Status.WAITING_FOR_DRIVER_ASSIGNMENT, Transit.Status.TRANSIT_TO_PASSENGER
         ):
             raise AttributeError("Transit cannot be canceled, id = " + str(transit_id))
@@ -194,7 +203,7 @@ class TransitService:
 
         transit.status = Transit.Status.CANCELLED
         transit.driver = None
-        transit.set_km(0)
+        transit.set_km(Distance.ZERO)
         transit.awaiting_drivers_responses = 0
         self.transit_repository.save(transit)
 
@@ -230,7 +239,7 @@ class TransitService:
                             transit.status == Transit.Status.CANCELLED
                     ):
                         transit.status = Transit.Status.DRIVER_ASSIGNMENT_FAILED
-                        transit.driver = None; transit.set_km(0)
+                        transit.driver = None; transit.set_km(Distance.ZERO)
                         transit.awaiting_drivers_responses = 0
                         self.transit_repository.save(transit)
                         return transit
@@ -399,8 +408,8 @@ class TransitService:
             geo_to: List[float] = self.geocoding_service.geocode_address(transit.address_to)
 
             transit.address_to = destination_address
-            transit.set_km(float(self.distance_calculator.calculate_by_map(
-                geo_from[0], geo_from[1], geo_to[0], geo_to[1])
+            transit.set_km(Distance.of_km(
+                float(self.distance_calculator.calculate_by_map(geo_from[0], geo_from[1], geo_to[0], geo_to[1]))
             ))
             transit.status = Transit.Status.COMPLETED
             transit.calculate_final_costs()
