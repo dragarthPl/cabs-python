@@ -65,16 +65,5 @@ class TestTariffRecognizingIntegration(TestCase):
         self.assertEqual("Standard", transit_dto.tariff)
         self.assertEqual(1.0, transit_dto.km_rate)
 
-    def test_standard_tariff_should_be_displayed_before_2019(self):
-        # given
-        transit = self.fixtures.a_completed_transit_at(60, datetime(2018, 12, 31, 8, 30).astimezone(pytz.utc))
-
-        # when
-        transit_dto: TransitDTO = self.transit_controller.get_transit(transit.id)
-
-        # then
-        self.assertEqual("Standard", transit_dto.tariff)
-        self.assertEqual(1.0, transit_dto.km_rate)
-
     def tearDown(self) -> None:
         drop_db_and_tables()
