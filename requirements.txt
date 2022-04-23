@@ -8,3 +8,4 @@ pythondi
 pytz
 python-dateutil
 pytest
+tzlocal
