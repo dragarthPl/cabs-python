@@ -44,6 +44,13 @@ class TransitDTO(BaseModel):
             data.update(**transit.dict())
         super().__init__(**data)
         if transit is not None:
+            if transit.get_price():
+                self.price = Decimal(transit.get_price().to_int())
+            if transit.get_drivers_fee():
+                self.drivers_fee = Decimal(transit.get_drivers_fee().to_int())
+            if transit.get_estimated_price():
+                self.estimated_price = Decimal(transit.get_estimated_price().to_int())
+
             if transit.address_from:
                 self.address_from = AddressDTO(**transit.address_from.dict())
             if transit.address_to:

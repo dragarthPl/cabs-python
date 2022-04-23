@@ -8,6 +8,8 @@ from typing import Dict
 from dto.driver_dto import DriverDTO
 from entity import Driver, DriverAttribute, DriverLicense
 from fastapi import Depends
+
+from money import Money
 from repository.driver_attribute_repository import DriverAttributeRepositoryImp
 from repository.driver_repository import DriverRepositoryImp
 from repository.transit_repository import TransitRepositoryImp
@@ -101,7 +103,7 @@ class DriverService:
         driver.photo = photo
         self.driver_repository.save(driver)
 
-    def calculate_driver_monthly_payment(self, driver_id: int, year: int, month: int) -> int:
+    def calculate_driver_monthly_payment(self, driver_id: int, year: int, month: int) -> Money:
         driver = self.driver_repository.get_one(driver_id)
         if driver is None:
             raise AttributeError("Driver does not exists, id = " + str(driver_id))
@@ -111,13 +113,14 @@ class DriverService:
 
         transit_list = self.transit_repository.find_all_by_driver_and_date_time_between(driver, from_date, to_date)
 
-        sum = reduce(
-            lambda a, b: a + b, map(lambda t: self.driver_fee_service.calculate_driver_fee(t.id), transit_list), 0
+        sum: Money = reduce(
+            lambda a, b: a.add(b),
+            map(lambda t: self.driver_fee_service.calculate_driver_fee(t.id), transit_list), Money.ZERO
         )
 
         return sum
 
-    def calculate_driver_yearly_payment(self, driver_id: int, year: int) -> Dict[int, int]:
+    def calculate_driver_yearly_payment(self, driver_id: int, year: int) -> Dict[int, Money]:
         payments = {}
         for m in range(1, 13):
             payments[m] = self.calculate_driver_monthly_payment(driver_id, year, m)

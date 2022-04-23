@@ -3,15 +3,17 @@ from __future__ import annotations
 import calendar
 import enum
 from datetime import datetime
-from decimal import ROUND_HALF_UP, Context, Decimal
-from typing import Optional, Set
+from decimal import ROUND_HALF_UP, Decimal
+from typing import Optional, Set, Any
 
-import pytz
 from common.base_entity import BaseEntity
 from entity import Address, CarType
 from sqlalchemy import Column, Enum, Float, ForeignKey, Table, DateTime
 from sqlalchemy.orm import backref, relationship
 from sqlmodel import Field, Relationship, SQLModel
+
+from money import Money
+
 
 drivers_rejections_link = Table(
     'drivers_rejections_link',
@@ -113,28 +115,37 @@ class Transit(BaseEntity, table=True):
     car_type: Optional[CarType.CarClass] = Field(sa_column=Column(Enum(CarType.CarClass)))
     complete_at: Optional[datetime] = Field(default=None, sa_column=Column(DateTime, nullable=True))
 
+    def __init__(self, **data: Any):
+        super().__init__(**data)
+        if "price" in data:
+            self.set_price(data["price"])
+        if "estimated_price" in data:
+            self.set_estimated_price(data["estimated_price"])
+        if "drivers_fee" in data:
+            self.set_price(data["drivers_fee"])
+
     def set_km(self, km) -> None:
         self.km = km
         self.estimate_cost()
 
-    def estimate_cost(self) -> int:
+    def estimate_cost(self) -> Money:
         if self.status == self.Status.COMPLETED:
             raise ValueError(f"Estimating cost for completed transit is forbidden, id = {self.id}")
 
-        estimated: int = self.__calculate_cost()
+        estimated: Money = self.__calculate_cost()
 
-        self.estimated_price = estimated
+        self.set_estimated_price(estimated)
         self.price = None
 
-        return self.estimated_price
+        return self.get_estimated_price()
 
-    def calculate_final_costs(self) -> int:
+    def calculate_final_costs(self) -> Money:
         if self.status == self.Status.COMPLETED:
             return self.__calculate_cost()
         else:
             raise ValueError("Cannot calculate final cost if the transit is not completed")
 
-    def __calculate_cost(self) -> int:
+    def __calculate_cost(self) -> Money:
         base_fee: int = self.BASE_FEE
         factor_to_calculate: int = self.factor
         if not factor_to_calculate:
@@ -170,9 +181,27 @@ class Transit(BaseEntity, table=True):
         price_big_decimal: Decimal = Decimal(
             self.km * km_rate * factor_to_calculate + base_fee
         ).quantize(Decimal('.01'), rounding=ROUND_HALF_UP)
-        final_price: int = int(str(price_big_decimal).replace(".", ""))
-        self.price = final_price
-        return self.price
+        final_price: Money = Money(int(str(price_big_decimal).replace(".", "")))
+        self.price = final_price.value
+        return final_price
+
+    def get_price(self) -> Money:
+        return Money(self.price)
+
+    def set_price(self, price: Money) -> None:
+        self.price = price.value
+
+    def get_estimated_price(self) -> Money:
+        return Money(self.estimated_price)
+
+    def set_estimated_price(self, estimated_price: Money) -> None:
+        self.estimated_price = estimated_price.value
+
+    def get_drivers_fee(self) -> Money:
+        return Money(self.drivers_fee)
+
+    def set_drivers_fee(self, drivers_fee: Money) -> None:
+        self.drivers_fee = drivers_fee.value
 
     def __eq__(self, o):
         if not isinstance(o, Transit):
