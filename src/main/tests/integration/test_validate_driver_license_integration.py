@@ -19,7 +19,7 @@ class TestValidateDriverLicenseIntegration(TestCase):
 
     def test_cannot_create_active_driver_with_invalid_license(self):
         # expect
-        with self.assertRaises(AttributeError):
+        with self.assertRaises(ValueError):
             self.create_active_driver_with_license("invalidLicense")
 
     def test_can_create_active_driver_with_valid_license(self):
@@ -58,7 +58,7 @@ class TestValidateDriverLicenseIntegration(TestCase):
         driver: Driver = self.create_active_driver_with_license("FARME100165AB5EW")
 
         # expect
-        with self.assertRaises(AttributeError):
+        with self.assertRaises(ValueError):
             self.change_license_to("invalid", driver)
 
     def test_can_activate_driver_with_valid_license(self):
@@ -76,7 +76,7 @@ class TestValidateDriverLicenseIntegration(TestCase):
         driver: Driver = self.create_inactive_driver_with_license("invalid")
 
         # expect
-        with self.assertRaises(AttributeError):
+        with self.assertRaises(ValueError):
             self.activate(driver)
 
     def create_active_driver_with_license(self, driver_license: str) -> Driver:
