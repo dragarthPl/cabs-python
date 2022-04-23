@@ -100,7 +100,7 @@ class Fixtures:
 
     def a_completed_transit_at(self, price: int, when: datetime):
         transit = self.a_transit_now(None, price)
-        transit.date_time = when
+        transit.set_date_time(when)
         transit.address_to = self.address_repository.save(
             Address(country="Polska", city="Warszawa", street="Zytnia", building_number=20)
         )

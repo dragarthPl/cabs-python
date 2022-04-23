@@ -43,6 +43,7 @@ class TransitDTO(BaseModel):
         if transit is not None:
             data.update(**transit.dict())
         super().__init__(**data)
+        self.factor = 1
         if transit is not None:
             if transit.get_price():
                 self.price = Decimal(transit.get_price().to_int() or 0)
@@ -67,46 +68,10 @@ class TransitDTO(BaseModel):
         self.set_tariff(transit)
 
     def set_tariff(self, transit: Transit) -> None:
-        day = self.date
-
         # wprowadzenie nowych cennikow od 1.01.2019
-        if day.year <= 2018:
-            self.km_rate = 1.0
-            self.tariff = "Standard"
-            return
-
-        year = day.year
-        leap = ((year % 4 == 0) and (year % 100 != 0)) or (year % 400 == 0)
-
-        if (leap and day.timetuple().tm_yday == 366) or (not leap and day.timetuple().tm_yday == 365) or (day.timetuple().tm_yday == 1 and day.hour <= 6):
-            self.tariff = "Sylwester"
-            self.km_rate = 3.50
-        else:
-            match day.weekday():
-                case 0 | 1 | 2 | 3:
-                    self.km_rate = 1.0
-                    self.tariff = "Standard"
-                case 4:
-                    if day.hour < 17:
-                        self.km_rate = 1.0
-                        self.tariff = "Standard"
-                    else:
-                        self.tariff = "Weekend+"
-                        self.km_rate = 2.50
-                case 5:
-                    if day.hour < 6 or day.hour >= 17:
-                        self.km_rate = 2.5
-                        self.tariff = "Weekend+"
-                    elif day.hour < 17:
-                        self.km_rate = 1.5
-                        self.tariff = "Weekend"
-                case 6:
-                    if day.hour < 6:
-                        self.km_rate = 2.5
-                        self.tariff = "Weekend+"
-                    else:
-                        self.km_rate = 1.5
-                        self.tariff = "Weekend"
+        self.tariff = transit.get_tariff().name
+        self.km_rate = transit.get_tariff().km_rate
+        self.base_fee = Decimal(transit.get_tariff().base_fee)
 
     def get_distance(self, unit: str) -> str:
         self.distance_unit = unit

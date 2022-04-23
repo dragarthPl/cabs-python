@@ -10,7 +10,8 @@ import pytz
 from tzlocal import get_localzone
 
 from common.base_entity import BaseEntity
-from entity import Address, CarType
+from distance.distance import Distance
+from entity import Address, CarType, Tariff
 from sqlalchemy import Column, Enum, Float, ForeignKey, Table, DateTime
 from sqlalchemy.orm import backref, relationship
 from sqlmodel import Field, Relationship, SQLModel
@@ -95,7 +96,10 @@ class Transit(BaseEntity, table=True):
             "entity.driver.Driver", secondary=proposed_drivers_link)
     )
     awaiting_drivers_responses: Optional[int] = 0
-    factor: Optional[int] = 0
+    tariff_km_rate: Optional[float] = 0
+    tariff_name: Optional[str] = None
+    tariff_base_fee: Optional[int] = 0
+
     km: Optional[float] = Field(default=0.0, sa_column=Column(Float))
 
     price: Optional[int] = 0
@@ -105,8 +109,6 @@ class Transit(BaseEntity, table=True):
     date_time: Optional[datetime] = Field(default=None, sa_column=Column(DateTime, nullable=True))
 
     published: Optional[datetime] = Field(default=None, sa_column=Column(DateTime, nullable=True))
-
-    BASE_FEE: Optional[int] = 8
 
     # @OneToOne
     client_id: Optional[int] = Field(default=None, foreign_key="client.id")
@@ -119,6 +121,9 @@ class Transit(BaseEntity, table=True):
     complete_at: Optional[datetime] = Field(default=None, sa_column=Column(DateTime, nullable=True))
 
     def __init__(self, **data: Any):
+        tariff = None
+        if "tariff" in data:
+            tariff = data.pop("tariff")
         super().__init__(**data)
         if "price" in data:
             self.set_price(data["price"])
@@ -126,6 +131,10 @@ class Transit(BaseEntity, table=True):
             self.set_estimated_price(data["estimated_price"])
         if "drivers_fee" in data:
             self.set_price(data["drivers_fee"])
+        if tariff:
+            self.tariff_name = tariff.name
+            self.tariff_base_fee = tariff.base_fee
+            self.tariff_km_rate = tariff.km_rate
 
     def set_km(self, km) -> None:
         self.km = km
@@ -149,44 +158,17 @@ class Transit(BaseEntity, table=True):
             raise ValueError("Cannot calculate final cost if the transit is not completed")
 
     def __calculate_cost(self) -> Money:
-        base_fee: int = self.BASE_FEE
-        factor_to_calculate: int = self.factor
-        if not factor_to_calculate:
-            factor_to_calculate = 1
-        km_rate: Optional[float] = None
-        day: datetime = self.date_time.astimezone(get_localzone())
-        # wprowadzenie nowych cennikow  od 1.01.2019
-        if day.year <= 2018:
-            km_rate = 1.0
-            base_fee += 1
-        else:
+        money: Money = self.get_tariff().calculate_cost(Distance.of_km(self.km))
+        self.price = money.value
+        return money
 
-            if (day.month == 12 and day.day == 31) or (day.month == 1 and day.day == 1 and day.hour <= 6):
-                km_rate = 3.50
-                base_fee += 3
-            else:
-                # piątek i sobota po 17 do 6 następnego dnia
-                if ((day.weekday() == calendar.FRIDAY and day.hour >= 17) or
-                (day.weekday() == calendar.SATURDAY and day.hour <= 6) or
-                (day.weekday() == calendar.SATURDAY and day.hour >= 17) or
-                (day.weekday() == calendar.SUNDAY and day.hour <= 6)):
-                    km_rate = 2.50
-                    base_fee += 2
-                else:
-                    # pozostałe godziny weekendu
-                    if (day.weekday() == calendar.SATURDAY and day.hour > 6 and day.hour < 17) or (day.weekday() == calendar.SUNDAY and day.hour > 6):
-                        km_rate = 1.5
-                    else:
-                        # tydzień roboczy
-                        km_rate = 1.0
-                        base_fee += 1
+    def get_tariff(self) -> Tariff:
+        return Tariff(km_rate=self.tariff_km_rate, base_fee=self.tariff_base_fee, name=self.tariff_name)
 
-        price_big_decimal: Decimal = Decimal(
-            self.km * km_rate * factor_to_calculate + base_fee
-        ).quantize(Decimal('.01'), rounding=ROUND_HALF_UP)
-        final_price: Money = Money(int(str(price_big_decimal).replace(".", "")))
-        self.price = final_price.value
-        return final_price
+    def set_tariff(self, tariff: Tariff) -> None:
+        self.tariff_name = tariff.name
+        self.tariff_base_fee = tariff.base_fee
+        self.tariff_km_rate = tariff.km_rate
 
     def get_price(self) -> Money:
         return Money(self.price)
@@ -199,6 +181,13 @@ class Transit(BaseEntity, table=True):
 
     def set_estimated_price(self, estimated_price: Money) -> None:
         self.estimated_price = estimated_price.value
+
+    def get_date_time(self) -> datetime:
+        return self.date_time
+
+    def set_date_time(self, date_time: datetime) -> None:
+        self.set_tariff(Tariff.of_time(date_time.astimezone(get_localzone())))
+        self.date_time = date_time
 
     def get_drivers_fee(self) -> Money:
         return Money(self.drivers_fee)
