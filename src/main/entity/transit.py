@@ -7,6 +7,7 @@ from decimal import ROUND_HALF_UP, Decimal
 from typing import Optional, Set, Any
 
 from common.base_entity import BaseEntity
+from distance.distance import Distance
 from entity import Address, CarType
 from sqlalchemy import Column, Enum, Float, ForeignKey, Table, DateTime
 from sqlalchemy.orm import backref, relationship
@@ -124,9 +125,12 @@ class Transit(BaseEntity, table=True):
         if "drivers_fee" in data:
             self.set_price(data["drivers_fee"])
 
-    def set_km(self, km) -> None:
-        self.km = km
+    def set_km(self, km: Distance) -> None:
+        self.km = km.to_km_in_float()
         self.estimate_cost()
+
+    def get_km(self) -> Distance:
+        return Distance.of_km(self.km)
 
     def estimate_cost(self) -> Money:
         if self.status == self.Status.COMPLETED:

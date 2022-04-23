@@ -3,6 +3,7 @@ from datetime import datetime
 from decimal import Decimal
 from typing import Any, List, Optional
 
+from distance.distance import Distance
 from dto.address_dto import AddressDTO
 from dto.claim_dto import ClaimDTO
 from dto.client_dto import ClientDTO
@@ -17,7 +18,7 @@ class TransitDTO(BaseModel):
     status: Optional[Transit.Status]
     driver: Optional[DriverDTO]
     factor: Optional[int]
-    distance: Optional[float]
+    distance: Optional[Distance]
     distance_unit: Optional[str]
     km_rate: Optional[float]
     price: Optional[Decimal]
@@ -38,6 +39,9 @@ class TransitDTO(BaseModel):
     address_from: Optional[AddressDTO]
     car_class: Optional[CarType.CarClass]
     client_dto: Optional[ClientDTO]
+
+    class Config:
+        arbitrary_types_allowed = True
 
     def __init__(self, *, transit: Transit = None, **data: Any):
         if transit is not None:
@@ -61,7 +65,7 @@ class TransitDTO(BaseModel):
                 self.proposed_drivers = []
                 for driver in transit.proposed_drivers:
                     self.proposed_drivers.append(DriverDTO(**driver.dict()))
-            self.distance = transit.km
+            self.distance = transit.get_km()
         self.set_tariff(transit)
 
     def set_tariff(self, transit: Transit) -> None:
@@ -108,16 +112,4 @@ class TransitDTO(BaseModel):
 
     def get_distance(self, unit: str) -> str:
         self.distance_unit = unit
-        if unit == 'km':
-            if self.distance == math.ceil(self.distance):
-                return "%dkm" % round(self.distance)
-            return "%.3fkm" % self.distance
-        if unit == 'miles':
-            distance = self.distance /1.609344
-            if distance == math.ceil(distance):
-                return "%dmiles" % round(distance)
-            return "%.3fmiles" % distance
-
-        if unit == 'm':
-            return "%dm" % round(self.distance * 1000)
-        raise AttributeError("Invalid unit " + unit)
+        return self.distance.print_in(unit)

@@ -2,17 +2,12 @@ from datetime import datetime
 from typing import Dict
 from unittest import TestCase
 
-import pytz
 from fastapi.params import Depends
 
 from core.const import Month
 from core.database import create_db_and_tables, drop_db_and_tables
-from entity import Driver, Transit, DriverFee
+from entity import Driver, DriverFee
 from money import Money
-from repository.address_repository import AddressRepositoryImp
-from repository.client_repository import ClientRepositoryImp
-from repository.driver_fee_repository import DriverFeeRepositoryImp
-from repository.transit_repository import TransitRepositoryImp
 from service.driver_service import DriverService
 from tests.common.fixtures import DependencyResolver, Fixtures
 
