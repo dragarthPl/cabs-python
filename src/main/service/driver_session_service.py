@@ -26,7 +26,7 @@ class DriverSessionService:
         session = DriverSession()
         session.driver = self.driver_repository.get_one(driver_id)
         session.logged_at = datetime.now()
-        session.car_type = car_class
+        session.car_class = car_class
         session.plates_number = plates_number
         session.car_brand = car_brand
         self.car_type_service.register_active_car(session.car_class)

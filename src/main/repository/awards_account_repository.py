@@ -14,7 +14,7 @@ class AwardsAccountRepositoryImp:
         self.session = session
 
     def find_by_client(self, client: Client) -> AwardsAccount:
-        statement = self.session.query(AwardsAccount).where(AwardsAccount.client.id == client.id)
+        statement = self.session.query(AwardsAccount).where(AwardsAccount.client_id == client.id)
         results = self.session.exec(statement)
         return results.scalar_one_or_none()
 

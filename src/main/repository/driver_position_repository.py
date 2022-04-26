@@ -6,7 +6,7 @@ from dto.driver_position_dtov_2 import DriverPositionDTOV2
 from entity import Driver
 from entity.driver_position import DriverPosition
 from fastapi import Depends
-from sqlalchemy import text
+from sqlalchemy import text, Float, DateTime, Integer
 from sqlmodel import Session
 
 
@@ -37,24 +37,34 @@ class DriverPositionRepositoryImp:
     def find_average_driver_position_since(
             self, latitude_min, latitude_max, longitude_min, longitude_max, date: datetime) -> List[DriverPositionDTOV2]:
         stmt = text(
-            "SELECT new io.legacyfighter.cabs.dto.DriverPositionDTOV2("
-            "p.driver,"
+            "SELECT "
+            "p.id, "
+            "p.driver_id,"
             " avg(p.latitude), "
             "avg(p.longitude),"
-            " max(p.seenAt)) "
-            "FROM DriverPosition p where p.latitude between :latitude_min "
+            " max(p.seen_at) "
+            "FROM driverposition as p where p.latitude between :latitude_min "
             "and :latitude_max and p.longitude between :longitude_min and :longitude_max and"
-            " p.seenAt >= :date group by p.driver.id")
+            " p.seen_at >= :date group by p.driver_id")
         stmt = stmt.columns(
-            DriverPositionDTOV2.driver,
-            DriverPositionDTOV2.latitude,
-            DriverPositionDTOV2.longitude,
-            DriverPositionDTOV2.seen_at
+            id=Integer,
+            driver=Integer,
+            latitude=Float,
+            longitude=Float,
+            seen_at=DateTime
         )
-        return self.session.query(DriverPositionDTOV2).from_statement(stmt).params(
+        driver_position = self.session.query(DriverPosition).from_statement(stmt).params(
             latitude_min=latitude_min,
             latitude_max=latitude_max,
             longitude_min=longitude_min,
             longitude_max=longitude_max,
             date=date
         ).all()
+        return [
+            DriverPositionDTOV2(
+                driver=d.driver,
+                latitude=d.latitude,
+                longitude=d.longitude,
+                seen_at=d.seen_at
+            )
+            for d in driver_position]

@@ -1,3 +1,4 @@
+import functools
 import math
 from datetime import datetime
 from typing import List
@@ -99,7 +100,7 @@ class TransitService:
         transit.address_to = address_to
         transit.car_type = car_class
         transit.status = Transit.Status.DRAFT
-        transit.date_time = datetime.now()
+        transit.set_date_time(datetime.now())
         transit.set_km(Distance.of_km(
             float(
                 self.distance_calculator.calculate_by_map(geo_from[0], geo_from[1], geo_to[0], geo_to[1])
@@ -141,8 +142,8 @@ class TransitService:
         # calculate the result
         distance_in_kmeters = c * r
 
-        if not (
-                transit.status == Transit.Status.DRAFT or
+        if (
+                not transit.status == Transit.Status.DRAFT or
                 transit.status == Transit.Status.WAITING_FOR_DRIVER_ASSIGNMENT or
                 transit.pickup_address_change_counter > 2 or
                 distance_in_kmeters > 0.25
@@ -234,7 +235,7 @@ class TransitService:
                     distance_to_check += 1
 
                     # FIXME: to refactor when the final business logic will be determined
-                    if (transit.published + relativedelta(seconds=300) > datetime.now() or
+                    if (transit.published + relativedelta(seconds=300) < datetime.now() or
                             distance_to_check >= 20 or
                             transit.status == Transit.Status.CANCELLED
                     ):
@@ -281,14 +282,14 @@ class TransitService:
                             longitude_max,
                             datetime.now() - relativedelta(minutes=5)
                         )
-                    if not drivers_avg_positions:
+                    if drivers_avg_positions:
                         comparator = lambda d1, d2: math.sqrt(
                             math.pow(latitude - d1.latitude, 2) + math.pow(longitude - d1.longitude, 2)
                         ) - math.sqrt(
                             math.pow(latitude - d2.latitude, 2) + math.pow(longitude - d2.longitude, 2)
                         )
 
-                        drivers_avg_positions = sorted(drivers_avg_positions, key=comparator)
+                        drivers_avg_positions = sorted(drivers_avg_positions, key=functools.cmp_to_key(comparator))
                         drivers_avg_positions = drivers_avg_positions[:20]
                         car_classes = []
                         active_car_classes = self.car_type_service.find_active_car_classes()
@@ -311,13 +312,18 @@ class TransitService:
                                 )
                         ))
 
-                        drivers_avg_positions = list(filter(lambda dp: dp.driver.id in active_driver_ids_in_specific_car))
+                        drivers_avg_positions = list(
+                            filter(
+                                lambda dp: dp.driver.id in active_driver_ids_in_specific_car,
+                                drivers_avg_positions
+                            ),
+                        )
 
                         # Iterate across average driver positions
                         for driver_avg_position in drivers_avg_positions:
                             driver = driver_avg_position.driver
-                            if driver.status == Driver.Status.ACTIVE and driver.is_occupied == False:
-                                if not driver in transit.drivers_rejections:
+                            if driver.status == Driver.Status.ACTIVE and not driver.is_occupied:
+                                if driver not in transit.drivers_rejections:
                                     transit.proposed_drivers.append(driver); transit.awaiting_drivers_responses += 1
                                     self.notification_service.notify_about_possible_transit(driver.id, transit_id)
                             else:
@@ -346,13 +352,19 @@ class TransitService:
                 if transit.driver != None:
                     raise AttributeError("Transit already accepted, id = " + str(transits_id))
                 else:
-                    transit.driver = driver
-                    transit.awaiting_drivers_responses = 0
-                    transit.accepted_at = datetime.now()
-                    transit.status = Transit.Status.TRANSIT_TO_PASSENGER
-                    self.transit_repository.save(transit)
-                    driver.is_occupied = True
-                    self.driver_repository.save(driver)
+                    if driver not in transit.proposed_drivers:
+                        raise AttributeError("Driver out of possible drivers, idd = " + str(driver_id))
+                    else:
+                        if driver in transit.drivers_rejections:
+                            raise AttributeError("Driver out of possible drivers, idd = " + str(driver_id))
+                        else:
+                            transit.driver = driver
+                            transit.awaiting_drivers_responses = 0
+                            transit.accepted_at = datetime.now()
+                            transit.status = Transit.Status.TRANSIT_TO_PASSENGER
+                            self.transit_repository.save(transit)
+                            driver.is_occupied = True
+                            self.driver_repository.save(driver)
 
     def start_transit(self, driver_id: int, transits_id: int):
         driver = self.driver_repository.get_one(driver_id)
@@ -416,11 +428,11 @@ class TransitService:
             driver.is_occupied = False
             transit.complete_at = datetime.now()
             driver_fee: Money = self.driver_fee_service.calculate_driver_fee(transit_id)
-            transit.drivers_fee = driver_fee
+            transit.drivers_fee = driver_fee.to_int()
             self.driver_repository.save(driver)
             self.awards_service.register_miles(transit.client.id, transit_id)
             self.transit_repository.save(transit)
-            self.invoice_generator.generate(transit.get_price().to_int(), transit.client.name + " " + transit.client.last_name)
+            self.invoice_generator.generate(transit.get_price().to_int(), f"{transit.client.name} {transit.client.last_name}")
         else:
             raise AttributeError("Cannot complete Transit, id = " + str(transit_id))
 

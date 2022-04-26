@@ -2,7 +2,7 @@ from datetime import datetime
 from typing import List, Optional
 
 from core.database import get_session
-from entity import Driver
+from entity import Driver, CarType
 from entity.driver_session import DriverSession
 from fastapi import Depends
 from sqlmodel import Session
@@ -14,15 +14,19 @@ class DriverSessionRepositoryImp:
     def __init__(self, session: Session = Depends(get_session)):
         self.session = session
 
-    def find_all_by_logged_out_at_null_and_driver_in_and_car_class_in(self, drivers, car_classes) -> List[DriverSession]:
+    def find_all_by_logged_out_at_null_and_driver_in_and_car_class_in(
+            self,
+            drivers: List[Driver],
+            car_classes: List[CarType.CarClass]
+    ) -> List[DriverSession]:
         return self.session.query(
             DriverSession
         ).where(
             DriverSession.logged_out_at == None
         ).where(
-            DriverSession.driver_id.in_(drivers)
+            DriverSession.driver_id.in_([d.id for d in drivers])
         ).where(
-            DriverSession.car_class_id.in_(car_classes)
+            DriverSession.car_class.in_(car_classes)
         ).all()
 
     def find_all_by_driver_and_logged_at_after(self, driver: Driver, since: datetime) -> List[DriverSession]:

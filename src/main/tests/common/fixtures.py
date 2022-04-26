@@ -5,12 +5,17 @@ from typing import Any, Dict
 import pytz
 from fastapi.params import Depends
 
-from entity import Driver, Transit, DriverFee, Address, Client
+from dto.address_dto import AddressDTO
+from dto.car_type_dto import CarTypeDTO
+from dto.client_dto import ClientDTO
+from dto.transit_dto import TransitDTO
+from entity import Driver, Transit, DriverFee, Address, Client, CarType
 from money import Money
 from repository.address_repository import AddressRepositoryImp
 from repository.client_repository import ClientRepositoryImp
 from repository.driver_fee_repository import DriverFeeRepositoryImp
 from repository.transit_repository import TransitRepositoryImp
+from service.car_type_service import CarTypeService
 from service.driver_service import DriverService
 
 
@@ -49,6 +54,7 @@ class Fixtures:
     driver_service: DriverService
     client_repository: ClientRepositoryImp
     address_repository: AddressRepositoryImp
+    car_type_service: CarTypeService
 
     def __init__(
         self,
@@ -57,12 +63,14 @@ class Fixtures:
         driver_service: DriverService = Depends(DriverService),
         client_repository: ClientRepositoryImp = Depends(ClientRepositoryImp),
         address_repository: AddressRepositoryImp = Depends(AddressRepositoryImp),
+        car_type_service: CarTypeService = Depends(CarTypeService),
     ):
         self.transit_repository = transit_repository
         self.fee_repository = fee_repository
         self.driver_service = driver_service
         self.client_repository = client_repository
         self.address_repository = address_repository
+        self.car_type_service = car_type_service
 
     def a_client(self) -> Client:
         return self.client_repository.save(Client())
@@ -71,7 +79,7 @@ class Fixtures:
         transit: Transit = Transit()
         transit.set_price(Money(price))
         transit.driver = driver
-        transit.date_time = when.astimezone(pytz.UTC)
+        transit.set_date_time(when.astimezone(pytz.UTC))
         return self.transit_repository.save(transit)
 
     def a_transit_now(self, driver: Driver, price: int) -> Transit:
@@ -110,3 +118,24 @@ class Fixtures:
         transit.client = self.a_client()
         return self.transit_repository.save(transit)
 
+    def an_active_car_category(self, car_class: CarType.CarClass) -> CarType:
+        car_type_dto = CarTypeDTO()
+        car_type_dto.car_class = car_class
+        car_type_dto.description = "opis"
+        car_type = self.car_type_service.create(car_type_dto)
+        [
+            self.car_type_service.register_car(car_type.car_class)
+            for _ in range(1, car_type.min_no_of_cars_to_activate_class + 1)
+        ]
+        self.car_type_service.activate(car_type.id)
+        return car_type
+
+    def a_transit_dto_for_client(self, client: Client, address_from: AddressDTO, address_to: AddressDTO):
+        transit_dto = TransitDTO()
+        transit_dto.client_dto = ClientDTO(**client.dict())
+        transit_dto.address_from = address_from
+        transit_dto.address_to = address_to
+        return transit_dto
+
+    def a_transit_dto(self, address_from: AddressDTO, address_to: AddressDTO) -> TransitDTO:
+        return self.a_transit_dto_for_client(self.a_client(), address_from, address_to)

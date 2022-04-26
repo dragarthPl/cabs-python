@@ -33,7 +33,7 @@ class TestCalculateTransitDistance(TestCase):
     def transit_for_distance(self, km: float) -> TransitDTO:
         t: Transit = Transit()
         t.set_price(Money(10))
-        t.date_time = datetime.now()
+        t.set_date_time(datetime.now())
         t.address_to = Address()
         t.address_from = Address()
         t.status = Transit.Status.DRAFT

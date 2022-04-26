@@ -68,7 +68,8 @@ class TransitDTO(BaseModel):
                     self.proposed_drivers.append(DriverDTO(**driver.dict()))
             if transit.date_time:
                 self.date = transit.date_time
-            self.distance = transit.km
+            self.distance = transit.get_km()
+            self.set_tariff(transit)
 
     def set_tariff(self, transit: Transit) -> None:
         # wprowadzenie nowych cennikow od 1.01.2019
