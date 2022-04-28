@@ -89,24 +89,25 @@ class TransitService:
         if client is None:
             raise AttributeError("Client does not exist, id = " + str(client_id))
 
-        transit = Transit()
-
         # FIXME later: add some exceptions handling
         geo_from: List[float] = self.geocoding_service.geocode_address(address_from)
         geo_to: List[float] = self.geocoding_service.geocode_address(address_to)
-
-        transit.client = client
-        transit.address_from = address_from
-        transit.address_to = address_to
-        transit.car_type = car_class
-        transit.status = Transit.Status.DRAFT
-        transit.set_date_time(datetime.now())
-        transit.set_km(Distance.of_km(
-            float(
-                self.distance_calculator.calculate_by_map(geo_from[0], geo_from[1], geo_to[0], geo_to[1])
-            )
-        ))
-
+        km = Distance.of_km(float(self.distance_calculator.calculate_by_map(
+            geo_from[0],
+            geo_from[1],
+            geo_to[0],
+            geo_to[1]))
+        )
+        transit: Transit = Transit(
+            address_from=address_from,
+            address_to=address_to,
+            client=client,
+            car_class=car_class,
+            date_time=datetime.now(),
+            km=km,
+            status=Transit.Status.DRAFT,
+        )
+        transit.estimate_cost()
         return self.transit_repository.save(transit)
 
     def _change_transit_address_from(self, transit_id: int, new_address: Address) -> None:
@@ -142,19 +143,10 @@ class TransitService:
         # calculate the result
         distance_in_kmeters = c * r
 
-        if (
-                not transit.status == Transit.Status.DRAFT or
-                transit.status == Transit.Status.WAITING_FOR_DRIVER_ASSIGNMENT or
-                transit.pickup_address_change_counter > 2 or
-                distance_in_kmeters > 0.25
-        ):
-            raise AttributeError("Address 'from' cannot be changed, id = " + str(transit_id))
-
-        transit.address_from = new_address
-        transit.set_km(Distance.of_km(float(
+        new_distance = Distance.of_km(float(
             self.distance_calculator.calculate_by_map(geo_from_new[0], geo_from_new[1], geo_to_new[0], geo_to_new[1])
-        )))
-        transit.pickup_address_change_counter = transit.pickup_address_change_counter + 1
+        ))
+        transit.change_pickup_to(new_address, new_distance, distance_in_kmeters)
         self.transit_repository.save(transit)
 
         for driver in transit.proposed_drivers:
@@ -172,17 +164,14 @@ class TransitService:
         if transit is None:
             raise AttributeError("Transit does not exist, id = " + str(transit_id))
 
-        if transit.status == Transit.Status.COMPLETED:
-            raise AttributeError("Address 'to' cannot be changed, id = " + str(transit_id))
-
         # FIXME later: add some exceptions handling
         geo_from: List[float] = self.geocoding_service.geocode_address(transit.address_from)
         geo_to: List[float] = self.geocoding_service.geocode_address(new_address)
 
-        transit.address_to = new_address
-        transit.set_km(Distance.of_km(
-            float(self.distance_calculator.calculate_by_map(geo_from[0], geo_from[1], geo_to[0], geo_to[1]))
+        new_distance = Distance.of_km(float(
+            self.distance_calculator.calculate_by_map(geo_from[0], geo_from[1], geo_to[0], geo_to[1])
         ))
+        transit.change_destination_to(new_address, new_distance)
         self.transit_repository.save(transit)
 
         if transit.driver is not None:
@@ -194,18 +183,10 @@ class TransitService:
         if transit is None:
             raise AttributeError("Transit does not exist, id = " + str(transit_id))
 
-        if transit.status not in (
-            Transit.Status.DRAFT, Transit.Status.WAITING_FOR_DRIVER_ASSIGNMENT, Transit.Status.TRANSIT_TO_PASSENGER
-        ):
-            raise AttributeError("Transit cannot be canceled, id = " + str(transit_id))
-
         if transit.driver != None:
             self.notification_service.notify_about_cancelled_transit(transit.driver.id, transit.id)
 
-        transit.status = Transit.Status.CANCELLED
-        transit.driver = None
-        transit.set_km(Distance.ZERO)
-        transit.awaiting_drivers_responses = 0
+        transit.cancel()
         self.transit_repository.save(transit)
 
     def publish_transit(self, transit_id: int) -> Transit:
@@ -214,10 +195,8 @@ class TransitService:
         if transit is None:
             raise AttributeError("Transit does not exist, id = " + str(transit_id))
 
-        transit.status = Transit.Status.WAITING_FOR_DRIVER_ASSIGNMENT
-        transit.published = datetime.now()
+        transit.publish_at(datetime.now())
         self.transit_repository.save(transit)
-
         return self.find_drivers_for_transit(transit_id)
 
     def find_drivers_for_transit(self, transit_id: int) -> Transit:
@@ -235,13 +214,10 @@ class TransitService:
                     distance_to_check += 1
 
                     # FIXME: to refactor when the final business logic will be determined
-                    if (transit.published + relativedelta(seconds=300) < datetime.now() or
-                            distance_to_check >= 20 or
-                            transit.status == Transit.Status.CANCELLED
+                    if (transit.should_not_wait_for_driver_any_more(datetime.now()) or
+                            distance_to_check >= 20
                     ):
-                        transit.status = Transit.Status.DRIVER_ASSIGNMENT_FAILED
-                        transit.driver = None; transit.set_km(Distance.ZERO)
-                        transit.awaiting_drivers_responses = 0
+                        transit.fail_driver_assignment()
                         self.transit_repository.save(transit)
                         return transit
                     geocoded = [None, None]
@@ -323,8 +299,8 @@ class TransitService:
                         for driver_avg_position in drivers_avg_positions:
                             driver = driver_avg_position.driver
                             if driver.status == Driver.Status.ACTIVE and not driver.is_occupied:
-                                if driver not in transit.drivers_rejections:
-                                    transit.proposed_drivers.append(driver); transit.awaiting_drivers_responses += 1
+                                if transit.can_propose_to(driver):
+                                    transit.propose_to(driver)
                                     self.notification_service.notify_about_possible_transit(driver.id, transit_id)
                             else:
                                 # Not implemented yet!
@@ -349,22 +325,9 @@ class TransitService:
             if transit is None:
                 raise AttributeError("Transit does not exist, id = " + str(transits_id))
             else:
-                if transit.driver != None:
-                    raise AttributeError("Transit already accepted, id = " + str(transits_id))
-                else:
-                    if driver not in transit.proposed_drivers:
-                        raise AttributeError("Driver out of possible drivers, idd = " + str(driver_id))
-                    else:
-                        if driver in transit.drivers_rejections:
-                            raise AttributeError("Driver out of possible drivers, idd = " + str(driver_id))
-                        else:
-                            transit.driver = driver
-                            transit.awaiting_drivers_responses = 0
-                            transit.accepted_at = datetime.now()
-                            transit.status = Transit.Status.TRANSIT_TO_PASSENGER
-                            self.transit_repository.save(transit)
-                            driver.is_occupied = True
-                            self.driver_repository.save(driver)
+                transit.accept_by(driver, datetime.now())
+                self.transit_repository.save(transit)
+                self.driver_repository.save(driver)
 
     def start_transit(self, driver_id: int, transits_id: int):
         driver = self.driver_repository.get_one(driver_id)
@@ -377,11 +340,7 @@ class TransitService:
         if transit is None:
             raise AttributeError("Transit does not exist, id = " + str(transits_id))
 
-        if not transit.status == Transit.Status.TRANSIT_TO_PASSENGER:
-            raise AttributeError("Transit cannot be started, id = " + str(transits_id))
-
-        transit.status = Transit.Status.IN_TRANSIT
-        transit.started = datetime.now()
+        transit.start(datetime.now())
         self.transit_repository.save(transit)
 
     def reject_transit(self, driver_id: int, transits_id: int):
@@ -395,8 +354,7 @@ class TransitService:
         if transit is None:
             raise AttributeError("Transit does not exist, id = " + str(transits_id))
 
-        transit.drivers_rejections.append(driver)
-        transit.awaiting_drivers_responses -= 1
+        transit.reject_by(driver)
         self.transit_repository.save(transit)
 
     def complete_transit(self, driver_id: int, transits_id: int, destination: AddressDTO):
@@ -414,27 +372,20 @@ class TransitService:
         if transit is None:
             raise AttributeError("Transit does not exist, id = " + str(transit_id))
 
-        if transit.status == Transit.Status.IN_TRANSIT:
-            # FIXME later: add some exceptions handling
-            geo_from: List[float] = self.geocoding_service.geocode_address(transit.address_from)
-            geo_to: List[float] = self.geocoding_service.geocode_address(transit.address_to)
-
-            transit.address_to = destination_address
-            transit.set_km(Distance.of_km(
-                float(self.distance_calculator.calculate_by_map(geo_from[0], geo_from[1], geo_to[0], geo_to[1]))
-            ))
-            transit.status = Transit.Status.COMPLETED
-            transit.calculate_final_costs()
-            driver.is_occupied = False
-            transit.complete_at = datetime.now()
-            driver_fee: Money = self.driver_fee_service.calculate_driver_fee(transit_id)
-            transit.drivers_fee = driver_fee.to_int()
-            self.driver_repository.save(driver)
-            self.awards_service.register_miles(transit.client.id, transit_id)
-            self.transit_repository.save(transit)
-            self.invoice_generator.generate(transit.get_price().to_int(), f"{transit.client.name} {transit.client.last_name}")
-        else:
-            raise AttributeError("Cannot complete Transit, id = " + str(transit_id))
+        # FIXME later: add some exceptions handling
+        geo_from: List[float] = self.geocoding_service.geocode_address(transit.address_from)
+        geo_to: List[float] = self.geocoding_service.geocode_address(transit.address_to)
+        distance = Distance.of_km(
+            float(self.distance_calculator.calculate_by_map(geo_from[0], geo_from[1], geo_to[0], geo_to[1]))
+        )
+        transit.complete_ride_at(datetime.now(), destination_address, distance)
+        driver_fee: Money = self.driver_fee_service.calculate_driver_fee(transit_id)
+        transit.set_drivers_fee(driver_fee)
+        driver.is_occupied = False
+        self.driver_repository.save(driver)
+        self.awards_service.register_miles(transit.client.id, transit_id)
+        self.transit_repository.save(transit)
+        self.invoice_generator.generate(transit.get_price().to_int(), f"{transit.client.name} {transit.client.last_name}")
 
     def load_transit(self, transit_id: int) -> TransitDTO:
         return TransitDTO(transit=self.transit_repository.get_one(transit_id))

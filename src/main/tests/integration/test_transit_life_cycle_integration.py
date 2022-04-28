@@ -300,6 +300,123 @@ class TestTransitLifeCycleIntegration(TestCase):
         with self.assertRaises(AttributeError):
             self.transit_service.accept_transit(driver, transit.id)
 
+    def test_transit_cannot_by_accepted_by_driver_who_has_not_seen_proposal(self):
+        # given
+        transit = self.request_transit_from_to(
+            AddressDTO(country="Polska", city="Warszawa", street="Młynarska", building_number=20),
+            AddressDTO(country="Polska", city="Warszawa", street="Żytnia", building_number=25),
+        )
+        # and
+        far_away_driver = self.a_far_away_driver("WU1212")
+        # and
+        self.transit_service.publish_transit(transit.id)
+
+        # when
+        with self.assertRaises(AttributeError):
+            self.transit_service.accept_transit(far_away_driver, transit.id)
+
+    def test_can_start_transit(self):
+        # given
+        transit = self.request_transit_from_to(
+            AddressDTO(country="Polska", city="Warszawa", street="Młynarska", building_number=20),
+            AddressDTO(country="Polska", city="Warszawa", street="Żytnia", building_number=25),
+        )
+        # and
+        driver = self.a_nearby_driver("WU1212")
+        # and
+        self.transit_service.publish_transit(transit.id)
+        # and
+        self.transit_service.accept_transit(driver, transit.id)
+
+        # when
+        self.transit_service.start_transit(driver, transit.id)
+
+        # then
+        loaded = self.transit_service.load_transit(transit.id)
+        self.assertEqual(Transit.Status.IN_TRANSIT, loaded.status)
+        self.assertIsNotNone(loaded.started)
+
+    def test_cannot_start_not_accepted_transit(self):
+        # given
+        transit = self.request_transit_from_to(
+            AddressDTO(country="Polska", city="Warszawa", street="Młynarska", building_number=20),
+            AddressDTO(country="Polska", city="Warszawa", street="Żytnia", building_number=25),
+        )
+        # and
+        driver = self.a_nearby_driver("WU1212")
+        # and
+        self.transit_service.publish_transit(transit.id)
+
+        # when
+        with self.assertRaises(AttributeError):
+            self.transit_service.start_transit(driver, transit.id)
+
+    def test_can_complete_transit(self):
+        # given
+        destination = AddressDTO(country="Polska", city="Warszawa", street="Żytnia", building_number=25)
+        # and
+        transit = self.request_transit_from_to(
+            AddressDTO(country="Polska", city="Warszawa", street="Młynarska", building_number=20),
+            destination,
+        )
+        # and
+        driver = self.a_nearby_driver("WU1212")
+        # and
+        self.transit_service.publish_transit(transit.id)
+        # and
+        self.transit_service.accept_transit(driver, transit.id)
+        # and
+        self.transit_service.start_transit(driver, transit.id)
+
+        # when
+        self.transit_service.complete_transit(driver, transit.id, destination)
+
+        # then
+        loaded = self.transit_service.load_transit(transit.id)
+        self.assertEqual(Transit.Status.COMPLETED, loaded.status)
+        self.assertIsNotNone(loaded.tariff)
+        self.assertIsNotNone(loaded.price)
+        self.assertIsNotNone(loaded.driver_fee)
+        self.assertIsNotNone(loaded.complete_at)
+
+    def test_cannot_complete_not_started_transit(self):
+        # given
+        address_to = AddressDTO(country="Polska", city="Warszawa", street="Żytnia", building_number=25)
+        # and
+        transit = self.request_transit_from_to(
+            AddressDTO(country="Polska", city="Warszawa", street="Młynarska", building_number=20),
+            address_to,
+        )
+        # and
+        driver = self.a_nearby_driver("WU1212")
+        # and
+        self.transit_service.publish_transit(transit.id)
+        # and
+        self.transit_service.accept_transit(driver, transit.id)
+
+        # when
+        with self.assertRaises(AttributeError):
+            self.transit_service.complete_transit(driver, transit.id, address_to)
+
+    def test_can_reject_transit(self):
+        # given
+        transit = self.request_transit_from_to(
+            AddressDTO(country="Polska", city="Warszawa", street="Młynarska", building_number=20),
+            AddressDTO(country="Polska", city="Warszawa", street="Żytnia", building_number=25),
+        )
+        # and
+        driver = self.a_nearby_driver("WU1212")
+        # and
+        self.transit_service.publish_transit(transit.id)
+
+        # when
+        self.transit_service.reject_transit(driver, transit.id)
+
+        # then
+        loaded = self.transit_service.load_transit(transit.id)
+        self.assertEqual(Transit.Status.WAITING_FOR_DRIVER_ASSIGNMENT, loaded.status)
+        self.assertIsNone(loaded.accepted_at)
+
     def far_away_address(self, transit: Transit):
         address_dto = AddressDTO(country="Dania", city="Kopenhaga", street="Mylve", building_number=2);
         when(self.geocoding_service).geocode_address(ANY).thenReturn([1000.0, 1000.0])
@@ -317,6 +434,13 @@ class TestTransitLifeCycleIntegration(TestCase):
         return self.transit_service.create_transit(
             self.fixtures.a_transit_dto(pickup, destination)
         )
+
+    def a_far_away_driver(self, plate_number: str) -> int:
+        driver = self.fixtures.a_driver()
+        self.fixtures.driver_has_fee(driver, DriverFee.FeeType.FLAT, 10)
+        self.driver_session_service.log_in(driver.id, plate_number, CarType.CarClass.VAN, "BRAND")
+        self.driver_tracking_service.register_position(driver.id, 1000, 1000)
+        return driver.id
 
     def tearDown(self) -> None:
         drop_db_and_tables()

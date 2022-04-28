@@ -99,12 +99,15 @@ class TestCalculateTransitPrice(TestCase):
         self.assertEqual(Money(2900), price)
 
     def transit(self, status: Transit.Status, km: int) -> Transit:
-        transit = Transit()
-        transit.set_date_time(datetime.now())
-        transit.status = Transit.Status.DRAFT
-        transit.set_km(Distance.of_km(km))
-        transit.status = status
-        return transit
+        return Transit(
+            status=status,
+            address_from=None,
+            address_to=None,
+            client=None,
+            car_class=None,
+            date_time=datetime.now(),
+            distance=Distance.of_km(km),
+        )
 
     def transit_was_on_done_on_friday(self, transit: Transit) -> None:
         transit.set_date_time(datetime(2021, 4, 16, 8, 30).astimezone(pytz.utc))

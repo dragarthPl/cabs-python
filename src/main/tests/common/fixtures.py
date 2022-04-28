@@ -5,6 +5,7 @@ from typing import Any, Dict
 import pytz
 from fastapi.params import Depends
 
+from distance.distance import Distance
 from dto.address_dto import AddressDTO
 from dto.car_type_dto import CarTypeDTO
 from dto.client_dto import ClientDTO
@@ -76,10 +77,17 @@ class Fixtures:
         return self.client_repository.save(Client())
 
     def a_transit(self, driver: Driver, price: int, when: datetime) -> Transit:
-        transit: Transit = Transit()
+        transit: Transit = Transit(
+            address_from=None,
+            address_to=None,
+            client=None,
+            car_class=None,
+            date_time=when.astimezone(pytz.UTC),
+            distance=Distance.ZERO,
+        )
         transit.set_price(Money(price))
-        transit.driver = driver
-        transit.set_date_time(when.astimezone(pytz.UTC))
+        transit.propose_to(driver)
+        transit.accept_by(driver, datetime.now())
         return self.transit_repository.save(transit)
 
     def a_transit_now(self, driver: Driver, price: int) -> Transit:
@@ -107,14 +115,15 @@ class Fixtures:
         )
 
     def a_completed_transit_at(self, price: int, when: datetime):
-        transit = self.a_transit_now(None, price)
+        transit = Transit(
+            address_from=Address(country="Polska", city="Warszawa", street="Młynarska", building_number=20),
+            address_to=Address(country="Polska", city="Warszawa", street="Zytnia", building_number=20),
+            client=self.a_client(),
+            car_class=None,
+            date_time=datetime.now(),
+            distance=Distance.ZERO,
+        )
         transit.set_date_time(when)
-        transit.address_to = self.address_repository.save(
-            Address(country="Polska", city="Warszawa", street="Zytnia", building_number=20)
-        )
-        transit.address_from = self.address_repository.save(
-            Address(country="Polska", city="Warszawa", street="Młynarska", building_number=20)
-        )
         transit.client = self.a_client()
         return self.transit_repository.save(transit)
 

@@ -7,6 +7,7 @@ from decimal import ROUND_HALF_UP, Decimal
 from typing import Optional, Set, Any
 
 import pytz
+from dateutil.relativedelta import relativedelta
 from tzlocal import get_localzone
 
 from common.base_entity import BaseEntity
@@ -121,27 +122,127 @@ class Transit(BaseEntity, table=True):
     complete_at: Optional[datetime] = Field(default=None, sa_column=Column(DateTime, nullable=True))
 
     def __init__(self, **data: Any):
-        tariff = None
+        tariff: Optional[Tariff] = None
+        km: Optional[Distance] = None
+        status: Optional[Transit.Status] = None
         if "tariff" in data:
             tariff = data.pop("tariff")
+        if "km" in data:
+            km = data.pop("km")
+        if "status" in data:
+            status = data.pop("status")
         super().__init__(**data)
+        self.status = status
         if "price" in data:
             self.set_price(data["price"])
         if "estimated_price" in data:
             self.set_estimated_price(data["estimated_price"])
         if "drivers_fee" in data:
             self.set_price(data["drivers_fee"])
+        if "distance" in data:
+            self.km = data["distance"].to_km_in_float()
         if tariff:
             self.tariff_name = tariff.name
             self.tariff_base_fee = tariff.base_fee
             self.tariff_km_rate = tariff.km_rate
+        if km:
+            self.km = km.to_km_in_float()
+        self.set_date_time(data.get("date_time", None))
 
-    def set_km(self, km: Distance) -> None:
-        self.km = km.to_km_in_float()
+    def change_pickup_to(
+            self,
+            new_address: Address,
+            new_distance: Distance,
+            distance_from_previous_pickup: float
+    ) -> None:
+        if distance_from_previous_pickup > 0.25:
+            raise AttributeError("Address 'from' cannot be changed, id = " + str(self.id))
+        if self.status != Transit.Status.DRAFT and self.status != Transit.Status.WAITING_FOR_DRIVER_ASSIGNMENT:
+            raise AttributeError("Address 'from' cannot be changed, id = " + str(self.id))
+        elif self.pickup_address_change_counter > 2:
+            raise AttributeError("Address 'from' cannot be changed, id = " + str(self.id))
+        self.address_from = new_address
+        self.pickup_address_change_counter = self.pickup_address_change_counter + 1
+        self.km = new_distance.to_km_in_float()
         self.estimate_cost()
 
-    def get_km(self) -> Distance:
-        return Distance.of_km(self.km)
+    def change_destination_to(self, new_address: Address, new_distance: Distance) -> None:
+        if self.status == Transit.Status.COMPLETED:
+            raise AttributeError("Address 'to' cannot be changed, id = " + str(self.id))
+
+        self.address_to = new_address
+        self.km = new_distance.to_km_in_float()
+        self.estimate_cost()
+
+    def cancel(self) -> None:
+        if self.status not in (
+            Transit.Status.DRAFT,
+            Transit.Status.WAITING_FOR_DRIVER_ASSIGNMENT,
+            Transit.Status.TRANSIT_TO_PASSENGER
+        ):
+            raise AttributeError("Transit cannot be canceled, id = " + str(self.id))
+
+        self.status = Transit.Status.CANCELLED
+        self.driver = None
+        self.km = Distance.ZERO.to_km_in_float()
+        self.awaiting_drivers_responses = 0
+
+    def can_propose_to(self, driver: Driver) -> bool:
+        return driver not in self.drivers_rejections
+
+    def propose_to(self, driver: Driver) -> None:
+        if self.can_propose_to(driver):
+            self.proposed_drivers.append(driver)
+            self.awaiting_drivers_responses = self.awaiting_drivers_responses + 1
+
+    def fail_driver_assignment(self) -> None:
+        self.status = Transit.Status.DRIVER_ASSIGNMENT_FAILED
+        self.driver = None
+        self.km = Distance.ZERO.to_km_in_float()
+        self.awaiting_drivers_responses = 0
+
+    def should_not_wait_for_driver_any_more(self, when: datetime) -> bool:
+        return self.status == Transit.Status.CANCELLED or self.published + relativedelta(seconds=300) < when
+
+    def accept_by(self, driver: Driver, when: datetime) -> None:
+        if self.driver != None:
+            raise AttributeError("Transit already accepted, id = " + str(self.id))
+        else:
+            if driver not in self.proposed_drivers:
+                raise AttributeError("Driver out of possible drivers, id = " + str(self.id))
+            else:
+                if driver in self.drivers_rejections:
+                    raise AttributeError("Driver out of possible drivers, id = " + str(self.id))
+            self.driver = driver
+            self.driver.is_occupied = True
+            self.awaiting_drivers_responses = 0
+            self.accepted_at = when
+            self.status = Transit.Status.TRANSIT_TO_PASSENGER
+
+    def start(self, when: datetime) -> None:
+        if self.status != Transit.Status.TRANSIT_TO_PASSENGER:
+            raise AttributeError("Transit cannot be started, id = " + str(self.id))
+        self.started = when
+        self.status = Transit.Status.IN_TRANSIT
+
+    def reject_by(self, driver: Driver) -> None:
+        self.drivers_rejections.append(driver)
+        self.awaiting_drivers_responses = self.awaiting_drivers_responses - 1
+
+    def publish_at(self, when: datetime) -> None:
+        self.status = Transit.Status.WAITING_FOR_DRIVER_ASSIGNMENT
+        self.published = when
+
+    def complete_ride_at(self, when: datetime, destination_address: Address, distance: Distance) -> None:
+        if self.status == Transit.Status.IN_TRANSIT:
+            self.km = distance.to_km_in_float()
+            self.estimate_cost()
+            self.complete_at = when
+            self.address_to = destination_address
+            self.status = Transit.Status.COMPLETED
+            self.calculate_final_costs()
+        else:
+            raise AttributeError("Cannot complete Transit, id = " + str(self.id))
 
     def estimate_cost(self) -> Money:
         if self.status == self.Status.COMPLETED:
@@ -164,6 +265,9 @@ class Transit(BaseEntity, table=True):
         money: Money = self.get_tariff().calculate_cost(Distance.of_km(self.km))
         self.price = money.value
         return money
+
+    def get_km(self) -> Distance:
+        return Distance.of_km(self.km)
 
     def get_tariff(self) -> Tariff:
         return Tariff(km_rate=self.tariff_km_rate, base_fee=self.tariff_base_fee, name=self.tariff_name)
