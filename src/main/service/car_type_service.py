@@ -42,7 +42,7 @@ class CarTypeService:
             return self.car_type_repository.save(car_type)
         else:
             by_car_class.description = car_type_dto.description
-            return by_car_class
+            return self.car_type_repository.save(by_car_class)
 
     # @Transactional
     def activate(self, _id: int) -> None:
@@ -95,7 +95,7 @@ class CarTypeService:
 
     # @Transactional
     def remove_car_type(self, car_class: CarType.CarClass):
-        car_type = self.__find_by_car_class(car_class)
+        car_type = self.car_type_repository.find_by_car_class(car_class)
         if car_type is not None:
             self.car_type_repository.delete(car_type)
 
