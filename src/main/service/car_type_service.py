@@ -28,7 +28,11 @@ class CarTypeService:
 
     # @Transactional
     def load_dto(self, _id: int) -> CarTypeDTO:
-        return CarTypeDTO(**self.load(_id).dict())
+        loaded = self.load(_id).dict()
+        loaded["active_cars_counter"] = self.car_type_repository.find_active_counter(
+            loaded.get("car_class")
+        ).active_cars_counter
+        return CarTypeDTO(**loaded)
 
     # @Transactional
     def create(self, car_type_dto: CarTypeDTO) -> CarType:
@@ -42,43 +46,35 @@ class CarTypeService:
             return self.car_type_repository.save(car_type)
         else:
             by_car_class.description = car_type_dto.description
-            return self.car_type_repository.save(by_car_class)
+            return self.car_type_repository.find_by_car_class(car_type_dto.car_class)
 
     # @Transactional
     def activate(self, _id: int) -> None:
         car_type = self.load(_id)
         car_type.activate()
-        self.car_type_repository.save(car_type)
 
     # @Transactional
     def deactivate(self, _id: int) -> None:
         car_type = self.load(_id)
         car_type.deactivate()
-        self.car_type_repository.save(car_type)
 
     # @Transactional
     def register_car(self, car_class: CarType.CarClass) -> None:
         car_type = self.__find_by_car_class(car_class)
         car_type.register_car()
-        self.car_type_repository.save(car_type)
 
     # @Transactional
     def unregister_car(self, car_class: CarType.CarClass) -> None:
         car_type = self.__find_by_car_class(car_class)
         car_type.unregister_car()
-        self.car_type_repository.save(car_type)
 
     # @Transactional
     def unregister_active_car(self, car_class: CarType.CarClass) -> None:
-        car_type = self.__find_by_car_class(car_class)
-        car_type.unregister_active_car()
-        self.car_type_repository.save(car_type)
+        self.car_type_repository.decrement_counter(car_class)
 
     # @Transactional
     def register_active_car(self, car_class: CarType.CarClass) -> None:
-        car_type = self.__find_by_car_class(car_class)
-        car_type.register_active_car()
-        self.car_type_repository.save(car_type)
+        self.car_type_repository.increment_counter(car_class)
 
     # @Transactional
     def find_active_car_classes(self) -> List[CarType.CarClass]:

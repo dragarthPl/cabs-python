@@ -27,6 +27,7 @@ def create_db_and_tables():
     SQLModel.metadata.create_all(engine)
 
 def drop_db_and_tables():
+    Session(engine).close_all()
     SQLModel.metadata.drop_all(engine)
 
 def get_engine() -> Engine:

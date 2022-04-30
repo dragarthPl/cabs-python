@@ -15,7 +15,7 @@ class CarTypeController:
     @car_type_router.post("/cartypes")
     def create(self, car_type_dto: CarTypeDTO) -> CarTypeDTO:
         created: CarType = self.car_type_service.create(car_type_dto)
-        return CarTypeDTO(**created.dict())
+        return self.car_type_service.load_dto(created.id)
 
     @car_type_router.post("/cartypes/{car_class}/registerCar")
     def register_car(self, car_class: CarType.CarClass) -> dict:
