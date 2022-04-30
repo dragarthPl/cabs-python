@@ -1,6 +1,8 @@
 import enum
 from typing import Any, Optional
 
+from deprecation import deprecated
+
 from common.base_entity import BaseEntity
 from sqlalchemy import Column, Enum, Integer
 from sqlmodel import Field, SQLModel
@@ -29,6 +31,16 @@ class CarType(BaseEntity, table=True):
     cars_counter: int = Field(default=0, sa_column=Column(Integer, nullable=False))
     # @Column(nullable = false)
     min_no_of_cars_to_activate_class: int = Field(sa_column=Column(Integer, nullable=False))
+
+    active_cars_counter = Field(default=0, sa_column=Column(Integer, nullable=False))
+
+    @deprecated(details="Deprecated")
+    def register_active_car(self):
+        self.active_cars_counter += 1
+
+    @deprecated(details="Deprecated")
+    def unregister_active_car(self):
+        self.active_cars_counter -= 1
 
     def register_car(self):
         self.cars_counter += 1
