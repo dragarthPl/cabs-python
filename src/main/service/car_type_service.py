@@ -2,7 +2,6 @@ from typing import List
 
 from config.app_properties import AppProperties, get_app_properties
 from dto.car_type_dto import CarTypeDTO
-from entity import CarTypeActiveCounter
 from entity.car_type import CarType
 from fastapi import Depends
 from repository.car_type_repository import CarTypeRepositoryImp
@@ -71,13 +70,11 @@ class CarTypeService:
 
     # @Transactional
     def unregister_active_car(self, car_class: CarType.CarClass) -> None:
-        car_type_active_counter: CarTypeActiveCounter = self.car_type_repository.find_active_counter(car_class)
-        car_type_active_counter.unregister_active_car()
+        self.car_type_repository.decrement_counter(car_class)
 
     # @Transactional
     def register_active_car(self, car_class: CarType.CarClass) -> None:
-        car_type_active_counter: CarTypeActiveCounter = self.car_type_repository.find_active_counter(car_class)
-        car_type_active_counter.register_active_car()
+        self.car_type_repository.increment_counter(car_class)
 
     # @Transactional
     def find_active_car_classes(self) -> List[CarType.CarClass]:
