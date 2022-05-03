@@ -19,7 +19,7 @@ class TransitRepositoryImp:
         return self.session.query(Transit).where(Transit.id == transit_id).first()
 
     def find_by_client(self, owner: Client) -> List[Transit]:
-        return self.session.query(Transit).filter(Transit.client == owner).all()
+        return self.session.query(Transit).filter(Transit.client_id == owner.id).all()
 
     def find_all_by_driver_and_date_time_between(self, driver: Driver, from_date, to_date) -> List[Transit]:
         return self.session.query(

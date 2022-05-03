@@ -73,7 +73,7 @@ class ClaimService:
         else:
             claim.status = Claim.Status.NEW
         claim.owner = client
-        claim.transit = transit
+        claim.transit_id = transit.id
         claim.creation_date = datetime.now()
         claim.reason = claim_dto.reason
         claim.incident_description = claim_dto.incident_description
@@ -134,6 +134,9 @@ class ClaimService:
                 claim.completion_date = datetime.now()
                 claim.change_date = datetime.now()
                 claim.completion_mode = Claim.CompletionMode.MANUAL
-                self.driver_notification_service.ask_driver_for_details_about_claim(claim.claim_no, claim.owner.id)
+                self.driver_notification_service.ask_driver_for_details_about_claim(
+                    claim.claim_no,
+                    claim.transit.driver.id
+                )
 
         return claim

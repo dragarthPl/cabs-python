@@ -27,3 +27,4 @@ class CarTypeActiveCounter(SQLModel, table=True):
         if not isinstance(o, CarTypeActiveCounter):
             return False
         return self.car_class is not None and self.car_class == o.car_class
+

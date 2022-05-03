@@ -25,12 +25,12 @@ class TestCalculateDriverPeriodicPaymentsIntegration(TestCase):
         # Given
         driver: Driver = self.fixtures.a_driver()
         # and
-        self.fixtures.a_transit(driver, 60, datetime(2000, 10, 1, 6, 30))
-        self.fixtures.a_transit(driver, 70, datetime(2000, 10, 1, 2, 30))
-        self.fixtures.a_transit(driver, 80, datetime(2000, 10, 1, 6, 30))
-        self.fixtures.a_transit(driver, 60, datetime(2000, 11, 1, 1, 30))
-        self.fixtures.a_transit(driver, 30, datetime(2000, 11, 1, 1, 30))
-        self.fixtures.a_transit(driver, 15, datetime(2000, 12, 1, 2, 30))
+        self.fixtures.a_transit_when(driver, 60, datetime(2000, 10, 1, 6, 30))
+        self.fixtures.a_transit_when(driver, 70, datetime(2000, 10, 1, 2, 30))
+        self.fixtures.a_transit_when(driver, 80, datetime(2000, 10, 1, 6, 30))
+        self.fixtures.a_transit_when(driver, 60, datetime(2000, 11, 1, 1, 30))
+        self.fixtures.a_transit_when(driver, 30, datetime(2000, 11, 1, 1, 30))
+        self.fixtures.a_transit_when(driver, 15, datetime(2000, 12, 1, 2, 30))
         # and
         self.fixtures.driver_has_fee(driver, DriverFee.FeeType.FLAT, 10)
 
@@ -53,12 +53,12 @@ class TestCalculateDriverPeriodicPaymentsIntegration(TestCase):
         # Given
         driver: Driver = self.fixtures.a_driver()
         # and
-        self.fixtures.a_transit(driver, 60, datetime(2000, 10, 1, 6, 30))
-        self.fixtures.a_transit(driver, 70, datetime(2000, 10, 10, 2, 30))
-        self.fixtures.a_transit(driver, 80, datetime(2000, 10, 30, 6, 30))
-        self.fixtures.a_transit(driver, 60, datetime(2000, 11, 10, 1, 30))
-        self.fixtures.a_transit(driver, 30, datetime(2000, 11, 10, 1, 30))
-        self.fixtures.a_transit(driver, 15, datetime(2000, 12, 10, 2, 30))
+        self.fixtures.a_transit_when(driver, 60, datetime(2000, 10, 1, 6, 30))
+        self.fixtures.a_transit_when(driver, 70, datetime(2000, 10, 10, 2, 30))
+        self.fixtures.a_transit_when(driver, 80, datetime(2000, 10, 30, 6, 30))
+        self.fixtures.a_transit_when(driver, 60, datetime(2000, 11, 10, 1, 30))
+        self.fixtures.a_transit_when(driver, 30, datetime(2000, 11, 10, 1, 30))
+        self.fixtures.a_transit_when(driver, 15, datetime(2000, 12, 10, 2, 30))
 
         # and
         self.fixtures.driver_has_fee(driver, DriverFee.FeeType.FLAT, 10)
