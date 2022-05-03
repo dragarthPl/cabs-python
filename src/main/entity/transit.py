@@ -147,7 +147,8 @@ class Transit(BaseEntity, table=True):
             self.tariff_km_rate = tariff.km_rate
         if km:
             self.km = km.to_km_in_float()
-        self.set_date_time(data.get("date_time", None))
+        if data.get("date_time", None):
+            self.set_date_time(data.get("date_time", None))
 
     def change_pickup_to(
             self,

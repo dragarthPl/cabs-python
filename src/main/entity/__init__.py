@@ -13,7 +13,7 @@ from .driver_attribute import DriverAttribute
 from .contract import Contract
 from .contract_attachment import ContractAttachment
 from .car_type_active_counter import CarTypeActiveCounter
-
+from .claims_resolver import ClaimsResolver
 
 
 __all__ = [
@@ -30,5 +30,6 @@ __all__ = [
     "ContractAttachment",
     "DriverLicense",
     "Tariff",
-    "CarTypeActiveCounter"
+    "CarTypeActiveCounter",
+    "ClaimsResolver",
 ]
