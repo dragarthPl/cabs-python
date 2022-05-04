@@ -47,6 +47,18 @@ class Claim(BaseEntity, table=True):
     status: Status = Field(sa_column=Column(Enum(Status), nullable=False))
     claim_no: str = Field(sa_column=Column(String, nullable=False))
 
+    def escalate(self) -> None:
+        self.status = Claim.Status.ESCALATED
+        self.completion_date = datetime.now()
+        self.change_date = datetime.now()
+        self.completion_mode = Claim.CompletionMode.MANUAL
+
+    def refund(self) -> None:
+        self.status = Claim.Status.REFUNDED
+        self.completion_date = datetime.now()
+        self.change_date = datetime.now()
+        self.completion_mode = Claim.CompletionMode.AUTOMATIC
+
     def __eq__(self, o):
         if not isinstance(o, Claim):
             return False

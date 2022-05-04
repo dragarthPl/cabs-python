@@ -3,10 +3,11 @@ from datetime import datetime
 from config.app_properties import AppProperties, get_app_properties
 from core.database import get_engine
 from dto.claim_dto import ClaimDTO
-from entity import Client
+from entity import Client, ClaimsResolver
 from entity.claim import Claim
 from fastapi import Depends
 from repository.claim_repository import ClaimRepositoryImp
+from repository.claims_resolver_repository import ClaimsResolverRepositoryImp
 from repository.client_repository import ClientRepositoryImp
 from repository.transit_repository import TransitRepositoryImp
 from service.awards_service import AwardsService
@@ -27,6 +28,7 @@ class ClaimService:
     awards_service: AwardsService
     client_notification_service: ClientNotificationService
     driver_notification_service: DriverNotificationService
+    claims_resolver_repository: ClaimsResolverRepositoryImp
 
     def __init__(
             self,
@@ -38,6 +40,7 @@ class ClaimService:
             awards_service: AwardsService = Depends(AwardsService),
             client_notification_service: ClientNotificationService = Depends(ClientNotificationService),
             driver_notification_service: DriverNotificationService = Depends(DriverNotificationService),
+            claims_resolver_repository: ClaimsResolverRepositoryImp = Depends(ClaimsResolverRepositoryImp)
     ):
         self.client_repository = client_repository
         self.transit_repository = transit_repository
@@ -47,6 +50,7 @@ class ClaimService:
         self.awards_service = awards_service
         self.client_notification_service = client_notification_service
         self.driver_notification_service = driver_notification_service
+        self.claims_resolver_repository = claims_resolver_repository
 
     def create(self, claim_dto: ClaimDTO) -> Claim:
         claim = Claim()
@@ -87,56 +91,30 @@ class ClaimService:
 
     def try_to_automatically_resolve(self, claim_id: int) -> Claim:
         claim = self.find(claim_id)
-        if len(self.claim_repository.find_by_owner_and_transit(claim.owner, claim.transit)) > 1:
-            claim.status = Claim.Status.ESCALATED
-            claim.completion_date = datetime.now()
-            claim.change_date = datetime.now()
-            claim.completion_mode = Claim.CompletionMode.MANUAL
-            return claim
-        if len(self.claim_repository.find_by_owner(claim.owner)) <= 3:
-            claim.status = Claim.Status.REFUNDED
-            claim.completion_date = datetime.now()
-            claim.change_date = datetime.now()
-            claim.completion_mode = Claim.CompletionMode.AUTOMATIC
-            self.client_notification_service.notify_client_about_refund(claim.claim_no, claim.owner.id)
-            return claim
-        if claim.owner.type == Client.Type.VIP:
-            if claim.transit.get_price().to_int() < self.app_properties.automatic_refund_for_vip_threshold:
-                claim.status = Claim.Status.REFUNDED
-                claim.completion_date = datetime.now()
-                claim.change_date = datetime.now()
-                claim.completion_mode = Claim.CompletionMode.AUTOMATIC
-                self.client_notification_service.notify_client_about_refund(claim.claim_no, claim.owner.id)
-                self.awards_service.register_special_miles(claim.owner.id, 10)
-            else:
-                claim.status = Claim.Status.ESCALATED
-                claim.completion_date = datetime.now()
-                claim.change_date = datetime.now()
-                claim.completion_mode = Claim.CompletionMode.MANUAL
-                self.driver_notification_service.ask_driver_for_details_about_claim(
-                    claim.claim_no, claim.transit.driver.id)
-        else:
-            if len(self.transit_repository.find_by_client(claim.owner)) >= self.app_properties.no_of_transits_for_claim_automatic_refund:
-                if claim.transit.get_price().to_int() < self.app_properties.automatic_refund_for_vip_threshold:
-                    claim.status = Claim.Status.REFUNDED
-                    claim.completion_date = datetime.now()
-                    claim.change_date = datetime.now()
-                    claim.completion_mode = Claim.CompletionMode.AUTOMATIC
-                    self.client_notification_service.notify_client_about_refund(claim.claim_no, claim.owner.id)
-                else:
-                    claim.status = Claim.Status.ESCALATED
-                    claim.completion_date = datetime.now()
-                    claim.change_date = datetime.now()
-                    claim.completion_mode = Claim.CompletionMode.MANUAL
-                    self.client_notification_service.ask_for_more_information(claim.claim_no, claim.owner.id)
-            else:
-                claim.status = Claim.Status.ESCALATED
-                claim.completion_date = datetime.now()
-                claim.change_date = datetime.now()
-                claim.completion_mode = Claim.CompletionMode.MANUAL
-                self.driver_notification_service.ask_driver_for_details_about_claim(
-                    claim.claim_no,
-                    claim.transit.driver.id
-                )
 
+        claims_resolver = self.find_or_create_resolver(claim.owner)
+        transits_done_by_client = self.transit_repository.find_by_client(claim.owner)
+        result = claims_resolver.resolve(
+            claim,
+            self.app_properties.automatic_refund_for_vip_threshold,
+            len(transits_done_by_client),
+            self.app_properties.no_of_transits_for_claim_automatic_refund
+        )
+        if result.decision == Claim.Status.REFUNDED:
+            claim.refund()
+            self.client_notification_service.notify_client_about_refund(claim.claim_no, claim.owner.id)
+            if claim.owner.type == Client.Type.VIP:
+                self.awards_service.register_special_miles(claim.owner.id, 10)
+        if result.decision == Claim.Status.ESCALATED:
+            claim.escalate()
+        if result.who_to_ask == ClaimsResolver.WhoToAsk.ASK_DRIVER:
+            self.driver_notification_service.ask_driver_for_details_about_claim(claim.claim_no, claim.transit.driver.id)
+        if result.who_to_ask == ClaimsResolver.WhoToAsk.ASK_CLIENT:
+            self.client_notification_service.ask_for_more_information(claim.claim_no, claim.owner.id)
         return claim
+
+    def find_or_create_resolver(self, client: Client) -> ClaimsResolver:
+        resolver = self.claims_resolver_repository.find_by_client_id(client.id)
+        if resolver is None:
+            resolver = self.claims_resolver_repository.save(ClaimsResolver(client_id=client.id))
+        return resolver
