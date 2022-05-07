@@ -14,6 +14,8 @@ from .contract import Contract
 from .contract_attachment import ContractAttachment
 from .car_type_active_counter import CarTypeActiveCounter
 from .claims_resolver import ClaimsResolver
+from .miles import Miles
+from .constant_until import ConstantUntil
 
 
 __all__ = [
@@ -32,4 +34,6 @@ __all__ = [
     "Tariff",
     "CarTypeActiveCounter",
     "ClaimsResolver",
+    "Miles",
+    "ConstantUntil",
 ]
