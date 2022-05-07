@@ -7,7 +7,7 @@ from mockito import when, verify, mock, ANY, verifyZeroInteractions
 from config.app_properties import AppProperties
 from core.database import create_db_and_tables, drop_db_and_tables
 from entity import Client, Driver, Transit, Claim
-from service.awards_service import AwardsService
+from service.awards_service import AwardsService, AwardsServiceImpl
 from service.claim_service import ClaimService
 from service.client_notification_service import ClientNotificationService
 from service.driver_notification_service import DriverNotificationService
@@ -24,7 +24,7 @@ class TestClaimAutomaticResolvingIntegration(TestCase):
     driver_notification_service: DriverNotificationService = dependency_resolver.resolve_dependency(
         Depends(DriverNotificationService))
 
-    awards_service: AwardsService = dependency_resolver.resolve_dependency(Depends(AwardsService))
+    awards_service: AwardsServiceImpl = dependency_resolver.resolve_dependency(Depends(AwardsServiceImpl))
 
     app_properties: AppProperties = dependency_resolver.resolve_dependency(Depends(AppProperties))
 
@@ -81,7 +81,7 @@ class TestClaimAutomaticResolvingIntegration(TestCase):
         self.assertEquals(Claim.CompletionMode.AUTOMATIC, claim.completion_mode)
         verify(self.claim_service.client_notification_service).notify_client_about_refund(claim.claim_no,
                                                                                           claim.owner.id)
-        verify(self.claim_service.awards_service).register_special_miles(claim.owner.id, 10)
+        verify(self.claim_service.awards_service).register_non_expiring_miles(claim.owner.id, 10)
 
     def test_high_cost_transits_are_escalated_even_when_client_is_vip(self):
         # given

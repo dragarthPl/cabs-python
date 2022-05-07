@@ -32,7 +32,7 @@ class AwardsService(metaclass=abc.ABCMeta):
     def register_miles(self, client_id: int, transit_id: int) -> AwardedMiles:
         raise NotImplementedError
 
-    def register_special_miles(self, client_id: int, miles: int) -> AwardedMiles:
+    def register_non_expiring_miles(self, client_id: int, miles: int) -> AwardedMiles:
         raise NotImplementedError
 
     def remove_miles(self, client_id: int, miles: int) -> None:
@@ -128,7 +128,7 @@ class AwardsServiceImpl(AwardsService):
     def is_sunday(self):
         return datetime.now().weekday() == 6
 
-    def register_special_miles(self, client_id: int, miles: int) -> AwardedMiles:
+    def register_non_expiring_miles(self, client_id: int, miles: int) -> AwardedMiles:
         account = self.account_repository.find_by_client(self.client_repository.get_one(client_id))
 
         if account == None:
@@ -166,24 +166,24 @@ class AwardsServiceImpl(AwardsService):
                 elif client.type == Client.Type.VIP:
                     miles_list = sorted(
                         miles_list,
-                        key=lambda x: (x.is_special, x.expiration_date or datetime.min)
+                        key=lambda x: (x.can_expire(), x.expiration_date or datetime.min)
                     )
                 elif transits_counter >= 15 and self.is_sunday():
                     miles_list = sorted(
                         miles_list,
-                        key=lambda x: (x.is_special, x.expiration_date or datetime.min)
+                        key=lambda x: (x.can_expire(), x.expiration_date or datetime.min)
                     )
                 elif transits_counter >= 15:
                     miles_list = sorted(
                         miles_list,
-                        key=lambda x: (x.is_special, x.date)
+                        key=lambda x: (x.can_expire(), x.date)
                     )
                 else:
                     miles_list = sorted(miles_list, key=lambda x: x.date)
                 for iter in miles_list:
                     if miles <= 0:
                         break
-                    if iter.is_special or iter.expiration_date > datetime.now():
+                    if iter.can_expire() or iter.expiration_date > datetime.now():
                         if iter.miles <= miles:
                             miles -= iter.miles
                             iter.miles = 0
@@ -204,7 +204,7 @@ class AwardsServiceImpl(AwardsService):
             map(
                 lambda t: t.miles,
                 filter(
-                    lambda t: t.expiration_date != None and t.expiration_date > datetime.now() or t.is_special,
+                    lambda t: t.expiration_date != None and t.expiration_date > datetime.now() or t.can_expire(),
                     miles_list
                 )
             ),
@@ -227,7 +227,7 @@ class AwardsServiceImpl(AwardsService):
             miles_list = self.miles_repository.find_all_by_client(from_client)
 
             for iter in miles_list:
-                if iter.is_special or iter.expiration_date > datetime.now():
+                if iter.can_expire() or iter.expiration_date > datetime.now():
                     if iter.miles <= miles:
                         iter.client = account_to.client
                         miles = miles - iter.miles
@@ -236,7 +236,7 @@ class AwardsServiceImpl(AwardsService):
                         _miles = AwardedMiles()
 
                         _miles.client = account_to.client
-                        _miles.is_special = iter.is_special
+                        _miles.is_special = iter.can_expire()
                         _miles.expiration_date = iter.expiration_date
                         _miles.miles = miles
 

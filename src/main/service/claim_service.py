@@ -10,7 +10,7 @@ from repository.claim_repository import ClaimRepositoryImp
 from repository.claims_resolver_repository import ClaimsResolverRepositoryImp
 from repository.client_repository import ClientRepositoryImp
 from repository.transit_repository import TransitRepositoryImp
-from service.awards_service import AwardsService
+from service.awards_service import AwardsService, AwardsServiceImpl
 from service.claim_number_generator import ClaimNumberGenerator
 from service.client_notification_service import ClientNotificationService
 from service.driver_notification_service import DriverNotificationService
@@ -37,7 +37,7 @@ class ClaimService:
             claim_repository: ClaimRepositoryImp = Depends(ClaimRepositoryImp),
             claim_number_generator: ClaimNumberGenerator = Depends(ClaimNumberGenerator),
             app_properties: AppProperties = Depends(get_app_properties),
-            awards_service: AwardsService = Depends(AwardsService),
+            awards_service: AwardsServiceImpl = Depends(AwardsServiceImpl),
             client_notification_service: ClientNotificationService = Depends(ClientNotificationService),
             driver_notification_service: DriverNotificationService = Depends(DriverNotificationService),
             claims_resolver_repository: ClaimsResolverRepositoryImp = Depends(ClaimsResolverRepositoryImp)
@@ -104,7 +104,7 @@ class ClaimService:
             claim.refund()
             self.client_notification_service.notify_client_about_refund(claim.claim_no, claim.owner.id)
             if claim.owner.type == Client.Type.VIP:
-                self.awards_service.register_special_miles(claim.owner.id, 10)
+                self.awards_service.register_non_expiring_miles(claim.owner.id, 10)
         if result.decision == Claim.Status.ESCALATED:
             claim.escalate()
         if result.who_to_ask == ClaimsResolver.WhoToAsk.ASK_DRIVER:

@@ -33,7 +33,7 @@ class TestRemovingAwardMilesIntegration(TestCase):
     def setUp(self):
         create_db_and_tables()
 
-    def test_by_default_remove_oldest_first_even_when_they_are_special(self):
+    def test_by_default_remove_oldest_first_even_when_they_are_non_expiring(self):
         # given
         client = self.client_with_an_active_miles_program(Client.Type.NORMAL)
         # and
@@ -41,7 +41,7 @@ class TestRemovingAwardMilesIntegration(TestCase):
         # and
         middle = self.granted_miles_that_will_expire_in_days(10, 365, self.YESTERDAY, client, transit)
         youngest = self.granted_miles_that_will_expire_in_days(10, 365, self.TODAY, client, transit)
-        oldest_special_miles = self.granted_special_miles(5, self.DAY_BEFORE_YESTERDAY, client)
+        oldest_non_expiring_miles = self.granted_non_expiring_miles(5, self.DAY_BEFORE_YESTERDAY, client)
 
         # when
         with freeze_time(self.DAY_BEFORE_YESTERDAY):
@@ -49,7 +49,7 @@ class TestRemovingAwardMilesIntegration(TestCase):
 
         # then
         awarded_miles = self.awarded_miles_repository.find_all_by_client(client)
-        self.assert_that_miles_were_reduced_to(oldest_special_miles, 0, awarded_miles)
+        self.assert_that_miles_were_reduced_to(oldest_non_expiring_miles, 0, awarded_miles)
         self.assert_that_miles_were_reduced_to(middle, 0, awarded_miles)
         self.assert_that_miles_were_reduced_to(youngest, 9, awarded_miles)
 
@@ -75,7 +75,7 @@ class TestRemovingAwardMilesIntegration(TestCase):
         self.assert_that_miles_were_reduced_to(middle, 5, awarded_miles)
         self.assert_that_miles_were_reduced_to(youngest, 10, awarded_miles)
 
-    def test_should_remove_special_miles_last_when_many_transits(self):
+    def test_should_remove_non_expiring_miles_last_when_many_transits(self):
         # given
         client = self.client_with_an_active_miles_program(Client.Type.NORMAL)
         # and
@@ -84,7 +84,7 @@ class TestRemovingAwardMilesIntegration(TestCase):
         transit = self.fixtures.a_transit_price(Money(80))
 
         regular_miles: AwardedMiles = self.granted_miles_that_will_expire_in_days(10, 365, self.TODAY, client, transit)
-        oldest_special_miles: AwardedMiles = self.granted_special_miles(5, self.DAY_BEFORE_YESTERDAY, client)
+        oldest_non_expiring_miles: AwardedMiles = self.granted_non_expiring_miles(5, self.DAY_BEFORE_YESTERDAY, client)
 
         # when
         with freeze_time(self.DAY_BEFORE_YESTERDAY):
@@ -93,7 +93,7 @@ class TestRemovingAwardMilesIntegration(TestCase):
         # then
         awarded_miles = self.awarded_miles_repository.find_all_by_client(client)
         self.assert_that_miles_were_reduced_to(regular_miles, 0, awarded_miles)
-        self.assert_that_miles_were_reduced_to(oldest_special_miles, 2, awarded_miles)
+        self.assert_that_miles_were_reduced_to(oldest_non_expiring_miles, 2, awarded_miles)
 
     def test_should_remove_soon_to_expire_miles_first_when_client_is_vip(self):
         # given
@@ -108,7 +108,7 @@ class TestRemovingAwardMilesIntegration(TestCase):
             5, 365, self.DAY_BEFORE_YESTERDAY, client, transit)
         first_to_expire: AwardedMiles = self.granted_miles_that_will_expire_in_days(
             15, 30, self.TODAY, client, transit)
-        special_miles: AwardedMiles = self.granted_special_miles(
+        non_expiring: AwardedMiles = self.granted_non_expiring_miles(
             1, self.DAY_BEFORE_YESTERDAY, client)
 
         # when
@@ -117,7 +117,7 @@ class TestRemovingAwardMilesIntegration(TestCase):
 
         # then
         awarded_miles = self.awarded_miles_repository.find_all_by_client(client)
-        self.assert_that_miles_were_reduced_to(special_miles, 1, awarded_miles)
+        self.assert_that_miles_were_reduced_to(non_expiring, 1, awarded_miles)
         self.assert_that_miles_were_reduced_to(first_to_expire, 0, awarded_miles)
         self.assert_that_miles_were_reduced_to(second_to_expire, 4, awarded_miles)
         self.assert_that_miles_were_reduced_to(third_to_expire, 5, awarded_miles)
@@ -136,7 +136,7 @@ class TestRemovingAwardMilesIntegration(TestCase):
             5, 365, self.DAY_BEFORE_YESTERDAY, client, transit)
         first_to_expire: AwardedMiles = self.granted_miles_that_will_expire_in_days(
             15, 10, self.TODAY, client, transit)
-        special_miles: AwardedMiles = self.granted_special_miles(
+        non_expiring: AwardedMiles = self.granted_non_expiring_miles(
             100, self.YESTERDAY, client)
 
         # when
@@ -145,7 +145,7 @@ class TestRemovingAwardMilesIntegration(TestCase):
 
         # then
         awarded_miles = self.awarded_miles_repository.find_all_by_client(client)
-        self.assert_that_miles_were_reduced_to(special_miles, 100, awarded_miles)
+        self.assert_that_miles_were_reduced_to(non_expiring, 100, awarded_miles)
         self.assert_that_miles_were_reduced_to(first_to_expire, 0, awarded_miles)
         self.assert_that_miles_were_reduced_to(second_to_expire, 4, awarded_miles)
         self.assert_that_miles_were_reduced_to(third_to_expire, 5, awarded_miles)
@@ -164,7 +164,7 @@ class TestRemovingAwardMilesIntegration(TestCase):
             10, 365, self.DAY_BEFORE_YESTERDAY, client, transit)
         first_to_expire: AwardedMiles = self.granted_miles_that_will_expire_in_days(
             5, 10, self.YESTERDAY, client, transit)
-        special_miles: AwardedMiles = self.granted_special_miles(
+        non_expiring: AwardedMiles = self.granted_non_expiring_miles(
             10, self.YESTERDAY, client)
 
         # when
@@ -173,7 +173,7 @@ class TestRemovingAwardMilesIntegration(TestCase):
 
         # then
         awarded_miles = self.awarded_miles_repository.find_all_by_client(client)
-        self.assert_that_miles_were_reduced_to(special_miles, 0, awarded_miles)
+        self.assert_that_miles_were_reduced_to(non_expiring, 0, awarded_miles)
         self.assert_that_miles_were_reduced_to(third_to_expire, 0, awarded_miles)
         self.assert_that_miles_were_reduced_to(second_to_expire, 3, awarded_miles)
         self.assert_that_miles_were_reduced_to(first_to_expire, 5, awarded_miles)
@@ -190,10 +190,10 @@ class TestRemovingAwardMilesIntegration(TestCase):
         self.default_miles_bonus_is(miles)
         return self.miles_registered_at(when, client, transit)
 
-    def granted_special_miles(self, miles: int, when: datetime, client: Client) -> AwardedMiles:
+    def granted_non_expiring_miles(self, miles: int, when: datetime, client: Client) -> AwardedMiles:
         self.default_miles_bonus_is(miles)
         with freeze_time(when):
-            return self.awards_service.register_special_miles(client.id, miles)
+            return self.awards_service.register_non_expiring_miles(client.id, miles)
 
     def assert_that_miles_were_reduced_to(
             self,

@@ -32,6 +32,9 @@ class AwardedMiles(BaseEntity, table=True):
         sa_relationship_kwargs=dict(foreign_keys="[AwardedMiles.transit_id]")
     )
 
+    def can_expire(self):
+        return self.is_special
+
     def __eq__(self, o):
         if not isinstance(o, AwardedMiles):
             return False
