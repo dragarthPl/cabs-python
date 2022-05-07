@@ -17,6 +17,7 @@ from repository.address_repository import AddressRepositoryImp
 from repository.client_repository import ClientRepositoryImp
 from repository.driver_fee_repository import DriverFeeRepositoryImp
 from repository.transit_repository import TransitRepositoryImp
+from service.awards_service import AwardsService, AwardsServiceImpl
 from service.car_type_service import CarTypeService
 from service.claim_service import ClaimService
 from service.driver_service import DriverService
@@ -59,6 +60,7 @@ class Fixtures:
     address_repository: AddressRepositoryImp
     car_type_service: CarTypeService
     claim_service: ClaimService
+    awards_service: AwardsServiceImpl
 
     def __init__(
         self,
@@ -69,6 +71,7 @@ class Fixtures:
         address_repository: AddressRepositoryImp = Depends(AddressRepositoryImp),
         car_type_service: CarTypeService = Depends(CarTypeService),
         claim_service: ClaimService = Depends(ClaimService),
+        awards_service: AwardsServiceImpl = Depends(AwardsServiceImpl),
     ):
         self.transit_repository = transit_repository
         self.fee_repository = fee_repository
@@ -77,6 +80,7 @@ class Fixtures:
         self.address_repository = address_repository
         self.car_type_service = car_type_service
         self.claim_service = claim_service
+        self.awards_service = awards_service
 
     def a_client(self) -> Client:
         return self.client_repository.save(Client())
@@ -85,6 +89,12 @@ class Fixtures:
         client = self.a_client()
         client.type = client_type
         return self.client_repository.save(client)
+
+    def a_transit_price(self, price: Money) -> Transit:
+        return self.a_transit_now(
+            self.a_driver(),
+            price.to_int()
+        )
 
     def a_transit(self, driver: Driver, price: int, when: datetime, client: Client) -> Transit:
         transit: Transit = Transit(
@@ -208,3 +218,10 @@ class Fixtures:
         client = self.a_client_with_type(client_type)
         self.client_has_done_claims(client, how_many_claims)
         return client
+
+    def awards_account(self, client: Client) -> None:
+        self.awards_service.register_to_program(client.id)
+
+    def active_awards_account(self, client: Client) -> None:
+        self.awards_account(client)
+        self.awards_service.activate_account(client.id)

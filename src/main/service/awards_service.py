@@ -68,7 +68,7 @@ class AwardsServiceImpl(AwardsService):
 
     def find_by(self, client_id: int) -> AwardsAccountDTO:
         return AwardsAccountDTO(
-            **self.account_repository.find_by_client(self.client_repository.get_one(client_id)).dict()
+            awards_account=self.account_repository.find_by_client(self.client_repository.get_one(client_id))
         )
 
     def register_to_program(self, client_id: int) -> None:
@@ -159,39 +159,27 @@ class AwardsServiceImpl(AwardsService):
                     miles_list = sorted(
                         sorted(
                             miles_list,
-                            key=lambda x: (x.expiration_date, x is None), reverse=True
+                            key=lambda x: x.expiration_date or datetime.max, reverse=True
                         ),
                         key=lambda x: x is None
                     )
-                elif client.client_type == Client.Type.VIP:
+                elif client.type == Client.Type.VIP:
                     miles_list = sorted(
-                        sorted(
-                            miles_list,
-                            key=lambda x: x.is_special, reverse=True
-                        ),
-                        key=lambda x: (x is not None, x.expiration_date)
+                        miles_list,
+                        key=lambda x: (x.is_special, x.expiration_date or datetime.min)
                     )
                 elif transits_counter >= 15 and self.is_sunday():
                     miles_list = sorted(
-                        sorted(
-                            miles_list,
-                            key=lambda x: x.is_special, reverse=True
-                        ),
-                        key=lambda x: (x is not None, x.expiration_date)
+                        miles_list,
+                        key=lambda x: (x.is_special, x.expiration_date or datetime.min)
                     )
                 elif transits_counter >= 15:
                     miles_list = sorted(
-                        sorted(
-                            miles_list,
-                            key=lambda x: x.is_special, reverse=True
-                        ),
-                        key=lambda x: x.date
+                        miles_list,
+                        key=lambda x: (x.is_special, x.date)
                     )
                 else:
-                    miles_list = sorted(
-                        miles_list,
-                        key=lambda x: x.date
-                    )
+                    miles_list = sorted(miles_list, key=lambda x: x.date)
                 for iter in miles_list:
                     if miles <= 0:
                         break

@@ -10,3 +10,4 @@ python-dateutil
 pytest
 tzlocal
 mockito
+freezegun

@@ -13,9 +13,7 @@ class AwardedMilesRepositoryImp:
         self.session = session
 
     def find_all_by_client(self, client: Client) -> List[AwardedMiles]:
-        statement = self.session.query(AwardedMiles).where(AwardedMiles.client.id == client.id)
-        results = self.session.exec(statement)
-        return results.all()
+        return self.session.query(AwardedMiles).where(AwardedMiles.client_id == client.id).all()
 
     def save(self, awarded_miles: AwardedMiles) -> Optional[AwardedMiles]:
         self.session.add(awarded_miles)
