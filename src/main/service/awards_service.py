@@ -77,11 +77,7 @@ class AwardsServiceImpl(AwardsService):
         if client is None:
             raise AttributeError("Client does not exists, id = " + str(client_id))
 
-        account = AwardsAccount()
-        account.client = client
-        account.is_active = False
-        account.date = datetime.now()
-
+        account = AwardsAccount.not_active_account(client, datetime.now())
         self.account_repository.save(account)
 
     def activate_account(self, client_id: int) -> None:
@@ -90,7 +86,7 @@ class AwardsServiceImpl(AwardsService):
         if account is None:
             raise AttributeError("Account does not exists, client_id = " + str(client_id))
 
-        account.is_active = True
+        account.activate()
         self.account_repository.save(account)
 
     def deactivate_account(self, client_id: int) -> None:
@@ -99,7 +95,7 @@ class AwardsServiceImpl(AwardsService):
         if account is None:
             raise AttributeError("Account does not exists, client_id = " + str(client_id))
 
-        account.is_active = False
+        account.deactivate()
         self.account_repository.save(account)
 
     def register_miles(self, client_id: int, transit_id: int) -> AwardedMiles:
@@ -108,21 +104,16 @@ class AwardsServiceImpl(AwardsService):
         if transit is None:
             raise AttributeError("Transit does not exists, id = " + str(transit_id))
 
-        now = datetime.now()
         if account == None or not account.is_active:
             return None
         else:
-            miles = AwardedMiles()
-            miles.transit = transit
-            miles.date = datetime.now()
-            miles.client = account.client
-            miles.set_miles(ConstantUntil.constant_until(
+            expire_at = datetime.now() + relativedelta(days=self.app_properties.miles_expiration_in_days)
+            miles = account.add_expiring_miles(
                 self.app_properties.default_miles_bonus,
-                now + relativedelta(days=self.app_properties.miles_expiration_in_days)
-            ))
-            account.increase_transactions()
-
-            self.miles_repository.save(miles)
+                expire_at,
+                transit,
+                datetime.now()
+            )
             self.account_repository.save(account)
             return miles
 
@@ -135,15 +126,10 @@ class AwardsServiceImpl(AwardsService):
         if account == None:
             raise AttributeError("Account does not exists, client_id = " + str(client_id))
         else:
-            _miles = AwardedMiles()
-            _miles.transit = None
-            _miles.client = account.client
-            _miles.set_miles(ConstantUntil.constant_until_forever(
-                miles
-            ))
-            _miles.date = datetime.now()
-            account.increase_transactions()
-            self.miles_repository.save(_miles)
+            _miles = account.add_non_expiring_miles(
+                miles,
+                datetime.now()
+            )
             self.account_repository.save(account)
             return _miles
 
@@ -154,68 +140,20 @@ class AwardsServiceImpl(AwardsService):
         if account is None:
             raise AttributeError("Account does not exists, client_id = " + str(client_id))
         else:
-            if self.calculate_balance(client_id) >= miles and account.is_active:
-                miles_list = self.miles_repository.find_all_by_client(client)
-                transits_counter = len(self.transit_repository.find_by_client(client))
-                if len(client.claims) >= 3:
-                    miles_list = sorted(
-                        sorted(
-                            miles_list,
-                            key=lambda x: x.get_expiration_date() or datetime.max, reverse=True
-                        ),
-                        key=lambda x: x is None
-                    )
-                elif client.type == Client.Type.VIP:
-                    miles_list = sorted(
-                        miles_list,
-                        key=lambda x: (x.can_expire(), x.get_expiration_date() or datetime.min)
-                    )
-                elif transits_counter >= 15 and self.is_sunday():
-                    miles_list = sorted(
-                        miles_list,
-                        key=lambda x: (x.can_expire(), x.get_expiration_date() or datetime.min)
-                    )
-                elif transits_counter >= 15:
-                    miles_list = sorted(
-                        miles_list,
-                        key=lambda x: (x.can_expire(), x.date)
-                    )
-                else:
-                    miles_list = sorted(miles_list, key=lambda x: x.date)
-                now: datetime = datetime.now()
-                for iter in miles_list:
-                    if miles <= 0:
-                        break
-                    if iter.can_expire() or iter.get_expiration_date() > datetime.now():
-                        miles_amount: int = iter.get_miles_amount(datetime.now())
-                        if miles_amount <= miles:
-                            miles -= miles_amount
-                            iter.remove_all(now)
-                        else:
-                            iter.subtract(miles, now)
-                            miles = 0
-                        self.miles_repository.save(iter)
-            else:
-                raise AttributeError("Insufficient miles, id = " + str(client_id) + ", miles requested = " + str(miles))
+            account.remove(
+                miles,
+                datetime.now(),
+                len(self.transit_repository.find_by_client(client)),
+                len(client.claims),
+                client.type,
+                self.is_sunday()
+            )
 
     def calculate_balance(self, client_id: int) -> int:
         client = self.client_repository.get_one(client_id)
+        account = self.account_repository.find_by_client(client)
 
-        miles_list = self.miles_repository.find_all_by_client(client)
-        now: datetime = datetime.now()
-        sum = reduce(
-            lambda a, b: a + b,
-            map(
-                lambda t: t.get_miles_amount(now),
-                filter(
-                    lambda t: t.get_expiration_date() != None and t.get_expiration_date() > datetime.now() or t.can_expire(),
-                    miles_list
-                )
-            ),
-            0
-        )
-
-        return sum
+        return account.calculate_balance(datetime.now())
 
     def transfer_miles(self, from_client_id: int, to_client_id: int, miles):
         from_client = self.client_repository.get_one(from_client_id)
@@ -228,29 +166,6 @@ class AwardsServiceImpl(AwardsService):
         if account_to is None:
             raise AttributeError("Account does not exists, id = " + str(to_client_id))
 
-        if self.calculate_balance(from_client_id) >= miles and account_from.is_active:
-            miles_list = self.miles_repository.find_all_by_client(from_client)
-
-            for iter in miles_list:
-                if iter.can_expire() or iter.get_expiration_date() > datetime.now():
-                    miles_amount: int = iter.get_miles_amount(now)
-                    if miles_amount <= miles:
-                        iter.client = account_to.client
-                        miles = miles - miles_amount
-                    else:
-                        iter.subtract(miles, now)
-                        _miles = AwardedMiles()
-
-                        _miles.client = account_to.client
-                        _miles.set_miles(iter.get_miles())
-
-                        miles = miles - miles_amount
-
-                        self.miles_repository.save(_miles)
-                    self.miles_repository.save(iter)
-
-            account_from.increase_transactions()
-            account_to.increase_transactions()
-
-            self.account_repository.save(account_from)
-            self.account_repository.save(account_to)
+        account_from.move_miles_to(account_to, miles, now)
+        self.account_repository.save(account_from)
+        self.account_repository.save(account_to)

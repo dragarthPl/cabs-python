@@ -1,6 +1,8 @@
-import json
+from __future__ import annotations
+
+
 from datetime import datetime
-from typing import Optional
+from typing import Optional, Any
 
 from sqlalchemy.orm import relationship
 from sqlmodel import Field, Relationship
@@ -33,10 +35,38 @@ class AwardedMiles(BaseEntity, table=True):
         sa_relationship_kwargs=dict(foreign_keys="[AwardedMiles.transit_id]")
     )
 
+    # @ManyToOne
+    account_id: Optional[int] = Field(default=None, foreign_key="awardsaccount.id")
+    account: AwardsAccount = Relationship(
+        sa_relationship_kwargs=dict(foreign_keys="[AwardedMiles.account_id]")
+    )
+
+    def __init__(
+            self,
+            *,
+            awards_account: AwardsAccount,
+            transit: Transit,
+            client: Client,
+            when: datetime,
+            constant_until: Miles,
+            **data: Any
+    ):
+        super().__init__(**data)
+        self.account = awards_account
+        self.transit = transit
+        self.client = client
+        self.date = when
+        self.__set_miles(constant_until)
+
+    def transfer_to(self, account: AwardsAccount):
+        self.client = account.client
+        self.client_id = account.client.id
+        self.account = account
+
     def get_miles(self) -> Miles:
         return MilesJsonMapper.deserialize(self.miles_json)
 
-    def set_miles(self, miles: Miles):
+    def __set_miles(self, miles: Miles):
         self.miles_json = MilesJsonMapper.serialize(miles)
 
     def get_miles_amount(self, when: datetime) -> int:
@@ -49,10 +79,10 @@ class AwardedMiles(BaseEntity, table=True):
         return self.get_expiration_date() == datetime.max
 
     def remove_all(self, for_when: datetime):
-        self.set_miles(self.get_miles().subtract(self.get_miles_amount(for_when), for_when))
+        self.__set_miles(self.get_miles().subtract(self.get_miles_amount(for_when), for_when))
 
     def subtract(self, miles: int, for_when: datetime):
-        self.set_miles(self.get_miles().subtract(miles, for_when))
+        self.__set_miles(self.get_miles().subtract(miles, for_when))
 
     def __eq__(self, o):
         if not isinstance(o, AwardedMiles):

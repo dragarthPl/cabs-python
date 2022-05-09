@@ -18,6 +18,7 @@ from tests.common.fixtures import DependencyResolver, Fixtures
 
 dependency_resolver = DependencyResolver()
 
+
 class TestRemovingAwardMilesIntegration(TestCase):
     DAY_BEFORE_YESTERDAY = datetime(1989, 12, 12, 12, 12).astimezone(pytz.utc)
     YESTERDAY = DAY_BEFORE_YESTERDAY + relativedelta(days=1)
@@ -204,7 +205,11 @@ class TestRemovingAwardMilesIntegration(TestCase):
         actual = list(
             map(
                 lambda awarded_miles: awarded_miles.get_miles_amount(datetime.min),
-                filter(lambda am: first_to_expire.id == am.id, all_miles)
+                filter(
+                    lambda am: first_to_expire.date == am.date
+                               and first_to_expire.get_expiration_date() == am.get_expiration_date(),
+                    all_miles
+                )
             )
         )
         self.assertEqual(miles_after_reduction, actual[0])

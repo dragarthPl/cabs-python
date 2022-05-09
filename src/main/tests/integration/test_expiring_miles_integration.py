@@ -10,10 +10,8 @@ from config.app_properties import AppProperties
 from core.database import create_db_and_tables, drop_db_and_tables
 from entity import Transit, Client
 from money import Money
-from repository.awarded_miles_repository import AwardedMilesRepositoryImp
 from service.awards_service import AwardsService, AwardsServiceImpl
 
-from service.driver_fee_service import DriverFeeService
 from tests.common.fixtures import DependencyResolver, Fixtures
 
 dependency_resolver = DependencyResolver()
