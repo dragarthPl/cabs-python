@@ -5,9 +5,9 @@ from functools import reduce
 from config.app_properties import AppProperties, get_app_properties
 from dateutil.relativedelta import relativedelta
 from dto.awards_account_dto import AwardsAccountDTO
-from entity import Client
-from entity.awarded_miles import AwardedMiles
-from entity.awards_account import AwardsAccount
+from entity import Client, ConstantUntil
+from entity.miles.awarded_miles import AwardedMiles
+from entity.miles.awards_account import AwardsAccount
 from fastapi import Depends
 from repository.awarded_miles_repository import AwardedMilesRepositoryImp
 from repository.awards_account_repository import AwardsAccountRepositoryImp
@@ -116,9 +116,10 @@ class AwardsServiceImpl(AwardsService):
             miles.transit = transit
             miles.date = datetime.now()
             miles.client = account.client
-            miles.miles = self.app_properties.default_miles_bonus
-            miles.expiration_date = now + relativedelta(days=self.app_properties.miles_expiration_in_days)
-            miles.is_special = False
+            miles.set_miles(ConstantUntil.constant_until(
+                self.app_properties.default_miles_bonus,
+                now + relativedelta(days=self.app_properties.miles_expiration_in_days)
+            ))
             account.increase_transactions()
 
             self.miles_repository.save(miles)
@@ -137,9 +138,10 @@ class AwardsServiceImpl(AwardsService):
             _miles = AwardedMiles()
             _miles.transit = None
             _miles.client = account.client
-            _miles.miles = miles
+            _miles.set_miles(ConstantUntil.constant_until_forever(
+                miles
+            ))
             _miles.date = datetime.now()
-            _miles.is_special = True
             account.increase_transactions()
             self.miles_repository.save(_miles)
             self.account_repository.save(account)
@@ -159,19 +161,19 @@ class AwardsServiceImpl(AwardsService):
                     miles_list = sorted(
                         sorted(
                             miles_list,
-                            key=lambda x: x.expiration_date or datetime.max, reverse=True
+                            key=lambda x: x.get_expiration_date() or datetime.max, reverse=True
                         ),
                         key=lambda x: x is None
                     )
                 elif client.type == Client.Type.VIP:
                     miles_list = sorted(
                         miles_list,
-                        key=lambda x: (x.can_expire(), x.expiration_date or datetime.min)
+                        key=lambda x: (x.can_expire(), x.get_expiration_date() or datetime.min)
                     )
                 elif transits_counter >= 15 and self.is_sunday():
                     miles_list = sorted(
                         miles_list,
-                        key=lambda x: (x.can_expire(), x.expiration_date or datetime.min)
+                        key=lambda x: (x.can_expire(), x.get_expiration_date() or datetime.min)
                     )
                 elif transits_counter >= 15:
                     miles_list = sorted(
@@ -180,15 +182,17 @@ class AwardsServiceImpl(AwardsService):
                     )
                 else:
                     miles_list = sorted(miles_list, key=lambda x: x.date)
+                now: datetime = datetime.now()
                 for iter in miles_list:
                     if miles <= 0:
                         break
-                    if iter.can_expire() or iter.expiration_date > datetime.now():
-                        if iter.miles <= miles:
-                            miles -= iter.miles
-                            iter.miles = 0
+                    if iter.can_expire() or iter.get_expiration_date() > datetime.now():
+                        miles_amount: int = iter.get_miles_amount(datetime.now())
+                        if miles_amount <= miles:
+                            miles -= miles_amount
+                            iter.remove_all(now)
                         else:
-                            iter.miles = iter.miles - miles
+                            iter.subtract(miles, now)
                             miles = 0
                         self.miles_repository.save(iter)
             else:
@@ -198,13 +202,13 @@ class AwardsServiceImpl(AwardsService):
         client = self.client_repository.get_one(client_id)
 
         miles_list = self.miles_repository.find_all_by_client(client)
-
+        now: datetime = datetime.now()
         sum = reduce(
             lambda a, b: a + b,
             map(
-                lambda t: t.miles,
+                lambda t: t.get_miles_amount(now),
                 filter(
-                    lambda t: t.expiration_date != None and t.expiration_date > datetime.now() or t.can_expire(),
+                    lambda t: t.get_expiration_date() != None and t.get_expiration_date() > datetime.now() or t.can_expire(),
                     miles_list
                 )
             ),
@@ -217,6 +221,7 @@ class AwardsServiceImpl(AwardsService):
         from_client = self.client_repository.get_one(from_client_id)
         account_from = self.account_repository.find_by_client(from_client)
         account_to = self.account_repository.find_by_client(self.client_repository.get_one(to_client_id))
+        now: datetime = datetime.now()
 
         if account_from is None:
             raise AttributeError("Account does not exists, id = " + str(from_client_id))
@@ -227,20 +232,19 @@ class AwardsServiceImpl(AwardsService):
             miles_list = self.miles_repository.find_all_by_client(from_client)
 
             for iter in miles_list:
-                if iter.can_expire() or iter.expiration_date > datetime.now():
-                    if iter.miles <= miles:
+                if iter.can_expire() or iter.get_expiration_date() > datetime.now():
+                    miles_amount: int = iter.get_miles_amount(now)
+                    if miles_amount <= miles:
                         iter.client = account_to.client
-                        miles = miles - iter.miles
+                        miles = miles - miles_amount
                     else:
-                        iter.miles = iter.miles - miles
+                        iter.subtract(miles, now)
                         _miles = AwardedMiles()
 
                         _miles.client = account_to.client
-                        _miles.is_special = iter.can_expire()
-                        _miles.expiration_date = iter.expiration_date
-                        _miles.miles = miles
+                        _miles.set_miles(iter.get_miles())
 
-                        miles = miles - iter.miles
+                        miles = miles - miles_amount
 
                         self.miles_repository.save(_miles)
                     self.miles_repository.save(iter)

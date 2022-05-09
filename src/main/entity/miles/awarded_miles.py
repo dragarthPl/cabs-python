@@ -1,3 +1,4 @@
+import json
 from datetime import datetime
 from typing import Optional
 
@@ -6,8 +7,9 @@ from sqlmodel import Field, Relationship
 from sqlalchemy import Column, Integer, DateTime
 
 from common.base_entity import BaseEntity
-from entity import Client
+from entity import Client, Miles
 from entity import Transit
+from entity import MilesJsonMapper
 
 
 class AwardedMiles(BaseEntity, table=True):
@@ -21,19 +23,36 @@ class AwardedMiles(BaseEntity, table=True):
     )
 
     # @Column(nullable = false)
-    miles: int = Field(sa_column=Column(Integer, nullable=False))
-    # @Column(nullable = false)
     date: datetime = Field(default=datetime.now(), sa_column=Column(DateTime, nullable=False))
-    expiration_date: Optional[datetime]
-    is_special: Optional[bool]
+
+    miles_json: str = None
+
     # @ManyToOne
     transit_id: Optional[int] = Field(default=None, foreign_key="transit.id")
     transit: Optional[Transit] = Relationship(
         sa_relationship_kwargs=dict(foreign_keys="[AwardedMiles.transit_id]")
     )
 
+    def get_miles(self) -> Miles:
+        return MilesJsonMapper.deserialize(self.miles_json)
+
+    def set_miles(self, miles: Miles):
+        self.miles_json = MilesJsonMapper.serialize(miles)
+
+    def get_miles_amount(self, when: datetime) -> int:
+        return self.get_miles().get_amount_for(when)
+
+    def get_expiration_date(self) -> datetime:
+        return self.get_miles().expires_at()
+
     def can_expire(self):
-        return self.is_special
+        return self.get_expiration_date() == datetime.max
+
+    def remove_all(self, for_when: datetime):
+        self.set_miles(self.get_miles().subtract(self.get_miles_amount(for_when), for_when))
+
+    def subtract(self, miles: int, for_when: datetime):
+        self.set_miles(self.get_miles().subtract(miles, for_when))
 
     def __eq__(self, o):
         if not isinstance(o, AwardedMiles):

@@ -203,7 +203,7 @@ class TestRemovingAwardMilesIntegration(TestCase):
     ):
         actual = list(
             map(
-                lambda am: am.miles,
+                lambda awarded_miles: awarded_miles.get_miles_amount(datetime.min),
                 filter(lambda am: first_to_expire.id == am.id, all_miles)
             )
         )

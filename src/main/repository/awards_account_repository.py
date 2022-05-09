@@ -2,7 +2,7 @@ from typing import Optional
 
 from core.database import get_session
 from entity import Client
-from entity.awards_account import AwardsAccount
+from entity.miles.awards_account import AwardsAccount
 from fastapi import Depends
 from sqlmodel import Session
 

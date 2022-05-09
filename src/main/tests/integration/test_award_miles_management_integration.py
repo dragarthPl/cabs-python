@@ -79,7 +79,7 @@ class TestAwardMilesManagementIntegration(TestCase):
         self.assertEqual(1, account.transactions)
         awarded_miles = self.awarded_miles_repository.find_all_by_client(client)
         self.assertEqual(1, len(awarded_miles))
-        self.assertEqual(10, awarded_miles[0].miles)
+        self.assertEqual(10, awarded_miles[0].get_miles_amount(self.NOW))
         self.assertFalse(awarded_miles[0].can_expire())
 
     def test_can_register_non_expiring_miles(self):
@@ -96,7 +96,7 @@ class TestAwardMilesManagementIntegration(TestCase):
         self.assertEqual(1, account.transactions)
         awarded_miles = self.awarded_miles_repository.find_all_by_client(client)
         self.assertEqual(1, len(awarded_miles))
-        self.assertEqual(20, awarded_miles[0].miles)
+        self.assertEqual(20, awarded_miles[0].get_miles_amount(self.NOW))
         self.assertTrue(awarded_miles[0].can_expire())
 
     def test_can_calculate_miles_balance(self):
