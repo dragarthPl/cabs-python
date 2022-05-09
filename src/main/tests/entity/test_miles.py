@@ -5,6 +5,7 @@ import pytz
 from dateutil.relativedelta import relativedelta
 
 from entity import Miles, ConstantUntil
+from entity.miles.two_step_expiring_miles import TwoStepExpiringMiles
 
 
 class MilesTest(TestCase):
@@ -69,3 +70,49 @@ class MilesTest(TestCase):
             expiring_miles.subtract(11, self.TODAY)
         with self.assertRaises(AttributeError):
             expiring_miles.subtract(8, self.TOMORROW)
+
+    def test_cannot_subtract_from_two_step_expiring_miles(self):
+        # given
+        expiring_in_two_steps_miles: Miles = TwoStepExpiringMiles(10, self.YESTERDAY, self.TODAY)
+
+        with self.assertRaises(AttributeError):
+            expiring_in_two_steps_miles.subtract(11, self.YESTERDAY)
+        with self.assertRaises(AttributeError):
+            expiring_in_two_steps_miles.subtract(11, self.TODAY)
+        with self.assertRaises(AttributeError):
+            expiring_in_two_steps_miles.subtract(11, self.TOMORROW)
+        with self.assertRaises(AttributeError):
+            expiring_in_two_steps_miles.subtract(2, self.TOMORROW)
+
+    def test_can_subtract_from_two_step_expiring_miles(self):
+        # given
+        two_step_expiring = TwoStepExpiringMiles(10, self.YESTERDAY, self.TODAY)
+
+        # expect
+        self.assertEqual(10, two_step_expiring.get_amount_for(self.YESTERDAY))
+        self.assertEqual(5, two_step_expiring.get_amount_for(self.TODAY))
+        self.assertEqual(0, two_step_expiring.get_amount_for(self.TOMORROW))
+
+    def test_can_subtract_from_two_step_expiring_miles_when_enough_miles(self):
+        # given
+        two_step_expiring_odd = TwoStepExpiringMiles(9, self.YESTERDAY, self.TODAY)
+        two_step_expiring_even = TwoStepExpiringMiles(10, self.YESTERDAY, self.TODAY)
+
+        # expect
+        self.assertEqual(
+            TwoStepExpiringMiles(4, self.YESTERDAY, self.TODAY),
+            two_step_expiring_odd.subtract(5, self.YESTERDAY)
+        )
+        self.assertEqual(
+            TwoStepExpiringMiles(1, self.YESTERDAY, self.TODAY),
+            two_step_expiring_odd.subtract(4, self.TODAY)
+        )
+
+        self.assertEqual(
+            TwoStepExpiringMiles(5, self.YESTERDAY, self.TODAY),
+            two_step_expiring_even.subtract(5, self.YESTERDAY)
+        )
+        self.assertEqual(
+            TwoStepExpiringMiles(0, self.YESTERDAY, self.TODAY),
+            two_step_expiring_even.subtract(5, self.TODAY)
+        )
