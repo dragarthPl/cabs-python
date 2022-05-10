@@ -11,7 +11,7 @@ from config.app_properties import AppProperties
 from core.database import create_db_and_tables, drop_db_and_tables
 from entity import Transit, Client, AwardedMiles
 from money import Money
-from repository.awarded_miles_repository import AwardedMilesRepositoryImp
+from repository.awards_account_repository import AwardsAccountRepositoryImp
 from service.awards_service import AwardsService, AwardsServiceImpl
 
 from tests.common.fixtures import DependencyResolver, Fixtures
@@ -26,8 +26,8 @@ class TestRemovingAwardMilesIntegration(TestCase):
     SUNDAY = datetime(1989, 12, 17, 12, 12).astimezone(pytz.utc)
 
     awards_service: AwardsService = dependency_resolver.resolve_dependency(Depends(AwardsServiceImpl))
-    awarded_miles_repository: AwardedMilesRepositoryImp = dependency_resolver.resolve_dependency(
-        Depends(AwardedMilesRepositoryImp))
+    awards_account_repository: AwardsAccountRepositoryImp = dependency_resolver.resolve_dependency(
+        Depends(AwardsAccountRepositoryImp))
     fixtures: Fixtures = dependency_resolver.resolve_dependency(Depends(Fixtures))
     app_properties: AppProperties = dependency_resolver.resolve_dependency(Depends(AppProperties))
 
@@ -49,7 +49,7 @@ class TestRemovingAwardMilesIntegration(TestCase):
             self.awards_service.remove_miles(client.id, 16)
 
         # then
-        awarded_miles = self.awarded_miles_repository.find_all_by_client(client)
+        awarded_miles = self.awards_account_repository.find_all_miles_by(client)
         self.assert_that_miles_were_reduced_to(oldest_non_expiring_miles, 0, awarded_miles)
         self.assert_that_miles_were_reduced_to(middle, 0, awarded_miles)
         self.assert_that_miles_were_reduced_to(youngest, 9, awarded_miles)
@@ -71,7 +71,7 @@ class TestRemovingAwardMilesIntegration(TestCase):
             self.awards_service.remove_miles(client.id, 15)
 
         # then
-        awarded_miles = self.awarded_miles_repository.find_all_by_client(client)
+        awarded_miles = self.awards_account_repository.find_all_miles_by(client)
         self.assert_that_miles_were_reduced_to(oldest, 0, awarded_miles)
         self.assert_that_miles_were_reduced_to(middle, 5, awarded_miles)
         self.assert_that_miles_were_reduced_to(youngest, 10, awarded_miles)
@@ -92,7 +92,7 @@ class TestRemovingAwardMilesIntegration(TestCase):
             self.awards_service.remove_miles(client.id, 13)
 
         # then
-        awarded_miles = self.awarded_miles_repository.find_all_by_client(client)
+        awarded_miles = self.awards_account_repository.find_all_miles_by(client)
         self.assert_that_miles_were_reduced_to(regular_miles, 0, awarded_miles)
         self.assert_that_miles_were_reduced_to(oldest_non_expiring_miles, 2, awarded_miles)
 
@@ -117,7 +117,7 @@ class TestRemovingAwardMilesIntegration(TestCase):
             self.awards_service.remove_miles(client.id, 21)
 
         # then
-        awarded_miles = self.awarded_miles_repository.find_all_by_client(client)
+        awarded_miles = self.awards_account_repository.find_all_miles_by(client)
         self.assert_that_miles_were_reduced_to(non_expiring, 1, awarded_miles)
         self.assert_that_miles_were_reduced_to(first_to_expire, 0, awarded_miles)
         self.assert_that_miles_were_reduced_to(second_to_expire, 4, awarded_miles)
@@ -145,7 +145,7 @@ class TestRemovingAwardMilesIntegration(TestCase):
             self.awards_service.remove_miles(client.id, 21)
 
         # then
-        awarded_miles = self.awarded_miles_repository.find_all_by_client(client)
+        awarded_miles = self.awards_account_repository.find_all_miles_by(client)
         self.assert_that_miles_were_reduced_to(non_expiring, 100, awarded_miles)
         self.assert_that_miles_were_reduced_to(first_to_expire, 0, awarded_miles)
         self.assert_that_miles_were_reduced_to(second_to_expire, 4, awarded_miles)
@@ -173,7 +173,7 @@ class TestRemovingAwardMilesIntegration(TestCase):
             self.awards_service.remove_miles(client.id, 21)
 
         # then
-        awarded_miles = self.awarded_miles_repository.find_all_by_client(client)
+        awarded_miles = self.awards_account_repository.find_all_miles_by(client)
         self.assert_that_miles_were_reduced_to(non_expiring, 0, awarded_miles)
         self.assert_that_miles_were_reduced_to(third_to_expire, 0, awarded_miles)
         self.assert_that_miles_were_reduced_to(second_to_expire, 3, awarded_miles)

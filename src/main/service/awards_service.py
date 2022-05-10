@@ -9,7 +9,6 @@ from entity import Client, ConstantUntil
 from entity.miles.awarded_miles import AwardedMiles
 from entity.miles.awards_account import AwardsAccount
 from fastapi import Depends
-from repository.awarded_miles_repository import AwardedMilesRepositoryImp
 from repository.awards_account_repository import AwardsAccountRepositoryImp
 from repository.client_repository import ClientRepositoryImp
 from repository.transit_repository import TransitRepositoryImp
@@ -47,7 +46,6 @@ class AwardsService(metaclass=abc.ABCMeta):
 
 class AwardsServiceImpl(AwardsService):
     account_repository: AwardsAccountRepositoryImp
-    miles_repository: AwardedMilesRepositoryImp
     client_repository: ClientRepositoryImp
     transit_repository: TransitRepositoryImp
     app_properties: AppProperties
@@ -55,13 +53,11 @@ class AwardsServiceImpl(AwardsService):
     def __init__(
             self,
             account_repository: AwardsAccountRepositoryImp = Depends(AwardsAccountRepositoryImp),
-            miles_repository: AwardedMilesRepositoryImp = Depends(AwardedMilesRepositoryImp),
             client_repository: ClientRepositoryImp = Depends(ClientRepositoryImp),
             transit_repository: TransitRepositoryImp = Depends(TransitRepositoryImp),
             app_properties: AppProperties = Depends(get_app_properties)
     ):
         self.account_repository = account_repository
-        self.miles_repository = miles_repository
         self.client_repository = client_repository
         self.transit_repository = transit_repository
         self.app_properties = app_properties

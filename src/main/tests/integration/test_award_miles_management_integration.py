@@ -5,7 +5,7 @@ import pytz
 from fastapi.params import Depends
 from core.database import create_db_and_tables, drop_db_and_tables
 from money import Money
-from repository.awarded_miles_repository import AwardedMilesRepositoryImp
+from repository.awards_account_repository import AwardsAccountRepositoryImp
 from service.awards_service import AwardsService, AwardsServiceImpl
 
 from tests.common.fixtures import DependencyResolver, Fixtures
@@ -16,8 +16,8 @@ class TestAwardMilesManagementIntegration(TestCase):
     NOW = datetime(1989, 12, 12, 12, 12).astimezone(pytz.utc)
 
     awards_service: AwardsService = dependency_resolver.resolve_dependency(Depends(AwardsServiceImpl))
-    awarded_miles_repository: AwardedMilesRepositoryImp = dependency_resolver.resolve_dependency(
-        Depends(AwardedMilesRepositoryImp))
+    awards_account_repository: AwardsAccountRepositoryImp = dependency_resolver.resolve_dependency(
+        Depends(AwardsAccountRepositoryImp))
     fixtures: Fixtures = dependency_resolver.resolve_dependency(Depends(Fixtures))
 
     def setUp(self):
@@ -77,7 +77,7 @@ class TestAwardMilesManagementIntegration(TestCase):
         # then
         account = self.awards_service.find_by(client.id)
         self.assertEqual(1, account.transactions)
-        awarded_miles = self.awarded_miles_repository.find_all_by_client(client)
+        awarded_miles = self.awards_account_repository.find_all_miles_by(client)
         self.assertEqual(1, len(awarded_miles))
         self.assertEqual(10, awarded_miles[0].get_miles_amount(self.NOW))
         self.assertFalse(awarded_miles[0].can_expire())
@@ -94,7 +94,7 @@ class TestAwardMilesManagementIntegration(TestCase):
         # then
         account = self.awards_service.find_by(client.id)
         self.assertEqual(1, account.transactions)
-        awarded_miles = self.awarded_miles_repository.find_all_by_client(client)
+        awarded_miles = self.awards_account_repository.find_all_miles_by(client)
         self.assertEqual(1, len(awarded_miles))
         self.assertEqual(20, awarded_miles[0].get_miles_amount(self.NOW))
         self.assertTrue(awarded_miles[0].can_expire())

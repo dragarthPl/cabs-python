@@ -2,7 +2,7 @@ from __future__ import annotations
 
 from datetime import datetime
 from functools import reduce
-from typing import Optional, Set, Any
+from typing import Optional, Set, Any, List
 
 from entity import Client, ConstantUntil, AwardedMiles
 from sqlalchemy import Boolean, Column, DateTime, Integer
@@ -156,3 +156,6 @@ class AwardsAccount(BaseEntity, table=True):
         if not isinstance(o, AwardsAccount):
             return False
         return self.id is not None and self.id == o.id
+
+    def get_miles(self) -> List[AwardedMiles]:
+        return list(self.miles)
