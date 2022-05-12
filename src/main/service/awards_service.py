@@ -1,6 +1,8 @@
 import abc
+import sys
 from datetime import datetime
 from functools import reduce
+from typing import Callable
 
 from config.app_properties import AppProperties, get_app_properties
 from dateutil.relativedelta import relativedelta
@@ -139,11 +141,26 @@ class AwardsServiceImpl(AwardsService):
             account.remove(
                 miles,
                 datetime.now(),
-                len(self.transit_repository.find_by_client(client)),
-                len(client.claims),
-                client.type,
-                self.is_sunday()
+                self.choose_strategy(
+                    len(self.transit_repository.find_by_client(client)),
+                    len(client.claims),
+                    client.type,
+                    self.is_sunday()
+                )
             )
+
+    def choose_strategy(
+            self, transits_counter: int, claims_counter: int, client_type: Client.Type, is_sunday: bool) -> Callable:
+        if claims_counter >= 3:
+            return lambda x: (x is None, -x.get_expiration_date().timestamp() or -sys.maxsize)
+        elif client_type == Client.Type.VIP:
+            return lambda x: (x.can_expire(), x.get_expiration_date() or datetime.min)
+        elif transits_counter >= 15 and is_sunday:
+            return lambda x: (x.can_expire(), x.get_expiration_date() or datetime.min)
+        elif transits_counter >= 15:
+            return lambda x: (x.can_expire(), x.date)
+        else:
+            return lambda x: x.date
 
     def calculate_balance(self, client_id: int) -> int:
         client = self.client_repository.get_one(client_id)
