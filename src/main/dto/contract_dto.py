@@ -19,6 +19,8 @@ class ContractDTO(BaseModel):
     attachments: List[ContractAttachmentDTO]
 
     def __init__(self, *, contract: Contract = None, **data: Any):
+        if "attachments" not in data:
+            data["attachments"] = []
         if contract is not None:
             data.update(**contract.dict())
         super().__init__(**data)

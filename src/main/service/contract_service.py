@@ -31,13 +31,13 @@ class ContractService:
     def accept_contract(self, contract_id: int):
         contract = self.find(contract_id)
         attachments = self.contract_attachment_repository.find_by_contract(contract)
-        if all(map(lambda x: x.status == ContractAttachment.Status.ACCEPTED_BY_ONE_SIDE, attachments)):
+        if all(map(lambda x: x.status == ContractAttachment.Status.ACCEPTED_BY_BOTH_SIDES, attachments)):
             contract.status = Contract.Status.ACCEPTED
         else:
             raise AttributeError("Not all attachments accepted by both sides")
         self.contract_repository.save(contract)
 
-    def reject_contract(self, contract_id):
+    def reject_contract(self, contract_id: int):
         contract = self.find(contract_id)
         contract.status = Contract.Status.REJECTED
         self.contract_repository.save(contract)
@@ -47,7 +47,7 @@ class ContractService:
         contract_attachment.status = ContractAttachment.Status.REJECTED
         self.contract_attachment_repository.save(contract_attachment)
 
-    def accept_attachment(self, contract_id, attachment_id):
+    def accept_attachment(self, attachment_id: int):
         contract_attachment = self.contract_attachment_repository.get_one(attachment_id)
         if contract_attachment.status == ContractAttachment.Status.ACCEPTED_BY_ONE_SIDE or \
                 contract_attachment.status == ContractAttachment.Status.ACCEPTED_BY_BOTH_SIDES:
@@ -71,10 +71,9 @@ class ContractService:
         contract_attachment.contract = contract
         contract_attachment.data = contract_attachment_dto.data
         self.contract_attachment_repository.save(contract_attachment)
-        contract.attachments.append(contract_attachment)
         return ContractAttachmentDTO(**contract_attachment.dict())
 
-    def remove_attachment(self, attachment_id: int):
+    def remove_attachment(self, contract_id: int, attachment_id: int):
         # //TODO sprawdzenie czy nalezy do kontraktu (JIRA: II-14455)
         self.contract_attachment_repository.delete_by_id(attachment_id)
 
