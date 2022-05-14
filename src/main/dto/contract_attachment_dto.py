@@ -1,7 +1,7 @@
 from datetime import datetime
-from typing import List, Optional, Any
+from typing import Optional, Any
 
-from entity.contract_attachment import ContractAttachment
+from entity import ContractAttachment
 from pydantic import BaseModel
 
 

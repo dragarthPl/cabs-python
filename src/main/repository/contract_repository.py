@@ -1,5 +1,7 @@
 from typing import List, Optional
 
+from sqlalchemy import text
+
 from core.database import get_session
 from entity import Contract
 from fastapi import Depends
@@ -20,6 +22,15 @@ class ContractRepositoryImp:
 
     def find_by_partner_name(self, partner_name: str) -> List[Contract]:
         return self.session.query(Contract).where(Contract.partner_name == partner_name).all()
+
+    def find_by_attachment_id(self, attachment_id: int) -> Contract:
+        stmt = text(
+            "SELECT c.id, c.partner_name, c.subject, c.creation_date, c.accepted_at, c.rejected_at, c.change_date,"
+            " c.status, c.contract_no"
+            " FROM contract as c JOIN ContractAttachment AS ca ON ca.contract_id = c.id WHERE ca.id = :attachment_id")
+        return self.session.query(Contract).from_statement(stmt).params(
+            attachment_id=attachment_id
+        ).one_or_none()
 
     def get_one(self, contract_id: int) -> Optional[Contract]:
         return self.session.query(Contract).filter(Contract.id == contract_id).first()

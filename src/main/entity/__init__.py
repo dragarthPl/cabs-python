@@ -13,8 +13,8 @@ from .miles.awarded_miles import AwardedMiles
 from .driver_fee import DriverFee
 from .driver import Driver
 from .driver_attribute import DriverAttribute
-from .contract import Contract
 from .contract_attachment import ContractAttachment
+from .contract import Contract
 from .car_type_active_counter import CarTypeActiveCounter
 from .claims_resolver import ClaimsResolver
 

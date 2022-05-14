@@ -1,15 +1,20 @@
+from __future__ import annotations
+
 import enum
 from datetime import datetime
 from typing import Optional
 
-from entity import Contract
+# from entity import Contract
 from sqlalchemy import Column, DateTime, Enum, LargeBinary
+from sqlalchemy.orm import relationship
 from sqlmodel import Field, Relationship
 
 from common.base_entity import BaseEntity
 
 
 class ContractAttachment(BaseEntity, table=True):
+    __table_args__ = {'extend_existing': True}
+
     class Status(enum.Enum):
         PROPOSED = 1
         ACCEPTED_BY_ONE_SIDE = 2
@@ -30,7 +35,8 @@ class ContractAttachment(BaseEntity, table=True):
     # @ManyToOne
     contract_id: Optional[int] = Field(default=None, foreign_key="contract.id")
     contract: Optional[Contract] = Relationship(
-        sa_relationship_kwargs=dict(foreign_keys="[ContractAttachment.contract_id]")
+        sa_relationship=relationship(
+            "entity.contract.Contract", back_populates="attachments"),
     )
 
     def __eq__(self, o):

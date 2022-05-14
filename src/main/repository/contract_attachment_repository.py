@@ -1,4 +1,4 @@
-from typing import List, Optional
+from typing import List, Optional, Set
 
 from core.database import get_session
 from entity import Contract, ContractAttachment
@@ -25,5 +25,5 @@ class ContractAttachmentRepositoryImp:
         # TODO sprawdzenie czy nalezy do kontraktu (JIRA: II-14455)
         self.session.query(ContractAttachment).filter(ContractAttachment.id == attachment_id).delete()
 
-    def find_by_contract(self, contract: Contract) -> List[ContractAttachment]:
-        return self.session.query(ContractAttachment).where(ContractAttachment.contract_id == contract.id).all()
+    def find_by_contract_id(self, contract_id: int) -> Set[ContractAttachment]:
+        return self.session.query(ContractAttachment).where(ContractAttachment.contract_id == contract_id).all()

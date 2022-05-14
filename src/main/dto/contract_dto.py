@@ -1,7 +1,8 @@
 from datetime import datetime
-from typing import List, Optional, Any
+from typing import List, Optional, Any, Set
 
 from dto.contract_attachment_dto import ContractAttachmentDTO
+from entity import ContractAttachment
 from entity.contract import Contract
 from pydantic import BaseModel
 
@@ -18,14 +19,13 @@ class ContractDTO(BaseModel):
     contract_no: Optional[str]
     attachments: List[ContractAttachmentDTO]
 
-    def __init__(self, *, contract: Contract = None, **data: Any):
+    def __init__(self, *, contract: Contract = None, attachments: Set[ContractAttachment] = None, **data: Any):
         if "attachments" not in data:
             data["attachments"] = []
         if contract is not None:
             data.update(**contract.dict())
         super().__init__(**data)
-        if contract is not None:
-            if contract.attachments:
-                self.attachments = []
-                for attachment in contract.attachments:
-                    self.attachments.append(ContractAttachmentDTO(**attachment.dict()))
+        if attachments:
+            self.attachments = []
+            for attachment in attachments:
+                self.attachments.append(ContractAttachmentDTO(**attachment.dict()))
