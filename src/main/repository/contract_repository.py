@@ -1,3 +1,4 @@
+import uuid as uuid_pkg
 from typing import List, Optional
 
 from sqlalchemy import text
@@ -31,6 +32,14 @@ class ContractRepositoryImp:
         return self.session.query(Contract).from_statement(stmt).params(
             attachment_id=attachment_id
         ).one_or_none()
+
+    def find_contract_attachment_no_by_id(self, attachment_id: int) -> Optional[uuid_pkg.UUID]:
+        stmt = text(
+            "SELECT c.contract_attachment_no FROM ContractAttachment AS c WHERE c.id = :attachment_id"
+        )
+        stmt = stmt.params(attachment_id=attachment_id)
+        result = self.session.execute(stmt).one_or_none()
+        return uuid_pkg.UUID(result[0]) if result else None
 
     def get_one(self, contract_id: int) -> Optional[Contract]:
         return self.session.query(Contract).filter(Contract.id == contract_id).first()

@@ -89,31 +89,6 @@ class AwardsAccount(BaseEntity, table=True):
     ) -> None:
         if self.calculate_balance(when) >= miles and self.is_active:
             miles_list = list(self.miles)
-            # if claims_counter >= 3:
-            #     miles_list = sorted(
-            #         sorted(
-            #             miles_list,
-            #             key=lambda x: x.get_expiration_date() or datetime.max, reverse=True
-            #         ),
-            #         key=lambda x: x is None
-            #     )
-            # elif client_type == Client.Type.VIP:
-            #     miles_list = sorted(
-            #         miles_list,
-            #         key=lambda x: (x.can_expire(), x.get_expiration_date() or datetime.min)
-            #     )
-            # elif transits_counter >= 15 and is_sunday:
-            #     miles_list = sorted(
-            #         miles_list,
-            #         key=lambda x: (x.can_expire(), x.get_expiration_date() or datetime.min)
-            #     )
-            # elif transits_counter >= 15:
-            #     miles_list = sorted(
-            #         miles_list,
-            #         key=lambda x: (x.can_expire(), x.date)
-            #     )
-            # else:
-            #     miles_list = sorted(miles_list, key=lambda x: x.date)
             miles_list.sort(key=strategy)
             for iter in miles_list:
                 if miles <= 0:

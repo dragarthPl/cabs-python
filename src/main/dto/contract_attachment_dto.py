@@ -1,7 +1,7 @@
 from datetime import datetime
 from typing import Optional, Any
 
-from entity import ContractAttachment
+from entity import ContractAttachment, ContractAttachmentData
 from pydantic import BaseModel
 
 
@@ -15,5 +15,15 @@ class ContractAttachmentDTO(BaseModel):
     change_date: Optional[datetime]
     status: Optional[ContractAttachment.Status]
 
-    def __init__(self, **data: Any):
-        super().__init__(**data)
+    def __init__(self, *, attachment: ContractAttachment = None, data: ContractAttachmentData = None, **kwargs: Any):
+        super().__init__(**kwargs)
+        if data is not None:
+            self.data = data.data
+            self.creation_date = data.creation_date
+        if attachment is not None:
+            self.id = attachment.id
+            self.contract_id = attachment.contract_id
+            self.rejected_at = attachment.rejected_at
+            self.accepted_at = attachment.accepted_at
+            self.change_date = attachment.change_date
+            self.status = attachment.status

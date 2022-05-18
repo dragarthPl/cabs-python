@@ -1,10 +1,11 @@
 from __future__ import annotations
 
 import enum
+import uuid as uuid_pkg
+
 from datetime import datetime
 from typing import Optional
 
-# from entity import Contract
 from sqlalchemy import Column, DateTime, Enum, LargeBinary
 from sqlalchemy.orm import relationship
 from sqlmodel import Field, Relationship
@@ -21,12 +22,11 @@ class ContractAttachment(BaseEntity, table=True):
         ACCEPTED_BY_BOTH_SIDES = 3
         REJECTED = 4
 
-    # @Lob
-    # @Column(name = "data", columnDefinition="BLOB")
-    data: bytes = Field(sa_column=Column('data', LargeBinary))
+    contract_attachment_no: uuid_pkg.UUID = Field(
+        default_factory=uuid_pkg.uuid4,
+        nullable=False,
+    )
 
-    # @Column(nullable = false)
-    creation_date: datetime = Field(default=datetime.now(), sa_column=Column(DateTime, nullable=False))
     accepted_at: Optional[datetime]
     rejected_at: Optional[datetime]
     change_date: Optional[datetime]

@@ -1,9 +1,7 @@
 from datetime import datetime
-from decimal import Decimal
 from unittest import TestCase
 
 from distance.distance import Distance
-from dto.address_dto import AddressDTO
 from entity import Transit, Client, Driver, Address
 
 

@@ -240,5 +240,4 @@ class TestAwardMilesManagementIntegration(TestCase):
         # then
         self.assertEqual(current_miles, self.awards_service.calculate_balance(client.id))
 
-    def tearDown(self) -> None:
-        drop_db_and_tables()
+

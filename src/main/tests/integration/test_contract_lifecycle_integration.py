@@ -7,7 +7,7 @@ from dto.contract_attachment_dto import ContractAttachmentDTO
 from dto.contract_dto import ContractDTO
 from entity import Contract, ContractAttachment
 from service.contract_service import ContractService
-from tests.common.fixtures import DependencyResolver, Fixtures
+from tests.common.fixtures import DependencyResolver
 
 dependency_resolver = DependencyResolver()
 

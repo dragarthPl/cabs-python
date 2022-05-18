@@ -1,6 +1,8 @@
 from __future__ import annotations
 
 import enum
+import uuid as uuid_pkg
+
 from datetime import datetime
 from typing import Set, Optional, Any
 
@@ -43,11 +45,17 @@ class Contract(BaseEntity, table=True):
         self.subject = subject
         self.contract_no = contract_no
 
-    def propose_attachment(self, data: bytes):
+    def get_attachment_ids(self):
+        return list(
+            map(
+                lambda contract_attachment: contract_attachment.contract_attachment_no,
+                self.attachments
+            )
+        )
+
+    def propose_attachment(self):
         contract_attachment = ContractAttachment()
-        contract_attachment.data = data
         contract_attachment.contract = self
-        self.attachments.append(contract_attachment)
         return contract_attachment
 
     def accept(self):
@@ -59,21 +67,29 @@ class Contract(BaseEntity, table=True):
     def reject(self):
         self.status = Contract.Status.REJECTED
 
-    def accept_attachment(self, attachment_id: int):
-        contract_attachment = self.find_attachment(attachment_id)
+    def accept_attachment(self, contract_attachment_no: uuid_pkg.UUID):
+        contract_attachment = self.find_attachment(contract_attachment_no)
         if contract_attachment.status == ContractAttachment.Status.ACCEPTED_BY_ONE_SIDE or \
                 contract_attachment.status == ContractAttachment.Status.ACCEPTED_BY_BOTH_SIDES:
             contract_attachment.status = ContractAttachment.Status.ACCEPTED_BY_BOTH_SIDES
         else:
             contract_attachment.status = ContractAttachment.Status.ACCEPTED_BY_ONE_SIDE
 
-    def reject_attachment(self, attachment_id: int) -> None:
-        contract_attachment = self.find_attachment(attachment_id)
+    def reject_attachment(self, contract_attachment_no: uuid_pkg.UUID) -> None:
+        contract_attachment = self.find_attachment(contract_attachment_no)
         contract_attachment.status = ContractAttachment.Status.REJECTED
 
-    def find_attachment(self, attachment_id: int) -> Optional[ContractAttachment]:
+    def remove(self, contract_attachment_no: uuid_pkg.UUID):
+        self.attachments = list(
+            filter(
+                lambda attachment: attachment.contract_attachment_no != contract_attachment_no,
+                self.attachments
+            )
+        )
+
+    def find_attachment(self, attachment_no: uuid_pkg.UUID) -> Optional[ContractAttachment]:
         for attachment in self.attachments:
-            if attachment.id == attachment_id:
+            if attachment.contract_attachment_no.int == attachment_no.int:
                 return attachment
         return None
 
