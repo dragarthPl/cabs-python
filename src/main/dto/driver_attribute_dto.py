@@ -1,4 +1,4 @@
-from typing import Optional
+from typing import Optional, Any
 
 from entity import DriverAttribute
 from pydantic import BaseModel
@@ -7,6 +7,12 @@ from pydantic import BaseModel
 class DriverAttributeDTO(BaseModel):
     name: Optional[DriverAttribute.DriverAttributeName]
     value: Optional[str]
+
+    def __init__(self, *, driver_attribute: DriverAttribute = None, **data: Any):
+        super().__init__(**data)
+        if driver_attribute:
+            self.name = driver_attribute.name
+            self.value = driver_attribute.value
 
     def __eq__(self, o):
         if o is None or not isinstance(o, DriverAttributeDTO):

@@ -1,6 +1,8 @@
 from datetime import datetime
 from typing import List, Optional
 
+from sqlalchemy import desc
+
 from core.database import get_session
 from entity import Driver, CarType
 from entity.driver_session import DriverSession
@@ -52,8 +54,8 @@ class DriverSessionRepositoryImp:
         ).where(
             DriverSession.logged_out_at == None
         ).order_by(
-            DriverSession.logged_at
-        ).desc().first()
+            desc(DriverSession.logged_at)
+        ).first()
 
     def find_by_driver(self, driver: Driver) -> List[DriverSession]:
         return self.session.query(DriverSession).where(DriverSession.driver_id == driver.id).all()

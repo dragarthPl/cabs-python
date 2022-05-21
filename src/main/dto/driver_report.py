@@ -1,4 +1,4 @@
-from typing import Dict, List, Optional
+from typing import Dict, List, Optional, Any
 
 from dto.driver_attribute_dto import DriverAttributeDTO
 from dto.driver_dto import DriverDTO
@@ -11,3 +11,21 @@ class DriverReport(BaseModel):
     driver_dto: Optional[DriverDTO]
     attributes: List[DriverAttributeDTO]
     sessions: Dict[DriverSessionDTO, List[TransitDTO]]
+
+    def __init__(
+            self,
+            *,
+            driver_dto: Optional[DriverDTO] = None,
+            attributes: List[DriverAttributeDTO] = None,
+            sessions: Dict[DriverSessionDTO, List[TransitDTO]] = None,
+            **data: Any
+    ):
+        attributes = attributes or []
+        sessions = sessions or {}
+        data['attributes'] = attributes
+        data['sessions'] = sessions
+        super().__init__(**data)
+        self.driver_dto = driver_dto
+        self.attributes = attributes
+        self.sessions = sessions
+

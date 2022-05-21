@@ -77,6 +77,7 @@ class ClaimService:
         else:
             claim.status = Claim.Status.NEW
         claim.owner = client
+        claim.owner_id = client.id
         claim.transit_id = transit.id
         claim.creation_date = datetime.now()
         claim.reason = claim_dto.reason

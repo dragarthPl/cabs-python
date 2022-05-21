@@ -32,3 +32,10 @@ class DriverAttribute(SQLModel, table=True):
         sa_relationship=relationship(
             "entity.driver.Driver", back_populates="attributes")
     )
+
+    def __init__(self, *, driver, name: DriverAttributeName, value: str, **data: Any):
+        super().__init__(**data)
+        self.driver = driver
+        self.driver_id = driver.id
+        self.name = name
+        self.value = value

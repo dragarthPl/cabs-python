@@ -3,6 +3,7 @@ from typing import Optional
 
 from dateutil.relativedelta import relativedelta
 from dto.claim_dto import ClaimDTO
+from dto.driver_attribute_dto import DriverAttributeDTO
 from dto.driver_report import DriverReport
 from dto.driver_session_dto import DriverSessionDTO
 from dto.transit_dto import TransitDTO
@@ -31,8 +32,8 @@ class DriverReportController:
         driver_dto = self.driver_service.load_driver(driver_id)
         driver_report.driver_dto = driver_dto
         driver = self.driver_repository.get_one(driver_id)
-        [driver_report.attributes.append(attr) for attr in filter(
-            lambda attr: not attr == DriverAttribute.DriverAttributeName.MEDICAL_EXAMINATION_REMARKS,
+        [driver_report.attributes.append(DriverAttributeDTO(driver_attribute=attr)) for attr in filter(
+            lambda attr: not attr.name == DriverAttribute.DriverAttributeName.MEDICAL_EXAMINATION_REMARKS,
             driver.attributes
         )]
         begging_of_today = datetime.now().replace(hour=0, minute=0, second=0, microsecond=0)
@@ -42,14 +43,14 @@ class DriverReportController:
         for session in all_by_driver_and_logged_at_after:
             dto = DriverSessionDTO(**session.dict())
             transits_in_session = list(filter(
-                lambda t: t.status == Transit.Status.COMPLETED and not t.completed_at < session.logged_at and not t.completed_at > session.logged_out_at,
+                lambda t: t.status == Transit.Status.COMPLETED and not t.complete_at < session.logged_at and not t.complete_at > session.logged_out_at,
                 driver.transits
             ))
             transits_dtos_in_session = []
             for t in transits_in_session:
                 transit_dto = TransitDTO(transit=t)
                 by_owner_and_transit = self.claim_repository.find_by_owner_and_transit(t.client, t)
-                if not by_owner_and_transit:
+                if by_owner_and_transit is not None:
                     claim = ClaimDTO(**by_owner_and_transit[0].dict())
                     transit_dto.claim_dto = claim
                 transits_dtos_in_session.append(transit_dto)

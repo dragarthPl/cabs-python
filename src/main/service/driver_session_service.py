@@ -46,7 +46,7 @@ class DriverSessionService:
         )
         if session != None:
             session.logged_out_at = datetime.now()
-            self.car_type_service.unregister_car(session.car_type)
+            self.car_type_service.unregister_car(session.car_class)
 
     def find_by_driver(self, driver_id):
         return self.driver_session_repository.find_by_driver(self.driver_repository.get_one(driver_id))

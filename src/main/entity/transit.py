@@ -133,14 +133,16 @@ class Transit(BaseEntity, table=True):
             status = data.pop("status")
         super().__init__(**data)
         self.status = status
-        if "price" in data:
+        if data.get("price"):
             self.set_price(data["price"])
-        if "estimated_price" in data:
+        if data.get("estimated_price"):
             self.set_estimated_price(data["estimated_price"])
-        if "drivers_fee" in data:
+        if data.get("drivers_fee"):
             self.set_price(data["drivers_fee"])
-        if "distance" in data:
+        if data.get("distance"):
             self.km = data["distance"].to_km_in_float()
+        if data.get("client"):
+            self.client_id = data["client"].id
         if tariff:
             self.tariff_name = tariff.name
             self.tariff_base_fee = tariff.base_fee
