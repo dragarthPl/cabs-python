@@ -37,7 +37,7 @@ class TestClaimAutomaticResolvingIntegration(TestCase):
         # given
         self.low_cost_threshold_is(40)
         # and
-        driver: Driver = self.fixtures.a_driver()
+        driver: Driver = self.fixtures.an_acitve_regular_driver()
         # and
         client: Client = self.fixtures.a_client_with_type(Client.Type.VIP)
         # and
@@ -65,7 +65,7 @@ class TestClaimAutomaticResolvingIntegration(TestCase):
         # and
         client: Client = self.fixtures.a_client_with_claims(Client.Type.VIP, 3)
         # and
-        driver = self.fixtures.a_driver()
+        driver = self.fixtures.an_acitve_regular_driver()
         # and
         transit: Transit = self.a_transit(client, driver, 39)
         # and
@@ -89,7 +89,7 @@ class TestClaimAutomaticResolvingIntegration(TestCase):
         # and
         client: Client = self.fixtures.a_client_with_claims(Client.Type.VIP, 3)
         # and
-        driver = self.fixtures.a_driver()
+        driver = self.fixtures.an_acitve_regular_driver()
         # and
         transit: Transit = self.a_transit(client, driver, 50)
         # and
@@ -116,7 +116,7 @@ class TestClaimAutomaticResolvingIntegration(TestCase):
         # and
         client: Client = self.a_client(Client.Type.NORMAL)
         # and
-        driver = self.fixtures.a_driver()
+        driver = self.fixtures.an_acitve_regular_driver()
 
         # when
         self.claim_service.awards_service = mock()
@@ -167,7 +167,7 @@ class TestClaimAutomaticResolvingIntegration(TestCase):
         # and
         self.fixtures.client_has_done_transits(client, 12)
         # and
-        transit: Transit = self.a_transit(client, self.fixtures.a_driver(), 39)
+        transit: Transit = self.a_transit(client, self.fixtures.an_acitve_regular_driver(), 39)
         # and
         claim = self.fixtures.create_claim(client, transit)
 
@@ -193,7 +193,7 @@ class TestClaimAutomaticResolvingIntegration(TestCase):
         # and
         self.fixtures.client_has_done_transits(client, 12)
         # and
-        transit: Transit = self.a_transit(client, self.fixtures.a_driver(), 50)
+        transit: Transit = self.a_transit(client, self.fixtures.an_acitve_regular_driver(), 50)
         # and
         claim = self.fixtures.create_claim(client, transit)
 
@@ -219,7 +219,7 @@ class TestClaimAutomaticResolvingIntegration(TestCase):
         # and
         self.fixtures.client_has_done_transits(client, 2)
         # and
-        driver: Driver = self.fixtures.a_driver()
+        driver: Driver = self.fixtures.an_acitve_regular_driver()
         # and
         claim = self.fixtures.create_claim(client, self.a_transit(client, driver, 50))
 

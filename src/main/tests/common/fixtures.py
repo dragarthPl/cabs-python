@@ -11,10 +11,11 @@ from dto.car_type_dto import CarTypeDTO
 from dto.claim_dto import ClaimDTO
 from dto.client_dto import ClientDTO
 from dto.transit_dto import TransitDTO
-from entity import Driver, Transit, DriverFee, Address, Client, CarType, Claim
+from entity import Driver, Transit, DriverFee, Address, Client, CarType, Claim, DriverAttribute
 from money import Money
 from repository.address_repository import AddressRepositoryImp
 from repository.client_repository import ClientRepositoryImp
+from repository.driver_attribute_repository import DriverAttributeRepositoryImp
 from repository.driver_fee_repository import DriverFeeRepositoryImp
 from repository.transit_repository import TransitRepositoryImp
 from service.awards_service import AwardsService, AwardsServiceImpl
@@ -61,6 +62,7 @@ class Fixtures:
     car_type_service: CarTypeService
     claim_service: ClaimService
     awards_service: AwardsServiceImpl
+    driver_attribute_repository: DriverAttributeRepositoryImp
 
     def __init__(
         self,
@@ -72,6 +74,7 @@ class Fixtures:
         car_type_service: CarTypeService = Depends(CarTypeService),
         claim_service: ClaimService = Depends(ClaimService),
         awards_service: AwardsServiceImpl = Depends(AwardsServiceImpl),
+        driver_attribute_repository: DriverAttributeRepositoryImp = Depends(DriverAttributeRepositoryImp),
     ):
         self.transit_repository = transit_repository
         self.fee_repository = fee_repository
@@ -81,6 +84,7 @@ class Fixtures:
         self.car_type_service = car_type_service
         self.claim_service = claim_service
         self.awards_service = awards_service
+        self.driver_attribute_repository = driver_attribute_repository
 
     def a_client(self) -> Client:
         return self.client_repository.save(Client())
@@ -92,7 +96,7 @@ class Fixtures:
 
     def a_transit_price(self, price: Money) -> Transit:
         return self.a_transit_now(
-            self.a_driver(),
+            self.an_acitve_regular_driver(),
             price.to_int()
         )
 
@@ -127,18 +131,26 @@ class Fixtures:
     def driver_has_fee(self, driver: Driver, fee_type: DriverFee.FeeType, amount: int) -> DriverFee:
         return self.driver_has_min_fee(driver, fee_type, amount, 0)
 
-    def a_driver(self) -> Driver:
-        return self.driver_service.create_driver(
-            "FARME100165AB5EW",
-            "Kowalsi",
-            "Janusz",
-            Driver.Type.REGULAR,
+    def an_acitve_regular_driver(self) -> Driver:
+        return self.a_driver(
             Driver.Status.ACTIVE,
+            "Janusz",
+            "Kowalsi",
+            "FARME100165AB5EW",
+        )
+
+    def a_driver(self, status: Driver.Status, name: str, last_name: str, driver_license: str) -> Driver:
+        return self.driver_service.create_driver(
+            driver_license,
+            last_name,
+            name,
+            Driver.Type.REGULAR,
+            status,
             "",
         )
 
     def a_completed_transit_at(self, price: int, when: datetime):
-        return self._a_completed_transit_at(price, when, self.a_client(), self.a_driver())
+        return self._a_completed_transit_at(price, when, self.a_client(), self.an_acitve_regular_driver())
 
     def _a_completed_transit_at(self, price: int, when: datetime, client: Client, driver: Driver):
         destination = self.address_repository.save(
@@ -186,11 +198,17 @@ class Fixtures:
     def client_has_done_transits(self, client: Client, no_of_transits: int):
         for _ in range(1, no_of_transits + 1):
            self.transit_repository.save(
-                self._a_completed_transit_at(10, datetime.now(), client, self.a_driver())
+                self._a_completed_transit_at(10, datetime.now(), client, self.an_acitve_regular_driver())
            )
 
     def create_claim(self, client: Client, transit: Transit) -> Claim:
         claim_dto = self.claim_dto("Okradli mnie na hajs", "$$$", client.id, transit.id)
+        claim_dto.is_draft = False
+        claim = self.claim_service.create(claim_dto)
+        return claim
+
+    def create_claim_reason(self, client: Client, transit: Transit, reason: str) -> Claim:
+        claim_dto = self.claim_dto("Okradli mnie na hajs", reason, client.id, transit.id)
         claim_dto.is_draft = False
         claim = self.claim_service.create(claim_dto)
         return claim
@@ -210,7 +228,7 @@ class Fixtures:
 
     def client_has_done_claims(self, client: Client, how_many: int) -> None:
         [
-            self.create_and_resolve_claim(client, self.a_transit(self.a_driver(), 20, datetime.now(), client))
+            self.create_and_resolve_claim(client, self.a_transit(self.an_acitve_regular_driver(), 20, datetime.now(), client))
             for _ in range(1, how_many + 1)
         ]
 
@@ -225,3 +243,6 @@ class Fixtures:
     def active_awards_account(self, client: Client) -> None:
         self.awards_account(client)
         self.awards_service.activate_account(client.id)
+
+    def driver_has_attribute(self, driver: Driver, name: DriverAttribute.DriverAttributeName, value: str):
+        self.driver_attribute_repository.save(DriverAttribute(driver=driver, name=name, value=value))

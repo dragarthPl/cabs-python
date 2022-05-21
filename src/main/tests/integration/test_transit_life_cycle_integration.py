@@ -424,7 +424,7 @@ class TestTransitLifeCycleIntegration(TestCase):
         return address_dto
 
     def a_nearby_driver(self, plate_number: str) -> int:
-        driver = self.fixtures.a_driver()
+        driver = self.fixtures.an_acitve_regular_driver()
         self.fixtures.driver_has_fee(driver, DriverFee.FeeType.FLAT, 10)
         self.driver_session_service.log_in(driver.id, plate_number, CarType.CarClass.VAN, "BRAND")
         self.driver_tracking_service.register_position(driver.id, 1, 1)
@@ -436,7 +436,7 @@ class TestTransitLifeCycleIntegration(TestCase):
         )
 
     def a_far_away_driver(self, plate_number: str) -> int:
-        driver = self.fixtures.a_driver()
+        driver = self.fixtures.an_acitve_regular_driver()
         self.fixtures.driver_has_fee(driver, DriverFee.FeeType.FLAT, 10)
         self.driver_session_service.log_in(driver.id, plate_number, CarType.CarClass.VAN, "BRAND")
         self.driver_tracking_service.register_position(driver.id, 1000, 1000)

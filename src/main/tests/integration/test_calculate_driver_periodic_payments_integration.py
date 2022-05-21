@@ -23,7 +23,7 @@ class TestCalculateDriverPeriodicPaymentsIntegration(TestCase):
 
     def test_calculate_monthly_payment(self):
         # Given
-        driver: Driver = self.fixtures.a_driver()
+        driver: Driver = self.fixtures.an_acitve_regular_driver()
         # and
         self.fixtures.a_transit_when(driver, 60, datetime(2000, 10, 1, 6, 30))
         self.fixtures.a_transit_when(driver, 70, datetime(2000, 10, 1, 2, 30))
@@ -51,7 +51,7 @@ class TestCalculateDriverPeriodicPaymentsIntegration(TestCase):
 
     def test_calculate_yearly_payment(self):
         # Given
-        driver: Driver = self.fixtures.a_driver()
+        driver: Driver = self.fixtures.an_acitve_regular_driver()
         # and
         self.fixtures.a_transit_when(driver, 60, datetime(2000, 10, 1, 6, 30))
         self.fixtures.a_transit_when(driver, 70, datetime(2000, 10, 10, 2, 30))
