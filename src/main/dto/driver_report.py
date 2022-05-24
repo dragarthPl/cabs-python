@@ -6,6 +6,8 @@ from dto.driver_session_dto import DriverSessionDTO
 from dto.transit_dto import TransitDTO
 from pydantic import BaseModel
 
+from entity import DriverAttribute
+
 
 class DriverReport(BaseModel):
     driver_dto: Optional[DriverDTO]
@@ -28,4 +30,7 @@ class DriverReport(BaseModel):
         self.driver_dto = driver_dto
         self.attributes = attributes
         self.sessions = sessions
+
+    def add_attr(self, name: DriverAttribute.DriverAttributeName, value: str):
+        self.attributes.append(DriverAttributeDTO(name=name, value=value))
 

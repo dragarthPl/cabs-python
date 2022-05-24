@@ -46,6 +46,8 @@ class TransitDTO(BaseModel):
     def __init__(self, *, transit: Transit = None, **data: Any):
         if transit is not None:
             data.update(**transit.dict())
+        if "proposed_drivers" in data:
+            data["proposed_drivers"] = data["proposed_drivers"] or []
         super().__init__(**data)
         self.factor = 1
         if transit is not None:
@@ -69,9 +71,9 @@ class TransitDTO(BaseModel):
             if transit.date_time:
                 self.date = transit.date_time
             self.distance = transit.get_km()
-            self.set_tariff(transit)
+            self.__set_tariff(transit)
 
-    def set_tariff(self, transit: Transit) -> None:
+    def __set_tariff(self, transit: Transit) -> None:
         # wprowadzenie nowych cennikow od 1.01.2019
         self.tariff = transit.get_tariff().name
         self.km_rate = transit.get_tariff().km_rate

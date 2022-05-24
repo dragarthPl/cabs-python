@@ -151,6 +151,8 @@ class Transit(BaseEntity, table=True):
             self.km = km.to_km_in_float()
         if data.get("date_time", None):
             self.set_date_time(data.get("date_time", None))
+        if data.get("car_class"):
+            self.car_type = data["car_class"]
 
     def change_pickup_to(
             self,

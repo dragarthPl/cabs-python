@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import enum
+import hashlib
 import uuid as uuid_pkg
 
 from datetime import datetime
@@ -43,3 +44,15 @@ class ContractAttachment(BaseEntity, table=True):
         if not isinstance(o, ContractAttachment):
             return False
         return self.id is not None and self.id == o.id
+
+    def __hash__(self):
+        m = hashlib.md5()
+        for s in (
+                self.id,
+                self.accepted_at,
+                self.rejected_at,
+                self.change_date,
+                self.status,
+        ):
+            m.update(str(s).encode('utf-8'))
+        return int(m.hexdigest(), 16)

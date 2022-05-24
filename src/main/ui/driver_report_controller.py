@@ -15,6 +15,7 @@ from repository.claim_repository import ClaimRepositoryImp
 from repository.driver_repository import DriverRepositoryImp
 from repository.driver_session_repository import DriverSessionRepositoryImp
 from service.driver_service import DriverService
+from ui.sql_based_driver_report_creator import SqlBasedDriverReportCreator
 
 driver_report_router = InferringRouter(tags=["DriverReportController"])
 
@@ -25,35 +26,8 @@ class DriverReportController:
     driver_repository: DriverRepositoryImp = Depends(DriverRepositoryImp)
     claim_repository: ClaimRepositoryImp = Depends(ClaimRepositoryImp)
     driver_session_repository: DriverSessionRepositoryImp = Depends(DriverSessionRepositoryImp)
+    sql_based_driver_report_creator: SqlBasedDriverReportCreator = Depends(SqlBasedDriverReportCreator)
 
     @driver_report_router.get("/driverreport/{driver_id}")
     def load_report_for_driver(self, driver_id: int, last_days: Optional[int] = 0) -> DriverReport:
-        driver_report = DriverReport()
-        driver_dto = self.driver_service.load_driver(driver_id)
-        driver_report.driver_dto = driver_dto
-        driver = self.driver_repository.get_one(driver_id)
-        [driver_report.attributes.append(DriverAttributeDTO(driver_attribute=attr)) for attr in filter(
-            lambda attr: not attr.name == DriverAttribute.DriverAttributeName.MEDICAL_EXAMINATION_REMARKS,
-            driver.attributes
-        )]
-        begging_of_today = datetime.now().replace(hour=0, minute=0, second=0, microsecond=0)
-        since = begging_of_today - relativedelta(days=last_days)
-        all_by_driver_and_logged_at_after = self.driver_session_repository.find_all_by_driver_and_logged_at_after(driver, since)
-        sessions_with_transits = {}
-        for session in all_by_driver_and_logged_at_after:
-            dto = DriverSessionDTO(**session.dict())
-            transits_in_session = list(filter(
-                lambda t: t.status == Transit.Status.COMPLETED and not t.complete_at < session.logged_at and not t.complete_at > session.logged_out_at,
-                driver.transits
-            ))
-            transits_dtos_in_session = []
-            for t in transits_in_session:
-                transit_dto = TransitDTO(transit=t)
-                by_owner_and_transit = self.claim_repository.find_by_owner_and_transit(t.client, t)
-                if by_owner_and_transit is not None:
-                    claim = ClaimDTO(**by_owner_and_transit[0].dict())
-                    transit_dto.claim_dto = claim
-                transits_dtos_in_session.append(transit_dto)
-            sessions_with_transits[dto] = transits_dtos_in_session
-        driver_report.sessions = sessions_with_transits
-        return driver_report
+        return self.sql_based_driver_report_creator.create_report(driver_id, last_days)

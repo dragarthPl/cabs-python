@@ -27,6 +27,7 @@ from service.geocoding_service import GeocodingService
 from service.transit_service import TransitService
 from tests.common.fixtures import DependencyResolver, Fixtures
 from ui.driver_report_controller import DriverReportController
+from ui.sql_based_driver_report_creator import SqlBasedDriverReportCreator
 
 dependency_resolver = DependencyResolver()
 
@@ -46,6 +47,7 @@ class TestCreateDriverReportIntegration(TestCase):
         driver_repository=dependency_resolver.resolve_dependency(Depends(DriverRepositoryImp)),
         claim_repository=dependency_resolver.resolve_dependency(Depends(ClaimRepositoryImp)),
         driver_session_repository=dependency_resolver.resolve_dependency(Depends(DriverSessionRepositoryImp)),
+        sql_based_driver_report_creator=dependency_resolver.resolve_dependency(Depends(SqlBasedDriverReportCreator)),
     )
     address_repository: AddressRepositoryImp = dependency_resolver.resolve_dependency(Depends(AddressRepositoryImp))
     geocoding_service: GeocodingService = dependency_resolver.resolve_dependency(Depends(GeocodingService))
