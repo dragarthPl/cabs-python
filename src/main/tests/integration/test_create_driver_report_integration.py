@@ -26,8 +26,8 @@ from service.driver_tracking_service import DriverTrackingService
 from service.geocoding_service import GeocodingService
 from service.transit_service import TransitService
 from tests.common.fixtures import DependencyResolver, Fixtures
-from ui.driver_report_controller import DriverReportController
-from ui.sql_based_driver_report_creator import SqlBasedDriverReportCreator
+from driverreport.driver_report_controller import DriverReportController
+from driverreport.sql_based_driver_report_creator import SqlBasedDriverReportCreator
 
 dependency_resolver = DependencyResolver()
 
