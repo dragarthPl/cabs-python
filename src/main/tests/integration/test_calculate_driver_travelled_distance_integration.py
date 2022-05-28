@@ -3,7 +3,6 @@ from unittest import TestCase
 
 import pytz
 from dateutil.relativedelta import relativedelta
-from freezegun import freeze_time
 
 from fastapi.params import Depends
 from core.database import create_db_and_tables, drop_db_and_tables
@@ -40,75 +39,73 @@ class TestCalculateDriverTravelledDistanceIntegration(TestCase):
         # given
         driver = self.fixtures.an_acitve_regular_driver()
         # and
-        with freeze_time(self.NOON):
-            self.driver_tracking_service.register_position(driver.id, 53.32055555555556, -1.7297222222222221)
+        self.driver_tracking_service.register_position(driver.id, 53.32055555555556, -1.7297222222222221, self.NOON)
 
-            # when
-            distance = self.driver_tracking_service.calculate_travelled_distance(driver.id, self.NOON, self.NOON_FIVE)
+        # when
+        distance = self.driver_tracking_service.calculate_travelled_distance(driver.id, self.NOON, self.NOON_FIVE)
 
-            # then
-            self.assertEqual("0km", distance.print_in("km"))
+        # then
+        self.assertEqual("0km", distance.print_in("km"))
 
     def test_can_calculate_travelled_distance_from_short_transit(self):
         # given
         driver = self.fixtures.an_acitve_regular_driver()
         # and
-        with freeze_time(self.NOON):
-            self.driver_tracking_service.register_position(driver.id, 53.32055555555556, -1.7297222222222221)
-            self.driver_tracking_service.register_position(driver.id, 53.31861111111111, -1.6997222222222223)
-            self.driver_tracking_service.register_position(driver.id, 53.32055555555556, -1.7297222222222221)
+        self.driver_tracking_service.register_position(driver.id, 53.32055555555556, -1.7297222222222221, self.NOON)
+        self.driver_tracking_service.register_position(driver.id, 53.31861111111111, -1.6997222222222223, self.NOON)
+        self.driver_tracking_service.register_position(driver.id, 53.32055555555556, -1.7297222222222221, self.NOON)
 
-            # when
-            distance = self.driver_tracking_service.calculate_travelled_distance(driver.id, self.NOON, self.NOON_FIVE)
+        # when
+        distance = self.driver_tracking_service.calculate_travelled_distance(driver.id, self.NOON, self.NOON_FIVE)
 
-            # then
-            self.assertEqual("4.009km", distance.print_in("km"))
+        # then
+        self.assertEqual("4.009km", distance.print_in("km"))
 
     def test_can_calculate_travelled_distance_from_long_transit(self):
         # given
         driver = self.fixtures.an_acitve_regular_driver()
         # and
-        with freeze_time(self.NOON):
-            # and
-            self.driver_tracking_service.register_position(driver.id, 53.32055555555556, -1.7297222222222221)
-            self.driver_tracking_service.register_position(driver.id, 53.31861111111111, -1.6997222222222223)
-            self.driver_tracking_service.register_position(driver.id, 53.32055555555556, -1.7297222222222221)
+        self.driver_tracking_service.register_position(driver.id, 53.32055555555556, -1.7297222222222221, self.NOON)
+        self.driver_tracking_service.register_position(driver.id, 53.31861111111111, -1.6997222222222223, self.NOON)
+        self.driver_tracking_service.register_position(driver.id, 53.32055555555556, -1.7297222222222221, self.NOON)
         # and
-        with freeze_time(self.NOON_FIVE):
-            self.driver_tracking_service.register_position(driver.id, 53.32055555555556, -1.7297222222222221)
-            self.driver_tracking_service.register_position(driver.id, 53.31861111111111, -1.6997222222222223)
-            self.driver_tracking_service.register_position(driver.id, 53.32055555555556, -1.7297222222222221)
+        self.driver_tracking_service.register_position(
+            driver.id, 53.32055555555556, -1.7297222222222221, self.NOON_FIVE)
+        self.driver_tracking_service.register_position(
+            driver.id, 53.31861111111111, -1.6997222222222223, self.NOON_FIVE)
+        self.driver_tracking_service.register_position(
+            driver.id, 53.32055555555556, -1.7297222222222221, self.NOON_FIVE)
 
-            # when
-            distance = self.driver_tracking_service.calculate_travelled_distance(driver.id, self.NOON, self.NOON_FIVE)
+        # when
+        distance = self.driver_tracking_service.calculate_travelled_distance(driver.id, self.NOON, self.NOON_FIVE)
 
-            # then
-            self.assertEqual("8.017km", distance.print_in("km"))
+        # then
+        self.assertEqual("8.017km", distance.print_in("km"))
 
     def test_can_calculate_travelled_distance_with_multiple_breaks(self):
         # given
         driver = self.fixtures.an_acitve_regular_driver()
         # and
-        with freeze_time(self.NOON):
-            self.driver_tracking_service.register_position(driver.id, 53.32055555555556, -1.7297222222222221)
-            self.driver_tracking_service.register_position(driver.id, 53.31861111111111, -1.6997222222222223)
-            self.driver_tracking_service.register_position(driver.id, 53.32055555555556, -1.7297222222222221)
+        self.driver_tracking_service.register_position(driver.id, 53.32055555555556, -1.7297222222222221, self.NOON)
+        self.driver_tracking_service.register_position(driver.id, 53.31861111111111, -1.6997222222222223, self.NOON)
+        self.driver_tracking_service.register_position(driver.id, 53.32055555555556, -1.7297222222222221, self.NOON)
         # and
-        with freeze_time(self.NOON_FIVE):
-            self.driver_tracking_service.register_position(driver.id, 53.32055555555556, -1.7297222222222221)
-            self.driver_tracking_service.register_position(driver.id, 53.31861111111111, -1.6997222222222223)
-            self.driver_tracking_service.register_position(driver.id, 53.32055555555556, -1.7297222222222221)
+        self.driver_tracking_service.register_position(
+            driver.id, 53.32055555555556, -1.7297222222222221, self.NOON_FIVE)
+        self.driver_tracking_service.register_position(
+            driver.id, 53.31861111111111, -1.6997222222222223, self.NOON_FIVE)
+        self.driver_tracking_service.register_position(
+            driver.id, 53.32055555555556, -1.7297222222222221, self.NOON_FIVE)
         # and
-        with freeze_time(self.NOON_TEN):
-            self.driver_tracking_service.register_position(driver.id, 53.32055555555556, -1.7297222222222221)
-            self.driver_tracking_service.register_position(driver.id, 53.31861111111111, -1.6997222222222223)
-            self.driver_tracking_service.register_position(driver.id, 53.32055555555556, -1.7297222222222221)
+        self.driver_tracking_service.register_position(driver.id, 53.32055555555556, -1.7297222222222221, self.NOON_TEN)
+        self.driver_tracking_service.register_position(driver.id, 53.31861111111111, -1.6997222222222223, self.NOON_TEN)
+        self.driver_tracking_service.register_position(driver.id, 53.32055555555556, -1.7297222222222221, self.NOON_TEN)
 
-            # when
-            distance = self.driver_tracking_service.calculate_travelled_distance(driver.id, self.NOON, self.NOON_TEN)
+        # when
+        distance = self.driver_tracking_service.calculate_travelled_distance(driver.id, self.NOON, self.NOON_TEN)
 
-            # then
-            self.assertEqual("12.026km", distance.print_in("km"))
+        # then
+        self.assertEqual("12.026km", distance.print_in("km"))
 
     def tearDown(self) -> None:
         drop_db_and_tables()

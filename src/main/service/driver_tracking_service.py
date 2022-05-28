@@ -24,7 +24,7 @@ class DriverTrackingService:
         self.driver_repository = driver_repository
         self.distance_calculator = distance_calculator
 
-    def register_position(self, driver_id: int, latitude: float, longitude: float) -> DriverPosition:
+    def register_position(self, driver_id: int, latitude: float, longitude: float, seen_at: datetime) -> DriverPosition:
         driver = self.driver_repository.get_one(driver_id)
         if driver is None:
             raise AttributeError(("Driver does not exists, id = " + str(driver_id)))
@@ -33,7 +33,7 @@ class DriverTrackingService:
 
         position = DriverPosition()
         position.driver = driver
-        position.seen_at = datetime.now()
+        position.seen_at = seen_at
         position.latitude = latitude
         position.longitude = longitude
         return self.position_repository.save(position)

@@ -142,7 +142,7 @@ class TestCreateDriverReportIntegration(TestCase):
         with freeze_time(when):
             driver_id = driver.id
             self.driver_session_service.log_in(driver_id, plate_number, car_class, car_brand)
-            self.driver_tracking_service.register_position(driver_id, 10, 20)
+            self.driver_tracking_service.register_position(driver_id, 10, 20, datetime.now())
             address_to = self.address("PL", "MAZ", "WAW", "STREET", 100, 10.01, 20.01)
             transit = self.transit_service.create_transit_transaction(
                 client.id,

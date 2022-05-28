@@ -1,3 +1,4 @@
+from datetime import datetime
 from decimal import Decimal
 from unittest import TestCase
 from unittest.mock import ANY
@@ -427,7 +428,7 @@ class TestTransitLifeCycleIntegration(TestCase):
         driver = self.fixtures.an_acitve_regular_driver()
         self.fixtures.driver_has_fee(driver, DriverFee.FeeType.FLAT, 10)
         self.driver_session_service.log_in(driver.id, plate_number, CarType.CarClass.VAN, "BRAND")
-        self.driver_tracking_service.register_position(driver.id, 1, 1)
+        self.driver_tracking_service.register_position(driver.id, 1, 1, datetime.now())
         return driver.id
 
     def request_transit_from_to(self, pickup: AddressDTO, destination: AddressDTO) -> Transit:
@@ -439,7 +440,7 @@ class TestTransitLifeCycleIntegration(TestCase):
         driver = self.fixtures.an_acitve_regular_driver()
         self.fixtures.driver_has_fee(driver, DriverFee.FeeType.FLAT, 10)
         self.driver_session_service.log_in(driver.id, plate_number, CarType.CarClass.VAN, "BRAND")
-        self.driver_tracking_service.register_position(driver.id, 1000, 1000)
+        self.driver_tracking_service.register_position(driver.id, 1000, 1000, datetime.now())
         return driver.id
 
     def tearDown(self) -> None:

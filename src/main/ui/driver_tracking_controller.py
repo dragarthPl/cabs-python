@@ -18,7 +18,8 @@ class DriverTrackingController:
         driver_position = self.tracking_service.register_position(
             driver_position_dto.driver_id,
             driver_position_dto.latitude,
-            driver_position_dto.longitude
+            driver_position_dto.longitude,
+            driver_position_dto.seen_at
         )
 
         return self.__to_dto(driver_position)
