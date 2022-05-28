@@ -43,11 +43,7 @@ class TestCreateDriverReportIntegration(TestCase):
     car_type_service: CarTypeService = dependency_resolver.resolve_dependency(Depends(CarTypeService))
     fixtures: Fixtures = dependency_resolver.resolve_dependency(Depends(Fixtures))
     driver_report_controller: DriverReportController = DriverReportController(
-        driver_service=dependency_resolver.resolve_dependency(Depends(DriverService)),
-        driver_repository=dependency_resolver.resolve_dependency(Depends(DriverRepositoryImp)),
-        claim_repository=dependency_resolver.resolve_dependency(Depends(ClaimRepositoryImp)),
-        driver_session_repository=dependency_resolver.resolve_dependency(Depends(DriverSessionRepositoryImp)),
-        sql_based_driver_report_creator=dependency_resolver.resolve_dependency(Depends(SqlBasedDriverReportCreator)),
+        driver_report_creator=dependency_resolver.resolve_dependency(Depends(SqlBasedDriverReportCreator)),
     )
     address_repository: AddressRepositoryImp = dependency_resolver.resolve_dependency(Depends(AddressRepositoryImp))
     geocoding_service: GeocodingService = dependency_resolver.resolve_dependency(Depends(GeocodingService))
