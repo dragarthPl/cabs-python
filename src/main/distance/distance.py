@@ -50,3 +50,9 @@ class Distance(BaseModel):
         m.update(str(self.km).encode('utf-8'))
 
         return int(m.hexdigest(), 16)
+
+    def to_string(self) -> str:
+        return f"Distance{{km={self.km}}}"
+
+    def __str__(self) -> str:
+        return self.to_string()

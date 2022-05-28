@@ -31,8 +31,8 @@ class DriverPositionRepositoryImp:
         ).where(
             DriverPosition.seen_at <= to_position
         ).order_by(
-            DriverPosition.seen_at
-        ).asc().all()
+            DriverPosition.seen_at.asc()
+        ).all()
 
     def find_average_driver_position_since(
             self, latitude_min, latitude_max, longitude_min, longitude_max, date: datetime) -> List[DriverPositionDTOV2]:

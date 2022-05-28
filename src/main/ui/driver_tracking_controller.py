@@ -25,7 +25,9 @@ class DriverTrackingController:
 
     @driver_tracking_router.get("/driverPositions/{driver_id}/total")
     def create(self, driver_id: int, from_position: datetime, to_position: datetime) -> float:
-        return self.tracking_service.calculate_travelled_distance(driver_id, from_position, to_position)
+        return self.tracking_service.calculate_travelled_distance(
+            driver_id, from_position, to_position
+        ).to_km_in_float()
 
     def __to_dto(self, driver_position: DriverPosition):
         dto = DriverPositionDTO()

@@ -1,5 +1,6 @@
 from datetime import datetime
 
+from distance.distance import Distance
 from entity import Driver
 from entity.driver_position import DriverPosition
 from fastapi import Depends
@@ -37,7 +38,7 @@ class DriverTrackingService:
         position.longitude = longitude
         return self.position_repository.save(position)
 
-    def calculate_travelled_distance(self, driver_id: int, from_position: datetime, to_position: datetime) -> float:
+    def calculate_travelled_distance(self, driver_id: int, from_position: datetime, to_position: datetime) -> Distance:
         driver = self.driver_repository.get_one(driver_id)
         if driver is None:
             raise AttributeError(("Driver does not exists, id = " + str(driver_id)))
@@ -56,4 +57,4 @@ class DriverTrackingService:
                 )
                 previous_position = position
 
-        return distance_travelled
+        return Distance.of_km(distance_travelled)
