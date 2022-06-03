@@ -1,5 +1,5 @@
 from datetime import datetime
-from typing import Optional
+from typing import Optional, Any
 
 from common.base_entity import BaseEntity
 from entity.driver import Driver
@@ -21,6 +21,25 @@ class DriverPosition(BaseEntity, table=True):
     longitude: float = Field(sa_column=Column(Float, nullable=False))
     # @Column(nullable = false)
     seen_at: datetime = Field(sa_column=Column(DateTime, nullable=False))
+
+    def __init__(
+        self,
+        *,
+        driver: Optional[Driver] = None,
+        seen_at: Optional[datetime] = None,
+        latitude: Optional[float] = None,
+        longitude: Optional[float] = None,
+        **data: Any
+    ):
+        super().__init__(**data)
+        if driver:
+            self.driver = driver
+        if seen_at:
+            self.seen_at = seen_at
+        if latitude:
+            self.latitude = latitude
+        if longitude:
+            self.longitude = longitude
 
     def __eq__(self, o):
         if not isinstance(o, DriverPosition):
