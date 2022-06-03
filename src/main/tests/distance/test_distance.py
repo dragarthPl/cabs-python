@@ -39,3 +39,9 @@ class TestDistance(TestCase):
         self.assertEqual("194.005miles", Distance.of_km(312.221111232313).print_in("miles"))
         self.assertEqual("1.243miles", Distance.of_km(2).print_in("miles"))
 
+    def test_can_add_distance(self):
+        # expect
+        self.assertEqual(Distance.of_km(1000.0), Distance.of_km(500.0).add(Distance.of_km(500.0)))
+        self.assertEqual(Distance.of_km(1042.0), Distance.of_km(1020.0).add(Distance.of_km(22.0)))
+        self.assertEqual(Distance.of_km(0.0), Distance.of_km(0.0).add(Distance.of_km(0.0)))
+        self.assertEqual(Distance.of_km(3.7), Distance.of_km(1.5).add(Distance.of_km(2.2)))

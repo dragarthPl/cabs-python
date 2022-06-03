@@ -1,28 +1,28 @@
 from datetime import datetime
 
 from distance.distance import Distance
+from driverreport.travelleddistance.travelled_distance_service import TravelledDistanceService
 from entity import Driver
 from entity.driver_position import DriverPosition
 from fastapi import Depends
 from repository.driver_position_repository import DriverPositionRepositoryImp
 from repository.driver_repository import DriverRepositoryImp
-from service.distance_calculator import DistanceCalculator
 
 
 class DriverTrackingService:
     position_repository: DriverPositionRepositoryImp
     driver_repository: DriverRepositoryImp
-    distance_calculator: DistanceCalculator
+    travelled_distance_service: TravelledDistanceService
 
     def __init__(
             self,
             position_repository: DriverPositionRepositoryImp = Depends(DriverPositionRepositoryImp),
             driver_repository: DriverRepositoryImp = Depends(DriverRepositoryImp),
-            distance_calculator: DistanceCalculator = Depends(DistanceCalculator)
+            travelled_distance_service: TravelledDistanceService = Depends(TravelledDistanceService)
     ):
         self.position_repository = position_repository
         self.driver_repository = driver_repository
-        self.distance_calculator = distance_calculator
+        self.travelled_distance_service = travelled_distance_service
 
     def register_position(self, driver_id: int, latitude: float, longitude: float, seen_at: datetime) -> DriverPosition:
         driver = self.driver_repository.get_one(driver_id)
@@ -36,25 +36,12 @@ class DriverTrackingService:
         position.seen_at = seen_at
         position.latitude = latitude
         position.longitude = longitude
-        return self.position_repository.save(position)
+        position = self.position_repository.save(position)
+        self.travelled_distance_service.add_position(position)
+        return position
 
     def calculate_travelled_distance(self, driver_id: int, from_position: datetime, to_position: datetime) -> Distance:
         driver = self.driver_repository.get_one(driver_id)
         if driver is None:
             raise AttributeError(("Driver does not exists, id = " + str(driver_id)))
-        positions = self.position_repository.find_by_driver_and_seen_at_between_order_by_seen_at_asc(
-            driver, from_position, to_position
-        )
-        distance_travelled = 0
-
-        if len(positions) > 1:
-            previous_position = positions[0]
-
-            for position in positions[1:]:
-                distance_travelled += self.distance_calculator.calculate_by_geo(
-                    previous_position.latitude, previous_position.longitude,
-                    position.latitude, position.longitude
-                )
-                previous_position = position
-
-        return Distance.of_km(distance_travelled)
+        return self.travelled_distance_service.calculate_distance(driver_id, from_position, to_position)

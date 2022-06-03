@@ -56,3 +56,6 @@ class Distance(BaseModel):
 
     def __str__(self) -> str:
         return self.to_string()
+
+    def add(self, travelled: 'Distance') -> 'Distance':
+        return Distance.of_km(self.km + travelled.km)
