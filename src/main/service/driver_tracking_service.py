@@ -37,7 +37,7 @@ class DriverTrackingService:
         position.latitude = latitude
         position.longitude = longitude
         position = self.position_repository.save(position)
-        self.travelled_distance_service.add_position(position)
+        self.travelled_distance_service.add_position(driver_id, latitude, longitude, seen_at)
         return position
 
     def calculate_travelled_distance(self, driver_id: int, from_position: datetime, to_position: datetime) -> Distance:

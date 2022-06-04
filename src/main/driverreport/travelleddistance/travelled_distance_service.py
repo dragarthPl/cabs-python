@@ -30,16 +30,15 @@ class TravelledDistanceService:
             driver_id,
         ))
 
-    def add_position(self, driver_position: DriverPosition) -> None:
-        driver_id = driver_position.driver.id
+    def add_position(self, driver_id: int, latitude: float, longitude: float, seen_at: datetime) -> None:
         matched_slot: TravelledDistance = self.travelled_distance_repository.find_travelled_distance_time_slot_by_time(
-            driver_position.seen_at,
+            seen_at,
             driver_id,
         )
         now = datetime.now()
         if matched_slot:
             if matched_slot.contains(now):
-                self.__add_distance_to_slot(driver_position, matched_slot)
+                self.__add_distance_to_slot(matched_slot, latitude, longitude)
             elif matched_slot.is_before(now):
                 self.__recalculate_distance_for(matched_slot, driver_id)
             self.travelled_distance_repository.save(matched_slot)
@@ -53,26 +52,27 @@ class TravelledDistanceService:
                     driver_id,
                 )
             if prev_travelled_distance:
-                if prev_travelled_distance.ends_at(driver_position.seen_at):
-                    self.__add_distance_to_slot(driver_position, prev_travelled_distance)
-            self.__create_slot_for_now(driver_position, driver_id, current_time_slot)
+                if prev_travelled_distance.ends_at(seen_at):
+                    self.__add_distance_to_slot(prev_travelled_distance, latitude, longitude)
+            self.__create_slot_for_now(driver_id, current_time_slot, latitude, longitude)
 
-    def __add_distance_to_slot(self, driver_position: DriverPosition, aggregated_distance: TravelledDistance) -> None:
+    def __add_distance_to_slot(self, aggregated_distance: TravelledDistance, latitude: float, longitude: float) -> None:
         travelled: Distance = Distance.of_km(self.distance_calculator.calculate_by_geo(
-            driver_position.latitude,
-            driver_position.longitude,
+            latitude,
+            longitude,
             aggregated_distance.last_latitude,
             aggregated_distance.last_longitude)
         )
-        aggregated_distance.add_distance(travelled, driver_position.latitude, driver_position.longitude)
+        aggregated_distance.add_distance(travelled, latitude, longitude)
 
     def __recalculate_distance_for(self, aggregated_distance: TravelledDistance, driver_id: int):
         # TODO
         pass
 
-    def __create_slot_for_now(self, driver_position: DriverPosition, driver_id: int, time_slot: TimeSlot):
+    def __create_slot_for_now(self, driver_id: int, time_slot: TimeSlot, latitude: float, longitude: float):
         self.travelled_distance_repository.save(
-            TravelledDistance(driver_id=driver_id, time_slot=time_slot, driver_position=driver_position)
+            TravelledDistance(
+                driver_id=driver_id, time_slot=time_slot, last_latitude=latitude, last_longitude=longitude)
         )
 
 

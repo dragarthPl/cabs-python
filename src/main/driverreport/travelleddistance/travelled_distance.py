@@ -92,13 +92,21 @@ class TravelledDistance(SQLModel, table=True):
     class Config:
         arbitrary_types_allowed = True
 
-    def __init__(self, *, driver_id: int, time_slot: TimeSlot, driver_position: DriverPosition, **data: Any):
+    def __init__(
+            self,
+            *,
+            driver_id: int,
+            time_slot: TimeSlot,
+            last_latitude: float,
+            last_longitude: float,
+            **data: Any
+    ):
         super().__init__(**data)
         self.driver_id = driver_id
         self.beginning = time_slot.beginning
         self.end = time_slot.end
-        self.last_latitude = driver_position.latitude
-        self.last_longitude = driver_position.longitude
+        self.last_latitude = last_latitude
+        self.last_longitude = last_longitude
         self.distance = Distance.ZERO.to_km_in_float()
 
     def contains(self, timestamp: datetime) -> bool:

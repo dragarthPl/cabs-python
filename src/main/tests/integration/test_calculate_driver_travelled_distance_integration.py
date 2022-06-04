@@ -12,7 +12,6 @@ from driverreport.travelleddistance.travelled_distance_service import TravelledD
 from entity import Driver
 from entity.driver_position import DriverPosition
 
-from service.driver_tracking_service import DriverTrackingService
 from tests.common.fixtures import DependencyResolver, Fixtures
 
 dependency_resolver = DependencyResolver()
@@ -47,7 +46,7 @@ class TestCalculateDriverTravelledDistanceIntegration(TestCase):
         driver = self.fixtures.an_acitve_regular_driver()
         # and
         with freeze_time(self.NOON):
-            self.register_position(driver, self.NOON, 53.32055555555556, -1.7297222222222221)
+            self.travelled_distance_service.add_position(driver.id, 53.32055555555556, -1.7297222222222221, self.NOON)
 
         # when
         distance = self.travelled_distance_service.calculate_distance(driver.id, self.NOON, self.NOON_FIVE)
@@ -60,9 +59,9 @@ class TestCalculateDriverTravelledDistanceIntegration(TestCase):
         driver = self.fixtures.an_acitve_regular_driver()
         # and
         with freeze_time(self.NOON):
-            self.register_position(driver, self.NOON, 53.32055555555556, -1.7297222222222221)
-            self.register_position(driver, self.NOON, 53.31861111111111, -1.6997222222222223)
-            self.register_position(driver, self.NOON, 53.32055555555556, -1.7297222222222221)
+            self.travelled_distance_service.add_position(driver.id, 53.32055555555556, -1.7297222222222221, self.NOON)
+            self.travelled_distance_service.add_position(driver.id, 53.31861111111111, -1.6997222222222223, self.NOON)
+            self.travelled_distance_service.add_position(driver.id, 53.32055555555556, -1.7297222222222221, self.NOON)
 
             # when
             distance = self.travelled_distance_service.calculate_distance(driver.id, self.NOON, self.NOON_FIVE)
@@ -75,17 +74,17 @@ class TestCalculateDriverTravelledDistanceIntegration(TestCase):
         driver = self.fixtures.an_acitve_regular_driver()
         with freeze_time(self.NOON):
             # and
-            self.register_position(driver, self.NOON, 53.32055555555556, -1.7297222222222221)
-            self.register_position(driver, self.NOON, 53.31861111111111, -1.6997222222222223)
-            self.register_position(driver, self.NOON, 53.32055555555556, -1.7297222222222221)
+            self.travelled_distance_service.add_position(driver.id, 53.32055555555556, -1.7297222222222221, self.NOON)
+            self.travelled_distance_service.add_position(driver.id, 53.31861111111111, -1.6997222222222223, self.NOON)
+            self.travelled_distance_service.add_position(driver.id, 53.32055555555556, -1.7297222222222221, self.NOON)
         with freeze_time(self.NOON_FIVE):
             # and
-            self.register_position(
-                driver, self.NOON_FIVE, 53.32055555555556, -1.7297222222222221)
-            self.register_position(
-                driver, self.NOON_FIVE, 53.31861111111111, -1.6997222222222223)
-            self.register_position(
-                driver, self.NOON_FIVE, 53.32055555555556, -1.7297222222222221)
+            self.travelled_distance_service.add_position(
+                driver.id, 53.32055555555556, -1.7297222222222221, self.NOON_FIVE)
+            self.travelled_distance_service.add_position(
+                driver.id, 53.31861111111111, -1.6997222222222223, self.NOON_FIVE)
+            self.travelled_distance_service.add_position(
+                driver.id, 53.32055555555556, -1.7297222222222221, self.NOON_FIVE)
 
         # when
         distance = self.travelled_distance_service.calculate_distance(driver.id, self.NOON, self.NOON_FIVE)
@@ -98,22 +97,25 @@ class TestCalculateDriverTravelledDistanceIntegration(TestCase):
         driver = self.fixtures.an_acitve_regular_driver()
         with freeze_time(self.NOON):
             # and
-            self.register_position(driver, self.NOON, 53.32055555555556, -1.7297222222222221)
-            self.register_position(driver, self.NOON, 53.31861111111111, -1.6997222222222223)
-            self.register_position(driver, self.NOON, 53.32055555555556, -1.7297222222222221)
+            self.travelled_distance_service.add_position(driver.id, 53.32055555555556, -1.7297222222222221, self.NOON)
+            self.travelled_distance_service.add_position(driver.id, 53.31861111111111, -1.6997222222222223, self.NOON)
+            self.travelled_distance_service.add_position(driver.id, 53.32055555555556, -1.7297222222222221, self.NOON)
         with freeze_time(self.NOON_FIVE):
             # and
-            self.register_position(
-                driver, self.NOON_FIVE, 53.32055555555556, -1.7297222222222221)
-            self.register_position(
-                driver, self.NOON_FIVE, 53.31861111111111, -1.6997222222222223)
-            self.register_position(
-                driver, self.NOON_FIVE, 53.32055555555556, -1.7297222222222221)
+            self.travelled_distance_service.add_position(
+               driver.id, 53.32055555555556, -1.7297222222222221, self.NOON_FIVE)
+            self.travelled_distance_service.add_position(
+               driver.id, 53.31861111111111, -1.6997222222222223, self.NOON_FIVE)
+            self.travelled_distance_service.add_position(
+               driver.id, 53.32055555555556, -1.7297222222222221, self.NOON_FIVE)
         with freeze_time(self.NOON_TEN):
             # and
-            self.register_position(driver, self.NOON_TEN, 53.32055555555556, -1.7297222222222221)
-            self.register_position(driver, self.NOON_TEN, 53.31861111111111, -1.6997222222222223)
-            self.register_position(driver, self.NOON_TEN, 53.32055555555556, -1.7297222222222221)
+            self.travelled_distance_service.add_position(
+                driver.id, 53.32055555555556, -1.7297222222222221, self.NOON_TEN)
+            self.travelled_distance_service.add_position(
+                driver.id, 53.31861111111111, -1.6997222222222223, self.NOON_TEN)
+            self.travelled_distance_service.add_position(
+                driver.id, 53.32055555555556, -1.7297222222222221, self.NOON_TEN)
 
         # when
         distance = self.travelled_distance_service.calculate_distance(driver.id, self.NOON, self.NOON_TEN)
