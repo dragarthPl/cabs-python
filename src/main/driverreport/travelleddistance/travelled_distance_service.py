@@ -74,5 +74,3 @@ class TravelledDistanceService:
             TravelledDistance(
                 driver_id=driver_id, time_slot=time_slot, last_latitude=latitude, last_longitude=longitude)
         )
-
-

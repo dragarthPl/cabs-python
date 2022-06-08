@@ -21,6 +21,9 @@ class Money:
     def percentage(self, percentage: int) -> 'Money':
         return Money(round(percentage * self.value/100.0))
 
+    def percentage_float(self, percentage: float) -> 'Money':
+        return Money(int(round(percentage * self.value/100)))
+
     def to_int(self) -> int:
         return self.value
 
