@@ -11,7 +11,7 @@ from sqlalchemy import Column, DateTime, Enum, LargeBinary
 from sqlalchemy.orm import relationship
 from sqlmodel import Field, Relationship
 
-from common.base_entity import BaseEntity
+from common.base_entity import BaseEntity, new_uuid
 
 
 class ContractAttachment(BaseEntity, table=True):
@@ -24,7 +24,7 @@ class ContractAttachment(BaseEntity, table=True):
         REJECTED = 4
 
     contract_attachment_no: uuid_pkg.UUID = Field(
-        default_factory=uuid_pkg.uuid4,
+        default_factory=new_uuid,
         nullable=False,
     )
 

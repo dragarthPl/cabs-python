@@ -1,4 +1,6 @@
-from uuid import UUID, uuid4
+from uuid import UUID
+
+from common.base_entity import new_uuid
 
 
 class PartyId:
@@ -8,7 +10,7 @@ class PartyId:
         if uuid:
             self.id = uuid
         else:
-            self.id = uuid4()
+            self.id = new_uuid()
 
     def to_uuid(self):
         return self.id

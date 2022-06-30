@@ -1,11 +1,12 @@
 import uuid as uuid_pkg
-from uuid import UUID, uuid4
+from uuid import UUID
 from typing import Optional
 
 from sqlalchemy import Column, Integer, ForeignKey
 from sqlalchemy.orm import relationship
 from sqlmodel import Field, SQLModel, Relationship
 
+from common.base_entity import new_uuid
 from party.model.party.party import Party
 
 
@@ -13,7 +14,7 @@ class PartyRelationship(SQLModel, table=True):
     __table_args__ = {'extend_existing': True}
 
     id: UUID = Field(
-        default_factory=uuid4,
+        default_factory=new_uuid,
         nullable=False,
         primary_key=True
     )

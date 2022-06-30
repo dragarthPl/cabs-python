@@ -11,7 +11,7 @@ from contracts.legacy.user import User
 
 
 document_user_link = Table(
-    'drivers_rejections_link',
+    'document_user_link',
     SQLModel.metadata,
     Column('document_id', ForeignKey('document.id')),
     Column('user_id', ForeignKey('user.id'))
