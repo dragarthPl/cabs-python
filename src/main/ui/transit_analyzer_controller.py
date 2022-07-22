@@ -13,8 +13,8 @@ transit_analyzer_router = InferringRouter(tags=["TransitAnalyzerController"])
 class TransitAnalyzerController:
     transit_analyzer: TransitAnalyzer = Depends(TransitAnalyzer)
 
-    @transit_analyzer_router.get("/transit_analyze/{client_id}/{address_id}")
-    def get_transit(self, client_id: int, address_id: int) -> AnalyzedAddressesDTO:
+    @transit_analyzer_router.get("/transitAnalyze/{client_id}/{address_id}")
+    def analyze(self, client_id: int, address_id: int) -> AnalyzedAddressesDTO:
         addresses = self.transit_analyzer.analyze(client_id, address_id)
         address_dtos: List[AddressDTO] = list(map(
             lambda a: AddressDTO(**a.dict()),

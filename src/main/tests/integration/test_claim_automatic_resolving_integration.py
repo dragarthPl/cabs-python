@@ -1,6 +1,7 @@
 from datetime import datetime
 from unittest import TestCase
 
+import pytz
 from fastapi.params import Depends
 from mockito import when, verify, mock, ANY, verifyZeroInteractions
 
@@ -37,7 +38,7 @@ class TestClaimAutomaticResolvingIntegration(TestCase):
         # given
         self.low_cost_threshold_is(40)
         # and
-        driver: Driver = self.fixtures.an_acitve_regular_driver()
+        driver: Driver = self.fixtures.an_active_regular_driver()
         # and
         client: Client = self.fixtures.a_client_with_type(Client.Type.VIP)
         # and
@@ -65,7 +66,7 @@ class TestClaimAutomaticResolvingIntegration(TestCase):
         # and
         client: Client = self.fixtures.a_client_with_claims(Client.Type.VIP, 3)
         # and
-        driver = self.fixtures.an_acitve_regular_driver()
+        driver = self.fixtures.an_active_regular_driver()
         # and
         transit: Transit = self.a_transit(client, driver, 39)
         # and
@@ -89,7 +90,7 @@ class TestClaimAutomaticResolvingIntegration(TestCase):
         # and
         client: Client = self.fixtures.a_client_with_claims(Client.Type.VIP, 3)
         # and
-        driver = self.fixtures.an_acitve_regular_driver()
+        driver = self.fixtures.an_active_regular_driver()
         # and
         transit: Transit = self.a_transit(client, driver, 50)
         # and
@@ -116,7 +117,7 @@ class TestClaimAutomaticResolvingIntegration(TestCase):
         # and
         client: Client = self.a_client(Client.Type.NORMAL)
         # and
-        driver = self.fixtures.an_acitve_regular_driver()
+        driver = self.fixtures.an_active_regular_driver()
 
         # when
         self.claim_service.awards_service = mock()
@@ -167,7 +168,7 @@ class TestClaimAutomaticResolvingIntegration(TestCase):
         # and
         self.fixtures.client_has_done_transits(client, 12)
         # and
-        transit: Transit = self.a_transit(client, self.fixtures.an_acitve_regular_driver(), 39)
+        transit: Transit = self.a_transit(client, self.fixtures.an_active_regular_driver(), 39)
         # and
         claim = self.fixtures.create_claim(client, transit)
 
@@ -193,7 +194,7 @@ class TestClaimAutomaticResolvingIntegration(TestCase):
         # and
         self.fixtures.client_has_done_transits(client, 12)
         # and
-        transit: Transit = self.a_transit(client, self.fixtures.an_acitve_regular_driver(), 50)
+        transit: Transit = self.a_transit(client, self.fixtures.an_active_regular_driver(), 50)
         # and
         claim = self.fixtures.create_claim(client, transit)
 
@@ -219,7 +220,7 @@ class TestClaimAutomaticResolvingIntegration(TestCase):
         # and
         self.fixtures.client_has_done_transits(client, 2)
         # and
-        driver: Driver = self.fixtures.an_acitve_regular_driver()
+        driver: Driver = self.fixtures.an_active_regular_driver()
         # and
         claim = self.fixtures.create_claim(client, self.a_transit(client, driver, 50))
 
@@ -237,7 +238,7 @@ class TestClaimAutomaticResolvingIntegration(TestCase):
         verifyZeroInteractions(self.claim_service.awards_service)
 
     def a_transit(self, client: Client, driver: Driver, price: int) -> Transit:
-        return self.fixtures._a_completed_transit_at(price, datetime.now(), client, driver)
+        return self.fixtures.a_completed_transit_at(price, datetime.now().astimezone(pytz.utc), client, driver)
 
     def low_cost_threshold_is(self, price: int) -> None:
         self.claim_service.app_properties.automatic_refund_for_vip_threshold = price

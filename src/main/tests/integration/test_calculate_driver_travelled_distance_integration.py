@@ -33,7 +33,7 @@ class TestCalculateDriverTravelledDistanceIntegration(TestCase):
 
     def test_distance_is_zero_when_zero_positions(self):
         # given
-        driver = self.fixtures.an_acitve_regular_driver()
+        driver = self.fixtures.an_active_regular_driver()
 
         # when
         distance = self.travelled_distance_service.calculate_distance(driver.id, self.NOON, self.NOON_FIVE)
@@ -43,7 +43,7 @@ class TestCalculateDriverTravelledDistanceIntegration(TestCase):
 
     def test_travelled_distance_without_multiple_positions_iz_zero(self):
         # given
-        driver = self.fixtures.an_acitve_regular_driver()
+        driver = self.fixtures.an_active_regular_driver()
         # and
         with freeze_time(self.NOON):
             self.travelled_distance_service.add_position(driver.id, 53.32055555555556, -1.7297222222222221, self.NOON)
@@ -56,7 +56,7 @@ class TestCalculateDriverTravelledDistanceIntegration(TestCase):
 
     def test_can_calculate_travelled_distance_from_short_transit(self):
         # given
-        driver = self.fixtures.an_acitve_regular_driver()
+        driver = self.fixtures.an_active_regular_driver()
         # and
         with freeze_time(self.NOON):
             self.travelled_distance_service.add_position(driver.id, 53.32055555555556, -1.7297222222222221, self.NOON)
@@ -71,7 +71,7 @@ class TestCalculateDriverTravelledDistanceIntegration(TestCase):
 
     def test_can_calculate_travelled_distance_from_long_transit(self):
         # given
-        driver = self.fixtures.an_acitve_regular_driver()
+        driver = self.fixtures.an_active_regular_driver()
         with freeze_time(self.NOON):
             # and
             self.travelled_distance_service.add_position(driver.id, 53.32055555555556, -1.7297222222222221, self.NOON)
@@ -94,7 +94,7 @@ class TestCalculateDriverTravelledDistanceIntegration(TestCase):
 
     def test_can_calculate_travelled_distance_with_multiple_breaks(self):
         # given
-        driver = self.fixtures.an_acitve_regular_driver()
+        driver = self.fixtures.an_active_regular_driver()
         with freeze_time(self.NOON):
             # and
             self.travelled_distance_service.add_position(driver.id, 53.32055555555556, -1.7297222222222221, self.NOON)

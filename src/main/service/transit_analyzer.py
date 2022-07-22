@@ -79,5 +79,5 @@ class TransitAnalyzer:
                 ts
             ),
             reverse=True,
-            key=lambda a, b: len(a) - len(b)
+            key=len
         )[0] or []

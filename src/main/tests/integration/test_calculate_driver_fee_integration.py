@@ -25,7 +25,7 @@ class TestCalculateDriverFeeIntegration(TestCase):
 
     def test_should_calculate_drivers_flat_fee(self):
         # given
-        driver = self.fixtures.an_acitve_regular_driver()
+        driver = self.fixtures.an_active_regular_driver()
         # and
         transit = self.fixtures.a_transit_now(driver, 60)
         # and
@@ -39,7 +39,7 @@ class TestCalculateDriverFeeIntegration(TestCase):
 
     def test_should_calculate_drivers_percentage_fee(self):
         # given
-        driver = self.fixtures.an_acitve_regular_driver()
+        driver = self.fixtures.an_active_regular_driver()
         # and
         transit = self.fixtures.a_transit_now(driver, 80)
         # and
@@ -53,7 +53,7 @@ class TestCalculateDriverFeeIntegration(TestCase):
 
     def test_should_use_minimum_fee(self):
         # given
-        driver = self.fixtures.an_acitve_regular_driver()
+        driver = self.fixtures.an_active_regular_driver()
         # and
         transit = self.fixtures.a_transit_now(driver, 10)
         # and

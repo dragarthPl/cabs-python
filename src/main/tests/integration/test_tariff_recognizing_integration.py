@@ -23,7 +23,7 @@ class TestTariffRecognizingIntegration(TestCase):
 
     def test_new_years_eve_tariff_should_be_displayed(self):
         # given
-        transit = self.fixtures.a_completed_transit_at(60, datetime(2021, 12, 31, 8, 30).astimezone(pytz.utc))
+        transit = self.fixtures.a_completed_transit_at_default(60, datetime(2021, 12, 31, 8, 30).astimezone(pytz.utc))
 
         # when
         transit_dto: TransitDTO = self.transit_controller.get_transit(transit.id)
@@ -34,7 +34,7 @@ class TestTariffRecognizingIntegration(TestCase):
 
     def test_weekend_tariff_should_be_displayed(self):
         # given
-        transit = self.fixtures.a_completed_transit_at(60, datetime(2021, 4, 17, 8, 30).astimezone(pytz.utc))
+        transit = self.fixtures.a_completed_transit_at_default(60, datetime(2021, 4, 17, 8, 30).astimezone(pytz.utc))
 
         # when
         transit_dto: TransitDTO = self.transit_controller.get_transit(transit.id)
@@ -45,7 +45,7 @@ class TestTariffRecognizingIntegration(TestCase):
 
     def test_weekend_plus_tariff_should_be_displayed(self):
         # given
-        transit = self.fixtures.a_completed_transit_at(60, datetime(2021, 4, 17, 22, 30).astimezone(pytz.utc))
+        transit = self.fixtures.a_completed_transit_at_default(60, datetime(2021, 4, 17, 22, 30).astimezone(pytz.utc))
 
         # when
         transit_dto: TransitDTO = self.transit_controller.get_transit(transit.id)
@@ -56,7 +56,7 @@ class TestTariffRecognizingIntegration(TestCase):
 
     def test_standard_tariff_should_be_displayed(self):
         # given
-        transit = self.fixtures.a_completed_transit_at(60, datetime(2021, 4, 13, 22, 30).astimezone(pytz.utc))
+        transit = self.fixtures.a_completed_transit_at_default(60, datetime(2021, 4, 13, 22, 30).astimezone(pytz.utc))
 
         # when
         transit_dto: TransitDTO = self.transit_controller.get_transit(transit.id)

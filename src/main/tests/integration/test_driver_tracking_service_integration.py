@@ -30,7 +30,7 @@ class TestDriverTrackingServiceIntegration(TestCase):
 
     def test_can_calculate_travelled_distance_from_short_transit(self):
         # given
-        driver: Driver = self.fixtures.an_acitve_regular_driver()
+        driver: Driver = self.fixtures.an_active_regular_driver()
         # and
         with freeze_time(self.NOON):
             # and

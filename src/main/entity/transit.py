@@ -8,7 +8,9 @@ from typing import Optional, Set, Any
 
 import pytz
 from dateutil.relativedelta import relativedelta
-from tzlocal import get_localzone
+from dateutil.tz import tzlocal
+
+from zoneinfo import ZoneInfo
 
 from common.base_entity import BaseEntity
 from distance.distance import Distance
@@ -116,7 +118,7 @@ class Transit(BaseEntity, table=True):
     client: Optional['Client'] = Relationship(
         sa_relationship=relationship(
             "entity.client.Client",
-            backref=backref("transit", uselist=False))
+            backref=backref("transit"))
     )
     car_type: Optional[CarType.CarClass] = Field(sa_column=Column(Enum(CarType.CarClass)))
     complete_at: Optional[datetime] = Field(default=None, sa_column=Column(DateTime, nullable=True))
@@ -143,6 +145,7 @@ class Transit(BaseEntity, table=True):
             self.km = data["distance"].to_km_in_float()
         if data.get("client"):
             self.client_id = data["client"].id
+            self.client = data["client"]
         if tariff:
             self.tariff_name = tariff.name
             self.tariff_base_fee = tariff.base_fee
@@ -298,7 +301,7 @@ class Transit(BaseEntity, table=True):
         return self.date_time
 
     def set_date_time(self, date_time: datetime) -> None:
-        self.set_tariff(Tariff.of_time(date_time.astimezone(get_localzone())))
+        self.set_tariff(Tariff.of_time(date_time.astimezone(tzlocal())))
         self.date_time = date_time
 
     def get_drivers_fee(self) -> Money:

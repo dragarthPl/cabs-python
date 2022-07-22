@@ -13,6 +13,7 @@ class AddressDTO(BaseModel):
     additional_number: Optional[int]
     postal_code: Optional[str]
     name: Optional[str]
+    hash: Optional[int]
 
     def to_address_entity(self) -> Address:
         address = Address()

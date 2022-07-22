@@ -4,7 +4,9 @@ from typing import Any, Dict
 
 import pytz
 import fastapi
+from dateutil.relativedelta import relativedelta
 from fastapi.params import Depends
+from freezegun import freeze_time
 
 from common.application_event_publisher import ApplicationEventPublisher
 from distance.distance import Distance
@@ -24,6 +26,9 @@ from service.awards_service import AwardsService, AwardsServiceImpl
 from service.car_type_service import CarTypeService
 from service.claim_service import ClaimService
 from service.driver_service import DriverService
+from service.driver_session_service import DriverSessionService
+from service.driver_tracking_service import DriverTrackingService
+from service.transit_service import TransitService
 
 
 class DependencyResolver:
@@ -71,7 +76,10 @@ class Fixtures:
     car_type_service: CarTypeService
     claim_service: ClaimService
     awards_service: AwardsServiceImpl
+    transit_service: TransitService
     driver_attribute_repository: DriverAttributeRepositoryImp
+    driver_session_service: DriverSessionService
+    driver_tracking_service: DriverTrackingService
 
     def __init__(
         self,
@@ -83,7 +91,10 @@ class Fixtures:
         car_type_service: CarTypeService = Depends(CarTypeService),
         claim_service: ClaimService = Depends(ClaimService),
         awards_service: AwardsServiceImpl = Depends(AwardsServiceImpl),
+        transit_service: TransitService = Depends(TransitService),
         driver_attribute_repository: DriverAttributeRepositoryImp = Depends(DriverAttributeRepositoryImp),
+        driver_session_service: DriverSessionService = Depends(DriverSessionService),
+        driver_tracking_service: DriverTrackingService = Depends(DriverTrackingService),
     ):
         self.transit_repository = transit_repository
         self.fee_repository = fee_repository
@@ -93,7 +104,10 @@ class Fixtures:
         self.car_type_service = car_type_service
         self.claim_service = claim_service
         self.awards_service = awards_service
+        self.transit_service = transit_service
         self.driver_attribute_repository = driver_attribute_repository
+        self.driver_session_service = driver_session_service
+        self.driver_tracking_service = driver_tracking_service
 
     def a_client(self) -> Client:
         return self.client_repository.save(Client())
@@ -105,7 +119,7 @@ class Fixtures:
 
     def a_transit_price(self, price: Money) -> Transit:
         return self.a_transit_now(
-            self.an_acitve_regular_driver(),
+            self.an_active_regular_driver(),
             price.to_int()
         )
 
@@ -140,7 +154,7 @@ class Fixtures:
     def driver_has_fee(self, driver: Driver, fee_type: DriverFee.FeeType, amount: int) -> DriverFee:
         return self.driver_has_min_fee(driver, fee_type, amount, 0)
 
-    def an_acitve_regular_driver(self) -> Driver:
+    def an_active_regular_driver(self) -> Driver:
         return self.a_driver(
             Driver.Status.ACTIVE,
             "Janusz",
@@ -158,29 +172,99 @@ class Fixtures:
             "",
         )
 
-    def a_completed_transit_at(self, price: int, when: datetime):
-        return self._a_completed_transit_at(price, when, self.a_client(), self.an_acitve_regular_driver())
+    def a_nearby_driver(self, plate_number: str) -> Driver:
+        driver: Driver = self.an_active_regular_driver()
+        self.driver_has_fee(driver, DriverFee.FeeType.FLAT, 10)
+        self.driver_session_service.log_in(driver.id, plate_number, CarType.CarClass.VAN, "BRAND")
+        self.driver_tracking_service.register_position(driver.id, 1, 1, datetime.now())
+        return driver
 
-    def _a_completed_transit_at(self, price: int, when: datetime, client: Client, driver: Driver):
-        destination = self.address_repository.save(
-            Address(country="Polska", city="Warszawa", street="Zytnia", building_number=20))
-        transit = Transit(
-            address_from=self.address_repository.save(
-                Address(country="Polska", city="Warszawa", street="Młynarska", building_number=20)
-            ),
+    def a_completed_transit_at_default(self, price: int, when: datetime):
+        return self.a_completed_transit_at(price, when, self.a_client(), self.an_active_regular_driver())
+
+    def a_requested_and_completed_transit(
+            self,
+            price: int,
+            published_at: datetime,
+            completed_at: datetime,
+            client: Client,
+            driver: Driver,
+            address_from: Address,
+            destination: Address
+    ) -> Transit:
+        address_from = self.address_repository.save(address_from)
+        destination = self.address_repository.save(destination)
+        transit: Transit = Transit(
+            address_from=address_from,
             address_to=destination,
-            client_id=client.id,
+            client=client,
             car_class=None,
-            date_time=when,
-            distance=Distance.ZERO,
+            date_time=published_at,
+            distance=Distance.ZERO
         )
-        transit.publish_at(when)
+        transit.publish_at(published_at)
         transit.propose_to(driver)
-        transit.accept_by(driver, datetime.now())
-        transit.start(datetime.now())
-        transit.complete_ride_at(datetime.now(), destination, Distance.of_km(20))
+        transit.accept_by(driver, published_at)
+        transit.start(published_at)
+        transit.complete_ride_at(completed_at, destination, Distance.of_km(1))
         transit.set_price(Money(price))
         return self.transit_repository.save(transit)
+
+    def _a_completed_transit_at(
+            self,
+            price: int,
+            published_at: datetime,
+            completed_at: datetime,
+            client: Client,
+            driver: Driver
+    ):
+        address_destination = self.address_repository.save(
+            Address(country="Polska", city="Warszawa", street="Zytnia", building_number=20))
+        address_from = self.address_repository.save(
+            Address(country="Polska", city="Warszawa", street="Młynarska", building_number=20)
+        )
+
+        return self.a_requested_and_completed_transit(
+            price, published_at, completed_at, client, driver, address_from, address_destination)
+
+    def a_completed_transit_at(self, price: int, published_at: datetime, client: Client, driver: Driver):
+        return self._a_completed_transit_at(
+            price,
+            published_at,
+            published_at + relativedelta(minutes=10),
+            client,
+            driver
+        )
+
+    def _a_requested_and_completed_transit(
+        self,
+        price: int,
+        published_at: datetime,
+        completed_at: datetime,
+        client: Client,
+        driver: Driver,
+        address_from: Address,
+        address_destination: Address,
+    ):
+        address_from = self.address_repository.save(address_from)
+        address_destination = self.address_repository.save(address_destination)
+
+        with freeze_time(published_at):
+            transit: Transit = self.transit_service.create_transit_transaction(
+                client.id,
+                address_from,
+                address_destination,
+                CarType.CarClass.VAN
+            )
+            self.transit_service.publish_transit(transit.id)
+            self.transit_service.find_drivers_for_transit(transit.id)
+            self.transit_service.accept_transit(driver.id, transit.id)
+            self.transit_service.start_transit(driver.id, transit.id)
+
+        with freeze_time(completed_at):
+            self.transit_service._complete_transit(driver.id, transit.id, address_destination)
+
+        return self.transit_repository.get_one(transit.id)
 
     def an_active_car_category(self, car_class: CarType.CarClass) -> CarType:
         car_type_dto = CarTypeDTO()
@@ -207,7 +291,7 @@ class Fixtures:
     def client_has_done_transits(self, client: Client, no_of_transits: int):
         for _ in range(1, no_of_transits + 1):
            self.transit_repository.save(
-                self._a_completed_transit_at(10, datetime.now(), client, self.an_acitve_regular_driver())
+                self.a_completed_transit_at(10, datetime.now(), client, self.an_active_regular_driver())
            )
 
     def create_claim(self, client: Client, transit: Transit) -> Claim:
@@ -237,17 +321,17 @@ class Fixtures:
 
     def client_has_done_claims(self, client: Client, how_many: int) -> None:
         [
-            self.create_and_resolve_claim(client, self.a_transit(self.an_acitve_regular_driver(), 20, datetime.now(), client))
+            self.create_and_resolve_claim(client, self.a_transit(self.an_active_regular_driver(), 20, datetime.now(), client))
             for _ in range(1, how_many + 1)
         ]
+
+    def awards_account(self, client: Client) -> None:
+        self.awards_service.register_to_program(client.id)
 
     def a_client_with_claims(self, client_type: Client.Type, how_many_claims: int) -> Client:
         client = self.a_client_with_type(client_type)
         self.client_has_done_claims(client, how_many_claims)
         return client
-
-    def awards_account(self, client: Client) -> None:
-        self.awards_service.register_to_program(client.id)
 
     def active_awards_account(self, client: Client) -> None:
         self.awards_account(client)
