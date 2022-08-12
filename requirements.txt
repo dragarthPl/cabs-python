@@ -11,3 +11,7 @@ pytest
 tzlocal
 mockito
 freezegun
+neo4j
+py2neo
+fastapi-events
+httpx
