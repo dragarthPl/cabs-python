@@ -11,7 +11,9 @@ from dto.driver_position_dtov_2 import DriverPositionDTOV2
 from dto.transit_dto import TransitDTO
 from entity import Address, CarType, Driver, Transit
 from fastapi import Depends
+from fastapi_events.dispatcher import dispatch
 
+from entity.events.transit_completed import TransitCompleted
 from money import Money
 from repository.address_repository import AddressRepositoryImp
 from repository.client_repository import ClientRepositoryImp
@@ -386,6 +388,19 @@ class TransitService:
         self.awards_service.register_miles(transit.client.id, transit_id)
         self.transit_repository.save(transit)
         self.invoice_generator.generate(transit.get_price().to_int(), f"{transit.client.name} {transit.client.last_name}")
+        dispatch(
+            "add_transit_between_addresses",
+            payload=TransitCompleted(
+                transit.client.id,
+                transit_id,
+                transit.address_from.hash,
+                transit.address_to.hash,
+                transit.started,
+                transit.complete_at,
+                datetime.now()
+            ),
+        )
+        print("Dupa!!!")
 
     def load_transit(self, transit_id: int) -> TransitDTO:
         return TransitDTO(transit=self.transit_repository.get_one(transit_id))

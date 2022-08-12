@@ -1,11 +1,13 @@
 from datetime import datetime
 from typing import List
-from unittest import TestCase
+from unittest import IsolatedAsyncioTestCase
 
 import pytz
+from fastapi_events import middleware_identifier
 from freezegun import freeze_time
 from dateutil.relativedelta import relativedelta
 from fastapi.params import Depends
+from httpx import AsyncClient
 from mockito import when
 
 from core.database import create_db_and_tables, drop_db_and_tables
@@ -15,12 +17,8 @@ from dto.driver_report import DriverReport
 from dto.transit_dto import TransitDTO
 from entity import CarType, Driver, DriverFee, DriverAttribute, Client, Transit, Address
 from repository.address_repository import AddressRepositoryImp
-from repository.claim_repository import ClaimRepositoryImp
-from repository.driver_repository import DriverRepositoryImp
-from repository.driver_session_repository import DriverSessionRepositoryImp
 from service.car_type_service import CarTypeService
 from service.claim_service import ClaimService
-from service.driver_service import DriverService
 from service.driver_session_service import DriverSessionService
 from service.driver_tracking_service import DriverTrackingService
 from service.geocoding_service import GeocodingService
@@ -29,9 +27,12 @@ from tests.common.fixtures import DependencyResolver, Fixtures
 from driverreport.driver_report_controller import DriverReportController
 from driverreport.sql_based_driver_report_creator import SqlBasedDriverReportCreator
 
+from cabs_application import CabsApplication
+
 dependency_resolver = DependencyResolver()
 
-class TestCreateDriverReportIntegration(TestCase):
+
+class TestCreateDriverReportIntegration(IsolatedAsyncioTestCase):
     DAY_BEFORE_YESTERDAY = datetime(1989, 12, 12, 12, 12).astimezone(pytz.utc)
     YESTERDAY = DAY_BEFORE_YESTERDAY + relativedelta(days=1)
     TODAY = YESTERDAY + relativedelta(days=1)
@@ -49,12 +50,16 @@ class TestCreateDriverReportIntegration(TestCase):
     geocoding_service: GeocodingService = dependency_resolver.resolve_dependency(Depends(GeocodingService))
     claim_service: ClaimService = dependency_resolver.resolve_dependency(Depends(ClaimService))
 
-    def setUp(self):
+    async def asyncSetUp(self):
         create_db_and_tables()
+        app = CabsApplication().create_app()
+        middleware_identifier.set(app.middleware_stack.app._id)
+
+        self.client = AsyncClient(app=app)
         self.an_active_car_category(CarType.CarClass.VAN)
         self.an_active_car_category(CarType.CarClass.PREMIUM)
 
-    def test_should_create_drivers_report(self):
+    async def test_should_create_drivers_report(self):
         # given
         client = self.fixtures.a_client()
         # and
@@ -196,5 +201,5 @@ class TestCreateDriverReportIntegration(TestCase):
         self.car_type_service.activate(car_type.id)
         return car_type
 
-    def tearDown(self) -> None:
+    async def asyncTearDown(self) -> None:
         drop_db_and_tables()

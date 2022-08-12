@@ -1,6 +1,7 @@
 from typing import Set
 from unittest import TestCase
 
+import fastapi
 from fastapi.params import Depends
 
 from core.database import create_db_and_tables, drop_db_and_tables
@@ -11,9 +12,11 @@ from repair.api.repair_request import RepairRequest
 from repair.api.resolve_result import ResolveResult
 from repair.legacy.parts.parts import Parts
 from tests.repair.api.vehicle_repair_assert import VehicleRepairAssert
-from tests.common.fixtures import DependencyResolver
+from tests.common.fixtures import DependencyResolver, DefaultFakeApplicationEventPublisher
 
-dependency_resolver = DependencyResolver()
+dependency_resolver = DependencyResolver(abstract_map={
+    "Depends(ApplicationEventPublisher)": fastapi.Depends(DefaultFakeApplicationEventPublisher)
+})
 
 
 class TestRepairProcess(TestCase):

@@ -2,6 +2,7 @@ from datetime import datetime
 from typing import Any
 from unittest import TestCase
 
+import fastapi
 import pytz
 from fastapi.params import Depends
 from core.database import create_db_and_tables, drop_db_and_tables

@@ -31,6 +31,15 @@ from service.driver_tracking_service import DriverTrackingService
 from service.transit_service import TransitService
 
 
+class DefaultFakeApplicationEventPublisher(ApplicationEventPublisher):
+
+    def __init__(self):
+        ...
+
+    def publish_event_object(self, event: Any):
+        ...
+
+
 class DependencyResolver:
     dependency_cache: Dict[str, Any]
     abstract_map: Dict[str, Any]
@@ -38,6 +47,7 @@ class DependencyResolver:
     def __init__(self, abstract_map: Dict[str, fastapi.Depends] = None):
         self.dependency_cache = {}
         self.abstract_map = abstract_map or {}
+        self.abstract_map["Depends(ApplicationEventPublisher)"] = fastapi.Depends(DefaultFakeApplicationEventPublisher)
 
     def resolve_dependency(self, container: Any):
         container_key = str(container)
@@ -264,7 +274,7 @@ class Fixtures:
         with freeze_time(completed_at):
             self.transit_service._complete_transit(driver.id, transit.id, address_destination)
 
-        return self.transit_repository.get_one(transit.id)
+            return self.transit_repository.get_one(transit.id)
 
     def an_active_car_category(self, car_class: CarType.CarClass) -> CarType:
         car_type_dto = CarTypeDTO()

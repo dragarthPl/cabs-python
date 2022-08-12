@@ -31,5 +31,11 @@ class AddressRepositoryImp:
     def find_by_hash(self, value: str) -> Optional[Address]:
         return self.session.query(Address).where(Address.hash == value).first()
 
+    def find_hash_by_id(self, address_id: int) -> Optional[Address]:
+        return self.session.query(Address).where(Address.id == address_id).first().hash
+
+    def get_by_hash(self, hash: int) -> Address:
+        return self.session.query(Address).where(Address.hash == hash).first()
+
     def get_one(self, address_id: int) -> Optional[Address]:
         return self.session.query(Address).where(Address.id == address_id).first()

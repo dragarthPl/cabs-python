@@ -22,16 +22,8 @@ from contracts.model.state.dynamic.acme.acme_contract_state_assembler import Acm
 
 from tests.contracts.application.dynamic.document_operation_result_assert import DocumentOperationResultAssert
 from tests.common.fixtures import DependencyResolver
-
-
-class DefaultFakeApplicationEventPublisher(ApplicationEventPublisher):
-
-    def __init__(self):
-        ...
-
-    def publish_event_object(self, event: Any):
-        ...
-
+from tests.contracts.application.straightforward.acme.test_acme_contract_process_based_on_straightforward_state_model import \
+    DefaultFakeApplicationEventPublisher
 
 dependency_resolver = DependencyResolver(abstract_map={
     "Depends(ApplicationEventPublisher)": fastapi.Depends(DefaultFakeApplicationEventPublisher)

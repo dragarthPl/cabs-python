@@ -7,8 +7,6 @@ from core.database import create_db_and_tables, drop_db_and_tables
 from entity import Driver, Transit, DriverFee
 from money import Money
 
-from repository.driver_fee_repository import DriverFeeRepositoryImp
-from repository.transit_repository import TransitRepositoryImp
 from service.driver_fee_service import DriverFeeService
 from service.driver_service import DriverService
 from tests.common.fixtures import DependencyResolver, Fixtures

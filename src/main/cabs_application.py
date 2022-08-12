@@ -13,12 +13,17 @@ from ui.driver_tracking_controller import driver_tracking_router
 from ui.transit_analyzer_controller import transit_analyzer_router
 from ui.transit_controller import transit_router
 
+from fastapi_events.middleware import EventHandlerASGIMiddleware
+from fastapi_events.handlers.local import local_handler
+from starlette.testclient import TestClient
+
 
 class CabsApplication:
     app: FastAPI
 
     def __init__(self):
         self.app = FastAPI()
+        self.app.add_middleware(EventHandlerASGIMiddleware, handlers=[local_handler])
         self.app.include_router(awards_account_router)
         self.app.include_router(car_type_router)
         self.app.include_router(claim_router)

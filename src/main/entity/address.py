@@ -48,7 +48,7 @@ class Address(BaseEntity, table=True):
             self.name
         ):
             m.update(str(s).encode('utf-8'))
-        self.hash = str(int(m.hexdigest(), 16))
+        self.hash = str(int(m.hexdigest(), 16) % 10**16)
 
     def __eq__(self, o):
         if not isinstance(o, Address):
