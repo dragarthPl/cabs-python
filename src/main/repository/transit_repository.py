@@ -18,6 +18,9 @@ class TransitRepositoryImp:
     def get_one(self, transit_id: int) -> Optional[Transit]:
         return self.session.query(Transit).where(Transit.id == transit_id).first()
 
+    def find_all_by_status(self, status: Transit.Status) -> List[Transit]:
+        return self.session.query(Transit).where(Transit.status == status).all()
+
     def find_by_client(self, owner: Client) -> List[Transit]:
         return self.session.query(Transit).filter(Transit.client_id == owner.id).all()
 
