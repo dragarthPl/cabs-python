@@ -9,33 +9,17 @@ class TestTransitLifeCycle(TestCase):
     
     def test_can_create_transit(self):
         # when
-        transit = self.request_transit_from_to(
-            Address(country="Polska", city="Warszawa", street="Młynarska", building_number=20),
-            Address(country="Polska", city="Warszawa", street="Żytnia", building_number=25),
-        )
+        transit = self.request_transit()
 
         # then
-        self.assertIsNone(transit.car_type)
         self.assertEqual(0, transit.get_price().to_int())
-        self.assertEqual("Polska", transit.address_from.country)
-        self.assertEqual("Warszawa", transit.address_from.city)
-        self.assertEqual("Młynarska", transit.address_from.street)
-        self.assertEqual(20, transit.address_from.building_number)
-        self.assertEqual("Polska", transit.address_to.country)
-        self.assertEqual("Warszawa", transit.address_to.city)
-        self.assertEqual("Żytnia", transit.address_to.street)
-        self.assertEqual(25, transit.address_to.building_number)
         self.assertEqual(Transit.Status.DRAFT, transit.status)
         self.assertIsNotNone(transit.get_tariff())
         self.assertNotEqual(0, transit.get_tariff().km_rate)
-        self.assertIsNotNone(transit.date_time)
 
     def test_can_change_transit_destination(self):
         # given
-        transit = self.request_transit_from_to(
-            Address(country="Polska", city="Warszawa", street="Młynarska", building_number=20),
-            Address(country="Polska", city="Warszawa", street="Żytnia", building_number=25),
-        )
+        transit = self.request_transit()
 
         # when
         transit.change_destination_to(
@@ -44,8 +28,6 @@ class TestTransitLifeCycle(TestCase):
         )
 
         # then
-        self.assertEqual(30, transit.address_to.building_number)
-        self.assertEqual("Mazowiecka", transit.address_to.street)
         self.assertIsNotNone(transit.estimated_price)
         self.assertIsNone(transit.get_price().to_int())
 
@@ -55,10 +37,7 @@ class TestTransitLifeCycle(TestCase):
         # and
         driver = Driver()
         # and
-        transit = self.request_transit_from_to(
-            Address(country="Polska", city="Warszawa", street="Młynarska", building_number=20),
-            destination
-        )
+        transit = self.request_transit()
         # and
         transit.publish_at(datetime.now())
         # and
@@ -79,21 +58,14 @@ class TestTransitLifeCycle(TestCase):
 
     def test_can_change_pickup_place(self):
         # given
-        transit = self.request_transit_from_to(
-            Address(country="Polska", city="Warszawa", street="Młynarska", building_number=20),
-            Address(country="Polska", city="Warszawa", street="Żytnia", building_number=25),
-        )
+        transit = self.request_transit()
 
-        # when
+        # expect
         transit.change_pickup_to(
             Address(country="Polska", city="Warszawa", street="Puławska", building_number=28),
             Distance.of_km(20),
             0.2
         )
-
-        # then
-        self.assertEqual(28, transit.address_from.building_number)
-        self.assertEqual("Puławska", transit.address_from.street)
 
     def test_cannot_change_pickup_place_after_transit_is_accepted(self):
         # given
@@ -101,10 +73,7 @@ class TestTransitLifeCycle(TestCase):
         # and
         driver = Driver()
         # and
-        transit = self.request_transit_from_to(
-            Address(country="Polska", city="Warszawa", street="Młynarska", building_number=20),
-            destination
-        )
+        transit = self.request_transit()
         # and
         changed_to = Address(country="Polska", city="Warszawa", street="Żytnia", building_number=27)
         # and
@@ -132,10 +101,7 @@ class TestTransitLifeCycle(TestCase):
 
     def test_cannot_change_pickup_place_more_than_three_times(self):
         # given
-        transit = self.request_transit_from_to(
-            Address(country="Polska", city="Warszawa", street="Młynarska", building_number=20),
-            Address(country="Polska", city="Warszawa", street="Żytnia", building_number=25),
-        )
+        transit = self.request_transit()
         # and
         transit.change_pickup_to(
             Address(country="Polska", city="Warszawa", street="Żytnia", building_number=26),
@@ -165,10 +131,7 @@ class TestTransitLifeCycle(TestCase):
 
     def test_cannot_change_pickup_place_when_it_is_far_way_from_original(self):
         # given
-        transit = self.request_transit_from_to(
-            Address(country="Polska", city="Warszawa", street="Młynarska", building_number=20),
-            Address(country="Polska", city="Warszawa", street="Żytnia", building_number=25),
-        )
+        transit = self.request_transit()
 
         # expect
         with self.assertRaises(AttributeError):
@@ -180,10 +143,7 @@ class TestTransitLifeCycle(TestCase):
 
     def test_can_cancel_transit(self):
         # given
-        transit = self.request_transit_from_to(
-            Address(country="Polska", city="Warszawa", street="Młynarska", building_number=20),
-            Address(country="Polska", city="Warszawa", street="Żytnia", building_number=25),
-        )
+        transit = self.request_transit()
 
         # when
         transit.cancel()
@@ -195,10 +155,7 @@ class TestTransitLifeCycle(TestCase):
         # given
         destination = Address(country="Polska", city="Warszawa", street="Żytnia", building_number=25)
         # and
-        transit = self.request_transit_from_to(
-            Address(country="Polska", city="Warszawa", street="Młynarska", building_number=20),
-            destination
-        )
+        transit = self.request_transit()
         # and
         driver = Driver()
         # and
@@ -221,10 +178,7 @@ class TestTransitLifeCycle(TestCase):
             transit.cancel()
 
     def test_can_publish_transit(self):
-        transit = self.request_transit_from_to(
-            Address(country="Polska", city="Warszawa", street="Młynarska", building_number=20),
-            Address(country="Polska", city="Warszawa", street="Żytnia", building_number=25),
-        )
+        transit = self.request_transit()
 
         # when
         transit.publish_at(datetime.now())
@@ -235,10 +189,7 @@ class TestTransitLifeCycle(TestCase):
 
     def test_can_accept_transit(self):
         # given
-        transit = self.request_transit_from_to(
-            Address(country="Polska", city="Warszawa", street="Młynarska", building_number=20),
-            Address(country="Polska", city="Warszawa", street="Żytnia", building_number=25),
-        )
+        transit = self.request_transit()
         # and
         driver = Driver()
         # and
@@ -251,14 +202,10 @@ class TestTransitLifeCycle(TestCase):
 
         # then
         self.assertEqual(Transit.Status.TRANSIT_TO_PASSENGER, transit.status)
-        self.assertIsNotNone(transit.accepted_at)
 
     def test_only_one_driver_can_accept_transit(self):
         # given
-        transit = self.request_transit_from_to(
-            Address(country="Polska", city="Warszawa", street="Młynarska", building_number=20),
-            Address(country="Polska", city="Warszawa", street="Żytnia", building_number=25),
-        )
+        transit = self.request_transit()
         # and
         driver = Driver()
         # and
@@ -275,10 +222,7 @@ class TestTransitLifeCycle(TestCase):
 
     def test_transit_cannot_by_accepted_by_driver_who_already_rejected(self):
         # given
-        transit = self.request_transit_from_to(
-            Address(country="Polska", city="Warszawa", street="Młynarska", building_number=20),
-            Address(country="Polska", city="Warszawa", street="Żytnia", building_number=25),
-        )
+        transit = self.request_transit()
         # and
         driver = Driver()
         # and
@@ -292,10 +236,7 @@ class TestTransitLifeCycle(TestCase):
 
     def test_transit_cannot_by_accepted_by_driver_who_has_not_seen_proposal(self):
         # given
-        transit = self.request_transit_from_to(
-            Address(country="Polska", city="Warszawa", street="Młynarska", building_number=20),
-            Address(country="Polska", city="Warszawa", street="Żytnia", building_number=25),
-        )
+        transit = self.request_transit()
         # and
         driver = Driver()
         # and
@@ -307,10 +248,7 @@ class TestTransitLifeCycle(TestCase):
 
     def test_can_start_transit(self):
         # given
-        transit = self.request_transit_from_to(
-            Address(country="Polska", city="Warszawa", street="Młynarska", building_number=20),
-            Address(country="Polska", city="Warszawa", street="Żytnia", building_number=25),
-        )
+        transit = self.request_transit()
         # and
         driver = Driver()
         # and
@@ -325,14 +263,10 @@ class TestTransitLifeCycle(TestCase):
 
         # then
         self.assertEqual(Transit.Status.IN_TRANSIT, transit.status)
-        self.assertIsNotNone(transit.started)
 
     def test_cannot_start_not_accepted_transit(self):
         # given
-        transit = self.request_transit_from_to(
-            Address(country="Polska", city="Warszawa", street="Młynarska", building_number=20),
-            Address(country="Polska", city="Warszawa", street="Żytnia", building_number=25),
-        )
+        transit = self.request_transit()
         # and
         transit.publish_at(datetime.now())
 
@@ -344,10 +278,7 @@ class TestTransitLifeCycle(TestCase):
         # given
         destination = Address(country="Polska", city="Warszawa", street="Żytnia", building_number=25)
         # and
-        transit = self.request_transit_from_to(
-            Address(country="Polska", city="Warszawa", street="Młynarska", building_number=20),
-            destination,
-        )
+        transit = self.request_transit()
         # and
         driver = Driver()
         # and
@@ -366,16 +297,12 @@ class TestTransitLifeCycle(TestCase):
         self.assertEqual(Transit.Status.COMPLETED, transit.status)
         self.assertIsNotNone(transit.get_tariff())
         self.assertIsNotNone(transit.get_price())
-        self.assertIsNotNone(transit.complete_at)
 
     def test_cannot_complete_not_started_transit(self):
         # given
         address_to = Address(country="Polska", city="Warszawa", street="Żytnia", building_number=25)
         # and
-        transit = self.request_transit_from_to(
-            Address(country="Polska", city="Warszawa", street="Młynarska", building_number=20),
-            address_to,
-        )
+        transit = self.request_transit()
         # and
         driver = Driver()
         # and
@@ -391,10 +318,7 @@ class TestTransitLifeCycle(TestCase):
 
     def test_can_reject_transit(self):
         # given
-        transit = self.request_transit_from_to(
-            Address(country="Polska", city="Warszawa", street="Młynarska", building_number=20),
-            Address(country="Polska", city="Warszawa", street="Żytnia", building_number=25),
-        )
+        transit = self.request_transit()
         # and
         driver = Driver()
         # and
@@ -405,16 +329,10 @@ class TestTransitLifeCycle(TestCase):
 
         # then
         self.assertEqual(Transit.Status.WAITING_FOR_DRIVER_ASSIGNMENT, transit.status)
-        self.assertIsNone(transit.accepted_at)
 
-    def request_transit_from_to(self, pickup: Address, destination: Address) -> Transit:
+    def request_transit(self) -> Transit:
         return Transit(
-            status=Transit.Status.DRAFT,
-            address_from=pickup,
-            address_to=destination,
-            client=Client(),
-            car_type=None,
-            date_time=datetime.now(),
+            when=datetime.now(),
             distance=Distance.ZERO,
         )
 

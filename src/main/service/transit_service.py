@@ -28,6 +28,8 @@ from service.driver_fee_service import DriverFeeService
 from service.driver_notification_service import DriverNotificationService
 from service.geocoding_service import GeocodingService
 from service.invoice_generator import InvoiceGenerator
+from transitdetails.transit_details_dto import TransitDetailsDTO
+from transitdetails.transit_details_facade import TransitDetailsFacade
 
 
 class TransitService:
@@ -44,6 +46,7 @@ class TransitService:
     address_repository: AddressRepositoryImp
     driver_fee_service: DriverFeeService
     awards_service: AwardsService
+    transit_details_facade: TransitDetailsFacade
 
     def __init__(
             self,
@@ -59,7 +62,8 @@ class TransitService:
             geocoding_service: GeocodingService = Depends(GeocodingService),
             address_repository: AddressRepositoryImp = Depends(AddressRepositoryImp),
             driver_fee_service: DriverFeeService = Depends(DriverFeeService),
-            awards_service: AwardsService = Depends(AwardsServiceImpl)
+            awards_service: AwardsService = Depends(AwardsServiceImpl),
+            transit_details_facade: TransitDetailsFacade = Depends(TransitDetailsFacade),
     ):
         self.driver_repository = driver_repository
         self.transit_repository = transit_repository
@@ -74,6 +78,7 @@ class TransitService:
         self.address_repository = address_repository
         self.driver_fee_service = driver_fee_service
         self.awards_service = awards_service
+        self.transit_details_facade = transit_details_facade
 
     def create_transit(self, transit_dto: TransitDTO) -> Transit:
         address_from = self.__address_from_dto(transit_dto.address_from)
@@ -100,28 +105,35 @@ class TransitService:
             geo_to[0],
             geo_to[1]))
         )
-        transit: Transit = Transit(
-            address_from=address_from,
-            address_to=address_to,
-            client=client,
-            car_class=car_class,
-            date_time=datetime.now(),
-            km=km,
-            status=Transit.Status.DRAFT,
+        now: datetime = datetime.now()
+        transit: Transit = Transit(when=now, distance=km)
+        estimated_price: Money = transit.estimate_cost()
+        transit = self.transit_repository.save(transit)
+        self.transit_details_facade.transit_requested(
+            now,
+            transit.id,
+            address_from,
+            address_to,
+            km,
+            client,
+            car_class,
+            estimated_price,
+            transit.get_tariff()
         )
-        transit.estimate_cost()
-        return self.transit_repository.save(transit)
+        return transit
 
     def _change_transit_address_from(self, transit_id: int, new_address: Address) -> None:
         new_address = self.address_repository.save(new_address)
         transit = self.transit_repository.get_one(transit_id)
-
+        transit_details: TransitDetailsDTO = self.find_transit_details(transit_id)
         if transit is None:
             raise AttributeError("Transit does not exist, id = " + str(transit_id))
 
         # FIXME later: add some exceptions handling
         geo_from_new: List[float] = self.geocoding_service.geocode_address(new_address)
-        geo_to_new: List[float] = self.geocoding_service.geocode_address(transit.address_from)
+        geo_to_new: List[float] = self.geocoding_service.geocode_address(
+            transit_details.address_from.to_address_entity()
+        )
 
         # https://www.geeksforgeeks.org/program-distance-two-points-earth/
         # The math module contains a function
@@ -150,6 +162,11 @@ class TransitService:
         ))
         transit.change_pickup_to(new_address, new_distance, distance_in_kmeters)
         self.transit_repository.save(transit)
+        self.transit_details_facade.pickup_changed_to(
+            transit.id,
+            new_address,
+            new_distance
+        )
 
         for driver in transit.proposed_drivers:
             self.notification_service.notify_about_changed_transit_address(driver.id, transit_id)
@@ -163,11 +180,12 @@ class TransitService:
     def _change_transit_address_to(self, transit_id: int, new_address: Address) -> None:
         new_address = self.address_repository.save(new_address)
         transit: Transit = self.transit_repository.get_one(transit_id)
+        transit_details: TransitDetailsDTO = self.find_transit_details(transit_id)
         if transit is None:
             raise AttributeError("Transit does not exist, id = " + str(transit_id))
 
         # FIXME later: add some exceptions handling
-        geo_from: List[float] = self.geocoding_service.geocode_address(transit.address_from)
+        geo_from: List[float] = self.geocoding_service.geocode_address(transit_details.address_from.to_address_entity())
         geo_to: List[float] = self.geocoding_service.geocode_address(new_address)
 
         new_distance = Distance.of_km(float(
@@ -175,7 +193,7 @@ class TransitService:
         ))
         transit.change_destination_to(new_address, new_distance)
         self.transit_repository.save(transit)
-
+        self.transit_details_facade.destination_changed(transit.id, new_address, new_distance)
         if transit.driver is not None:
             self.notification_service.notify_about_changed_transit_address(transit.driver.id, transit_id)
 
@@ -189,6 +207,7 @@ class TransitService:
             self.notification_service.notify_about_cancelled_transit(transit.driver.id, transit.id)
 
         transit.cancel()
+        self.transit_details_facade.transit_cancelled(transit_id)
         self.transit_repository.save(transit)
 
     def publish_transit(self, transit_id: int) -> Transit:
@@ -197,12 +216,15 @@ class TransitService:
         if transit is None:
             raise AttributeError("Transit does not exist, id = " + str(transit_id))
 
-        transit.publish_at(datetime.now())
+        now: datetime = datetime.now()
+        transit.publish_at(now)
         self.transit_repository.save(transit)
+        self.transit_details_facade.transit_published(transit_id, now)
         return self.find_drivers_for_transit(transit_id)
 
     def find_drivers_for_transit(self, transit_id: int) -> Transit:
         transit = self.transit_repository.get_one(transit_id)
+        transit_details: TransitDetailsDTO = self.find_transit_details(transit_id)
 
         if transit != None:
             if transit.status == Transit.Status.WAITING_FOR_DRIVER_ASSIGNMENT:
@@ -225,7 +247,9 @@ class TransitService:
                     geocoded = [None, None]
 
                     try:
-                        geocoded = self.geocoding_service.geocode_address(transit.address_from)
+                        geocoded = self.geocoding_service.geocode_address(self.address_repository.get_by_hash(
+                            transit_details.address_from.hash
+                        ))
                     except Exception as e:
                         # Geocoding failed! Ask Jessica or Bryan for some help if needed.
                         pass
@@ -273,9 +297,9 @@ class TransitService:
                         active_car_classes = self.car_type_service.find_active_car_classes()
                         if not active_car_classes:
                             return transit
-                        if transit.car_type != None:
-                            if transit.car_type in active_car_classes:
-                                car_classes.append(transit.car_type)
+                        if transit_details.car_type != None:
+                            if transit_details.car_type in active_car_classes:
+                                car_classes.append(transit_details.car_type)
                             else:
                                 return transit
                         else:
@@ -327,7 +351,9 @@ class TransitService:
             if transit is None:
                 raise AttributeError("Transit does not exist, id = " + str(transits_id))
             else:
-                transit.accept_by(driver, datetime.now())
+                now = datetime.now()
+                transit.accept_by(driver, now)
+                self.transit_details_facade.transit_accepted(transits_id, now, driver_id)
                 self.transit_repository.save(transit)
                 self.driver_repository.save(driver)
 
@@ -342,7 +368,9 @@ class TransitService:
         if transit is None:
             raise AttributeError("Transit does not exist, id = " + str(transits_id))
 
-        transit.start(datetime.now())
+        now = datetime.now()
+        transit.start(now)
+        self.transit_details_facade.transit_started(transits_id, now)
         self.transit_repository.save(transit)
 
     def reject_transit(self, driver_id: int, transits_id: int):
@@ -365,6 +393,7 @@ class TransitService:
     def _complete_transit(self, driver_id: int, transit_id: int, destination_address: Address):
         destination_address = self.address_repository.save(destination_address)
         driver = self.driver_repository.get_one(driver_id)
+        transit_details: TransitDetailsDTO = self.find_transit_details(transit_id)
 
         if driver is None:
             raise AttributeError("Driver does not exist, id = " + str(driver_id))
@@ -375,32 +404,40 @@ class TransitService:
             raise AttributeError("Transit does not exist, id = " + str(transit_id))
 
         # FIXME later: add some exceptions handling
-        geo_from: List[float] = self.geocoding_service.geocode_address(transit.address_from)
-        geo_to: List[float] = self.geocoding_service.geocode_address(transit.address_to)
+        geo_from: List[float] = self.geocoding_service.geocode_address(
+            self.address_repository.get_by_hash(transit_details.address_from.hash))
+        geo_to: List[float] = self.geocoding_service.geocode_address(
+            self.address_repository.get_by_hash(transit_details.address_to.hash))
         distance = Distance.of_km(
             float(self.distance_calculator.calculate_by_map(geo_from[0], geo_from[1], geo_to[0], geo_to[1]))
         )
-        transit.complete_ride_at(datetime.now(), destination_address, distance)
+        now = datetime.now()
+        transit.complete_ride_at(now, destination_address, distance)
         driver_fee: Money = self.driver_fee_service.calculate_driver_fee(transit_id)
         transit.set_drivers_fee(driver_fee)
         driver.is_occupied = False
         self.driver_repository.save(driver)
-        self.awards_service.register_miles(transit.client.id, transit_id)
+        self.awards_service.register_miles(transit_details.client.id, transit_id)
         self.transit_repository.save(transit)
-        self.invoice_generator.generate(transit.get_price().to_int(), f"{transit.client.name} {transit.client.last_name}")
+        self.transit_details_facade.transit_completed(transit_id, now, Money(transit.price), driver_fee)
+        self.invoice_generator.generate(
+            transit.get_price().to_int(), f"{transit_details.client.name} {transit_details.client.last_name}")
         dispatch(
             "add_transit_between_addresses",
             payload=TransitCompleted(
-                transit.client.id,
+                transit_details.client.id,
                 transit_id,
-                transit.address_from.hash,
-                transit.address_to.hash,
-                transit.started,
-                transit.complete_at,
+                transit_details.address_from.hash,
+                transit_details.address_to.hash,
+                transit_details.started,
+                now,
                 datetime.now()
             ),
         )
-        print("Dupa!!!")
 
     def load_transit(self, transit_id: int) -> TransitDTO:
-        return TransitDTO(transit=self.transit_repository.get_one(transit_id))
+        transit_details: TransitDetailsDTO = self.find_transit_details(transit_id)
+        return TransitDTO(transit=self.transit_repository.get_one(transit_id), transit_details=transit_details)
+
+    def find_transit_details(self, transit_id: int) -> TransitDetailsDTO:
+        return self.transit_details_facade.find(transit_id)

@@ -64,19 +64,7 @@ class Transit(BaseEntity, table=True):
     client_payment_status: Optional[ClientPaymentStatus] = Field(sa_column=Column(Enum(ClientPaymentStatus)))
     payment_type: Optional['Client.PaymentType'] = Field(sa_column=Column(Enum('Client.PaymentType')))
     status: Optional[Status] = Field(sa_column=Column(Enum(Status)))
-    date: Optional[datetime] = Field(default=None, sa_column=Column(DateTime, nullable=True))
 
-    # @OneToOne
-    address_from_id: Optional[int] = Field(default=None, foreign_key="address.id")
-    address_from: Optional[Address] = Relationship(
-        sa_relationship=relationship("Address", foreign_keys="[Transit.address_from_id]"),
-    )
-
-    # @OneToOne
-    address_to_id: Optional[int] = Field(default=None, foreign_key="address.id")
-    address_to: Optional[Address] = Relationship(
-        sa_relationship=relationship("Address", foreign_keys="[Transit.address_to_id]"),
-    )
     pickup_address_change_counter: Optional[int] = 0
 
     # @ManyToOne
@@ -86,8 +74,6 @@ class Transit(BaseEntity, table=True):
             "entity.driver.Driver", back_populates="transits")
     )
 
-    accepted_at: Optional[datetime] = Field(default=None, sa_column=Column(DateTime, nullable=True))
-    started: Optional[datetime] = Field(default=None, sa_column=Column(DateTime, nullable=True))
     # @ManyToMany
     drivers_rejections: Set[Driver] = Relationship(
         sa_relationship=relationship(
@@ -109,32 +95,23 @@ class Transit(BaseEntity, table=True):
     estimated_price: Optional[int] = 0
     drivers_fee: Optional[int] = 0
 
-    date_time: Optional[datetime] = Field(default=None, sa_column=Column(DateTime, nullable=True))
-
     published: Optional[datetime] = Field(default=None, sa_column=Column(DateTime, nullable=True))
-
-    # @OneToOne
-    client_id: Optional[int] = Field(default=None, foreign_key="client.id")
-    client: Optional['Client'] = Relationship(
-        sa_relationship=relationship(
-            "entity.client.Client",
-            backref=backref("transit"))
-    )
-    car_type: Optional[CarType.CarClass] = Field(sa_column=Column(Enum(CarType.CarClass)))
-    complete_at: Optional[datetime] = Field(default=None, sa_column=Column(DateTime, nullable=True))
 
     def __init__(self, **data: Any):
         tariff: Optional[Tariff] = None
         km: Optional[Distance] = None
         status: Optional[Transit.Status] = None
+        when: Optional[datetime] = None
         if "tariff" in data:
             tariff = data.pop("tariff")
         if "km" in data:
             km = data.pop("km")
         if "status" in data:
             status = data.pop("status")
+        if "when" in data:
+            when = data.pop("when")
         super().__init__(**data)
-        self.status = status
+        self.status = status or self.Status.DRAFT
         if data.get("price"):
             self.set_price(data["price"])
         if data.get("estimated_price"):
@@ -152,8 +129,8 @@ class Transit(BaseEntity, table=True):
             self.tariff_km_rate = tariff.km_rate
         if km:
             self.km = km.to_km_in_float()
-        if data.get("date_time", None):
-            self.set_date_time(data.get("date_time", None))
+        if data.get("date_time", None) or when:
+            self.set_date_time(data.get("date_time", None) or when)
         if data.get("car_class"):
             self.car_type = data["car_class"]
 
@@ -169,7 +146,6 @@ class Transit(BaseEntity, table=True):
             raise AttributeError("Address 'from' cannot be changed, id = " + str(self.id))
         elif self.pickup_address_change_counter > 2:
             raise AttributeError("Address 'from' cannot be changed, id = " + str(self.id))
-        self.address_from = new_address
         self.pickup_address_change_counter = self.pickup_address_change_counter + 1
         self.km = new_distance.to_km_in_float()
         self.estimate_cost()
@@ -178,7 +154,6 @@ class Transit(BaseEntity, table=True):
         if self.status == Transit.Status.COMPLETED:
             raise AttributeError("Address 'to' cannot be changed, id = " + str(self.id))
 
-        self.address_to = new_address
         self.km = new_distance.to_km_in_float()
         self.estimate_cost()
 
@@ -224,13 +199,11 @@ class Transit(BaseEntity, table=True):
             self.driver = driver
             self.driver.is_occupied = True
             self.awaiting_drivers_responses = 0
-            self.accepted_at = when
             self.status = Transit.Status.TRANSIT_TO_PASSENGER
 
     def start(self, when: datetime) -> None:
         if self.status != Transit.Status.TRANSIT_TO_PASSENGER:
             raise AttributeError("Transit cannot be started, id = " + str(self.id))
-        self.started = when
         self.status = Transit.Status.IN_TRANSIT
 
     def reject_by(self, driver: Driver) -> None:
@@ -245,8 +218,6 @@ class Transit(BaseEntity, table=True):
         if self.status == Transit.Status.IN_TRANSIT:
             self.km = distance.to_km_in_float()
             self.estimate_cost()
-            self.complete_at = when
-            self.address_to = destination_address
             self.status = Transit.Status.COMPLETED
             self.calculate_final_costs()
         else:
@@ -297,12 +268,8 @@ class Transit(BaseEntity, table=True):
     def set_estimated_price(self, estimated_price: Money) -> None:
         self.estimated_price = estimated_price.value
 
-    def get_date_time(self) -> datetime:
-        return self.date_time
-
     def set_date_time(self, date_time: datetime) -> None:
         self.set_tariff(Tariff.of_time(date_time.astimezone(tzlocal())))
-        self.date_time = date_time
 
     def get_drivers_fee(self) -> Money:
         return Money(self.drivers_fee)

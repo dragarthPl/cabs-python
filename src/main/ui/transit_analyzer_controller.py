@@ -7,7 +7,6 @@ from fastapi_utils.cbv import cbv
 from fastapi_utils.inferring_router import InferringRouter
 
 from repository.address_repository import AddressRepositoryImp
-from service.transit_analyzer import TransitAnalyzer
 from transitanalyzer.graph_transit_analyzer import GraphTransitAnalyzer
 
 transit_analyzer_router = InferringRouter(tags=["TransitAnalyzerController"])

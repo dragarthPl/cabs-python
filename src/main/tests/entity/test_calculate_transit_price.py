@@ -101,10 +101,6 @@ class TestCalculateTransitPrice(TestCase):
     def transit(self, status: Transit.Status, km: int) -> Transit:
         return Transit(
             status=status,
-            address_from=None,
-            address_to=None,
-            client=None,
-            car_class=None,
             date_time=datetime.now(),
             distance=Distance.of_km(km),
         )

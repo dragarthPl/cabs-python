@@ -2,8 +2,12 @@ from datetime import datetime
 from unittest import TestCase
 
 from distance.distance import Distance
+from dto.address_dto import AddressDTO
+from dto.client_dto import ClientDTO
 from dto.transit_dto import TransitDTO
 from entity import Transit, Address, Client
+from money import Money
+from transitdetails.transit_details_dto import TransitDetailsDTO
 
 
 class TestCalculateTransitDistance(TestCase):
@@ -30,12 +34,20 @@ class TestCalculateTransitDistance(TestCase):
         self.assertEqual("0miles", self.transit_for_distance(0).get_distance("miles"))
 
     def transit_for_distance(self, km: float) -> TransitDTO:
-        t = Transit(
-            address_from=Address(),
-            address_to=Address(),
-            client=Client(),
-            car_class=None,
+        distance: Distance = Distance.of_km(km)
+        transit: Transit = Transit(when=datetime.now(), distance=distance);
+        transit.set_price(Money(10))
+        transit_details: TransitDetailsDTO = TransitDetailsDTO(
+            transit_id=1,
             date_time=datetime.now(),
-            distance=Distance.of_km(km),
+            completed_at=datetime.now(),
+            client=ClientDTO(),
+            car_type=None,
+            address_from=AddressDTO(),
+            address_to=AddressDTO(),
+            started=datetime.now(),
+            accepted_at=datetime.now(),
+            distance=distance,
+            tariff=transit.get_tariff(),
         )
-        return TransitDTO(transit=t)
+        return TransitDTO(transit=transit, transit_details=transit_details)

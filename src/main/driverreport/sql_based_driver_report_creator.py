@@ -30,23 +30,23 @@ class SqlBasedDriverReportCreator:
 
     QUERY_FOR_SESSIONS = (
         "SELECT ds.logged_at, ds.logged_out_at, ds.plates_number, ds.car_class, ds.car_brand, "
-        "t.id as TRANSIT_ID, t.tariff_name as TARIFF_NAME, t.status as TRANSIT_STATUS, t.km, t.tariff_km_rate, "
-        "t.price, t.drivers_fee, t.estimated_price, t.tariff_base_fee, "
-        "t.date_time, t.published, t.accepted_at, t.started, t.complete_at, t.car_type, "
+        "td.transit_id as TRANSIT_ID, td.tariff_name as TARIFF_NAME, td.status as TRANSIT_STATUS, td.distance, td.tariff_km_rate, "
+        "td.price, td.drivers_fee, td.estimated_price, td.tariff_base_fee, "
+        "td.date_time, td.published_at, td.accepted_at, td.started, td.complete_at, td.car_type, "
         "cl.id as CLAIM_ID, cl.owner_id, cl.reason, cl.incident_description, cl.status as CLAIM_STATUS,"
         " cl.creation_date, cl.completion_date, cl.change_date, cl.completion_mode, cl.claim_no, "
         "af.country as AF_COUNTRY, af.city as AF_CITY, af.street AS AF_STREET, af.building_number AS AF_NUMBER, "
         "ato.country as ATO_COUNTRY, ato.city as ATO_CITY, ato.street AS ATO_STREET, "
         "ato.building_number AS ATO_NUMBER "
         "FROM DriverSession AS ds "
-        "LEFT JOIN Transit AS t ON t.driver_id = ds.driver_id "
-        "LEFT JOIN Address AS af ON t.address_from_id = af.id "
-        "LEFT JOIN Address AS ato ON t.address_to_id = ato.id "
-        "LEFT JOIN Claim AS cl ON cl.transit_id = t.id "
-        "WHERE ds.driver_id = :driver_id AND t.status = :transit_status "
+        "LEFT JOIN TransitDetails AS td ON td.driver_id = ds.driver_id "
+        "LEFT JOIN Address AS af ON td.address_from_id = af.id "
+        "LEFT JOIN Address AS ato ON td.address_to_id = ato.id "
+        "LEFT JOIN Claim AS cl ON cl.transit_id = td.transit_id "
+        "WHERE ds.driver_id = :driver_id AND td.status = :transit_status "
         "AND ds.logged_at >= :since "
-        "AND t.complete_at >= ds.logged_at "
-        "AND t.complete_at <= ds.logged_out_at GROUP BY ds.id"
+        "AND td.complete_at >= ds.logged_at "
+        "AND td.complete_at <= ds.logged_out_at GROUP BY ds.id"
     )
 
     session: Session
@@ -101,7 +101,7 @@ class SqlBasedDriverReportCreator:
             estimated_price=row.get("estimated_price"),
             base_fee=row.get("tariff_base_fee"),
             date_time=row.get("date_time"),
-            published=row.get("published"),
+            published=row.get("published_at"),
             accepted_at=row.get("accepted_at"),
             started=row.get("started"),
             complete_at=row.get("complete_at"),

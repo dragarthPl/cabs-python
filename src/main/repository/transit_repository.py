@@ -1,7 +1,7 @@
 from datetime import datetime
 from typing import List, Optional
 
-from sqlalchemy import desc
+from sqlalchemy import desc, text
 
 from core.database import get_session
 from entity import Address, Client, Driver, Transit
@@ -22,17 +22,24 @@ class TransitRepositoryImp:
         return self.session.query(Transit).where(Transit.status == status).all()
 
     def find_by_client(self, owner: Client) -> List[Transit]:
-        return self.session.query(Transit).filter(Transit.client_id == owner.id).all()
+        stmt = text(
+            "select T.* from transit AS T join transitdetails AS TD "
+            "ON T.id = TD.transit_id where TD.client_id = :client"
+        )
+        return self.session.query(Transit).from_statement(stmt).params(
+            client=owner.id
+        ).all()
 
     def find_all_by_driver_and_date_time_between(self, driver: Driver, from_date, to_date) -> List[Transit]:
-        return self.session.query(
-            Transit
-        ).where(
-            Transit.driver_id == driver.id
-        ).filter(
-            Transit.date_time >= from_date
-        ).filter(
-            Transit.date_time <= to_date
+        stmt = text(
+            "select T.* from transit AS T join transitdetails AS TD "
+            "ON T.id = TD.transit_id where T.driver_id = :driver and TD.date_time >= :from_date AND "
+            "date_time <= :to_date"
+        )
+        return self.session.query(Transit).from_statement(stmt).params(
+            driver=driver.id,
+            from_date=from_date,
+            to_date=to_date,
         ).all()
 
     def save(self, transit: Transit) -> Optional[Transit]:

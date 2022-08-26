@@ -11,6 +11,10 @@ from dto.driver_dto import DriverDTO
 from entity import CarType, Transit
 from pydantic import BaseModel
 
+from money import Money
+from transitdetails.transit_details import TransitDetails
+from transitdetails.transit_details_dto import TransitDetailsDTO
+
 
 class TransitDTO(BaseModel):
     id: Optional[int]
@@ -43,7 +47,7 @@ class TransitDTO(BaseModel):
     class Config:
         arbitrary_types_allowed = True
 
-    def __init__(self, *, transit: Transit = None, **data: Any):
+    def __init__(self, *, transit: Transit = None, transit_details: TransitDetailsDTO = None, **data: Any):
         if transit is not None:
             data.update(**transit.dict())
         if "proposed_drivers" in data:
@@ -51,33 +55,46 @@ class TransitDTO(BaseModel):
         super().__init__(**data)
         self.factor = 1
         if transit is not None:
-            if transit.get_price():
-                self.price = Decimal(transit.get_price().to_int() or 0)
-            if transit.get_drivers_fee():
-                self.driver_fee = Decimal(transit.get_drivers_fee().to_int() or 0)
-            if transit.get_estimated_price():
-                self.estimated_price = Decimal(transit.get_estimated_price().to_int() or 0)
-
-            if transit.address_from:
-                self.address_from = AddressDTO(**transit.address_from.dict())
-            if transit.address_to:
-                self.address_to = AddressDTO(**transit.address_to.dict())
-            if transit.client:
-                self.client_dto = ClientDTO(**transit.client.dict())
             if transit.proposed_drivers:
                 self.proposed_drivers = []
                 for driver in transit.proposed_drivers:
                     self.proposed_drivers.append(DriverDTO(**driver.dict()))
-            if transit.date_time:
-                self.date = transit.date_time
-            self.distance = transit.get_km()
-            self.__set_tariff(transit)
 
-    def __set_tariff(self, transit: Transit) -> None:
+            self.distance = transit.get_km()
+
+        if transit_details is not None:
+            if hasattr(transit_details, "price"):
+                self.price = Decimal(Money(transit.price).to_int() or 0)
+            if hasattr(transit_details, "driver_fee"):
+                self.driver_fee = Decimal(transit_details.driver_fee.to_int() or 0)
+            if hasattr(transit_details, "estimated_price"):
+                self.estimated_price = Decimal(transit_details.estimated_price.to_int() or 0)
+            if transit_details.client:
+                self.client_dto = ClientDTO(**transit_details.client.dict())
+            if transit_details.address_from:
+                self.address_from = AddressDTO(**transit_details.address_from.dict())
+            if transit_details.address_to:
+                self.address_to = AddressDTO(**transit_details.address_to.dict())
+            if transit_details.date_time:
+                self.date = transit_details.date_time
+                self.date_time = transit_details.date_time
+            if hasattr(transit_details, "published_at"):
+                self.published = transit_details.published_at
+            if transit_details.accepted_at:
+                self.accepted_at = transit_details.accepted_at
+            if transit_details.started:
+                self.started = transit_details.started
+            if transit_details.completed_at:
+                self.complete_at = transit_details.completed_at
+            if transit_details.car_type:
+                self.car_class = transit_details.car_type
+            self.__set_tariff(transit_details)
+
+    def __set_tariff(self, transit_details: TransitDetailsDTO) -> None:
         # wprowadzenie nowych cennikow od 1.01.2019
-        self.tariff = transit.get_tariff().name
-        self.km_rate = transit.get_tariff().km_rate
-        self.base_fee = Decimal(transit.get_tariff().base_fee)
+        self.tariff = transit_details.tariff_name
+        self.km_rate = transit_details.km_rate
+        self.base_fee = Decimal(transit_details.base_fee)
 
     def get_distance(self, unit: str) -> str:
         self.distance_unit = unit

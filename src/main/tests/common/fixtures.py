@@ -29,6 +29,7 @@ from service.driver_service import DriverService
 from service.driver_session_service import DriverSessionService
 from service.driver_tracking_service import DriverTrackingService
 from service.transit_service import TransitService
+from transitdetails.transit_details_facade import TransitDetailsFacade
 
 
 class DefaultFakeApplicationEventPublisher(ApplicationEventPublisher):
@@ -90,6 +91,7 @@ class Fixtures:
     driver_attribute_repository: DriverAttributeRepositoryImp
     driver_session_service: DriverSessionService
     driver_tracking_service: DriverTrackingService
+    transit_details_facade: TransitDetailsFacade
 
     def __init__(
         self,
@@ -105,6 +107,7 @@ class Fixtures:
         driver_attribute_repository: DriverAttributeRepositoryImp = Depends(DriverAttributeRepositoryImp),
         driver_session_service: DriverSessionService = Depends(DriverSessionService),
         driver_tracking_service: DriverTrackingService = Depends(DriverTrackingService),
+        transit_details_facade: TransitDetailsFacade = Depends(TransitDetailsFacade),
     ):
         self.transit_repository = transit_repository
         self.fee_repository = fee_repository
@@ -118,6 +121,7 @@ class Fixtures:
         self.driver_attribute_repository = driver_attribute_repository
         self.driver_session_service = driver_session_service
         self.driver_tracking_service = driver_tracking_service
+        self.transit_details_facade = transit_details_facade
 
     def a_client(self) -> Client:
         return self.client_repository.save(Client())
@@ -134,18 +138,27 @@ class Fixtures:
         )
 
     def a_transit(self, driver: Driver, price: int, when: datetime, client: Client) -> Transit:
+        date_time = when.astimezone(pytz.UTC)
         transit: Transit = Transit(
-            address_from=None,
-            address_to=None,
-            client=client,
-            car_class=None,
-            date_time=when.astimezone(pytz.UTC),
+            when=date_time,
             distance=Distance.ZERO,
         )
         transit.set_price(Money(price))
         transit.propose_to(driver)
         transit.accept_by(driver, datetime.now())
-        return self.transit_repository.save(transit)
+        transit = self.transit_repository.save(transit)
+        self.transit_details_facade.transit_requested(
+            when=date_time,
+            transit_id=transit.id,
+            address_from=None,
+            address_to=None,
+            distance=Distance.ZERO,
+            client=client,
+            car_class=None,
+            estimated_price=Money(price),
+            tariff=transit.get_tariff(),
+        )
+        return transit
 
     def a_transit_when(self, driver: Driver, price: int, when: datetime) -> Transit:
         self.a_transit(driver, price, when, None)
@@ -205,11 +218,7 @@ class Fixtures:
         address_from = self.address_repository.save(address_from)
         destination = self.address_repository.save(destination)
         transit: Transit = Transit(
-            address_from=address_from,
-            address_to=destination,
-            client=client,
-            car_class=None,
-            date_time=published_at,
+            when=published_at,
             distance=Distance.ZERO
         )
         transit.publish_at(published_at)
@@ -218,7 +227,27 @@ class Fixtures:
         transit.start(published_at)
         transit.complete_ride_at(completed_at, destination, Distance.of_km(1))
         transit.set_price(Money(price))
-        return self.transit_repository.save(transit)
+        transit = self.transit_repository.save(transit)
+        self.transit_details_facade.transit_requested(
+            published_at,
+            transit.id,
+            address_from,
+            destination,
+            Distance.ZERO,
+            client,
+            None,
+            Money(price),
+            transit.get_tariff()
+        )
+        self.transit_details_facade.transit_accepted(transit.id, published_at, driver.id)
+        self.transit_details_facade.transit_started(transit.id, published_at)
+        self.transit_details_facade.transit_completed(
+            transit.id,
+            published_at,
+            Money(price),
+            Money(0)
+        )
+        return transit
 
     def _a_completed_transit_at(
             self,
