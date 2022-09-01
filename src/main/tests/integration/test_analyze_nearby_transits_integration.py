@@ -51,7 +51,7 @@ class TestAnalyzeNearbyTransitsIntegration(IsolatedAsyncioTestCase):
         # given
         client: Client = self.fixtures.a_client()
         # and
-        driver: Driver = self.fixtures.a_nearby_driver("WA001")
+        driver: Driver = self.fixtures.a_nearby_driver_default("WA001", 1, 1, CarType.CarClass.VAN, datetime.now())
         with freeze_time(datetime(2021, 1, 1, 0, 0).astimezone(pytz.utc)):
             address1: Address = Address(country="1_1", district="1", city="1", street="1", building_number=1)
             address2: Address = Address(country="1_2", district="2", city="2", street="2", building_number=2)
@@ -60,7 +60,7 @@ class TestAnalyzeNearbyTransitsIntegration(IsolatedAsyncioTestCase):
             address5: Address = Address(country="1_5", district="5", city="5", street="5", building_number=3)
             # and
             # 1-2-3-4
-            self.fixtures._a_requested_and_completed_transit(
+            self.a_transit_from_to(
                 50,
                 datetime(2021, 1, 1, 0, 00).astimezone(pytz.utc),
                 datetime(2021, 1, 1, 0, 5).astimezone(pytz.utc),
@@ -69,7 +69,7 @@ class TestAnalyzeNearbyTransitsIntegration(IsolatedAsyncioTestCase):
                 address1,
                 address2,
             )
-            self.fixtures._a_requested_and_completed_transit(
+            self.a_transit_from_to(
                 50,
                 datetime(2021, 1, 1, 0, 6).astimezone(pytz.utc),
                 datetime(2021, 1, 1, 0, 10).astimezone(pytz.utc),
@@ -78,7 +78,7 @@ class TestAnalyzeNearbyTransitsIntegration(IsolatedAsyncioTestCase):
                 address2,
                 address3,
             )
-            self.fixtures._a_requested_and_completed_transit(
+            self.a_transit_from_to(
                 50,
                 datetime(2021, 1, 1, 0, 15).astimezone(pytz.utc),
                 datetime(2021, 1, 1, 0, 20).astimezone(pytz.utc),
@@ -88,7 +88,7 @@ class TestAnalyzeNearbyTransitsIntegration(IsolatedAsyncioTestCase):
                 address4,
             )
             # 1-2-3
-            self.fixtures._a_requested_and_completed_transit(
+            self.a_transit_from_to(
                 50,
                 datetime(2021, 1, 2, 0, 00).astimezone(pytz.utc),
                 datetime(2021, 1, 2, 0, 10).astimezone(pytz.utc),
@@ -97,7 +97,7 @@ class TestAnalyzeNearbyTransitsIntegration(IsolatedAsyncioTestCase):
                 address1,
                 address2,
             )
-            self.fixtures._a_requested_and_completed_transit(
+            self.a_transit_from_to(
                 50,
                 datetime(2021, 1, 2, 0, 15).astimezone(pytz.utc),
                 datetime(2021, 1, 2, 0, 20).astimezone(pytz.utc),
@@ -107,7 +107,7 @@ class TestAnalyzeNearbyTransitsIntegration(IsolatedAsyncioTestCase):
                 address3,
             )
             # 1-3
-            self.fixtures._a_requested_and_completed_transit(
+            self.a_transit_from_to(
                 50,
                 datetime(2021, 1, 3, 0, 00).astimezone(pytz.utc),
                 datetime(2021, 1, 3, 0, 10).astimezone(pytz.utc),
@@ -117,7 +117,7 @@ class TestAnalyzeNearbyTransitsIntegration(IsolatedAsyncioTestCase):
                 address3,
             )
             # 3-1-2-5-4-5
-            self.fixtures._a_requested_and_completed_transit(
+            self.a_transit_from_to(
                 50,
                 datetime(2021, 2, 1, 0, 00).astimezone(pytz.utc),
                 datetime(2021, 2, 1, 0, 10).astimezone(pytz.utc),
@@ -126,7 +126,7 @@ class TestAnalyzeNearbyTransitsIntegration(IsolatedAsyncioTestCase):
                 address3,
                 address1,
             )
-            self.fixtures._a_requested_and_completed_transit(
+            self.a_transit_from_to(
                 50,
                 datetime(2021, 2, 1, 0, 20).astimezone(pytz.utc),
                 datetime(2021, 2, 1, 0, 25).astimezone(pytz.utc),
@@ -135,7 +135,7 @@ class TestAnalyzeNearbyTransitsIntegration(IsolatedAsyncioTestCase):
                 address1,
                 address2,
             )
-            self.fixtures._a_requested_and_completed_transit(
+            self.a_transit_from_to(
                 50,
                 datetime(2021, 2, 1, 0, 30).astimezone(pytz.utc),
                 datetime(2021, 2, 1, 0, 35).astimezone(pytz.utc),
@@ -144,7 +144,7 @@ class TestAnalyzeNearbyTransitsIntegration(IsolatedAsyncioTestCase):
                 address2,
                 address5,
             )
-            self.fixtures._a_requested_and_completed_transit(
+            self.a_transit_from_to(
                 50,
                 datetime(2021, 2, 1, 0, 40).astimezone(pytz.utc),
                 datetime(2021, 2, 1, 0, 45).astimezone(pytz.utc),
@@ -153,7 +153,7 @@ class TestAnalyzeNearbyTransitsIntegration(IsolatedAsyncioTestCase):
                 address5,
                 address4,
             )
-            self.fixtures._a_requested_and_completed_transit(
+            self.a_transit_from_to(
                 50,
                 datetime(2021, 2, 1, 0, 50).astimezone(pytz.utc),
                 datetime(2021, 2, 1, 0, 55).astimezone(pytz.utc),
@@ -179,7 +179,7 @@ class TestAnalyzeNearbyTransitsIntegration(IsolatedAsyncioTestCase):
         client3: Client = self.fixtures.a_client()
         client4: Client = self.fixtures.a_client()
         # and
-        driver: Driver = self.fixtures.a_nearby_driver("WA001")
+        driver: Driver = self.fixtures.a_nearby_driver_default("WA001", 1, 1, CarType.CarClass.VAN, datetime.now())
         # and
         with freeze_time(datetime(2021, 1, 1, 0, 0).astimezone(pytz.utc)):
             address1: Address = Address(country="2_1", district="1", city="1", street="1", building_number=1)
@@ -189,7 +189,7 @@ class TestAnalyzeNearbyTransitsIntegration(IsolatedAsyncioTestCase):
             address5: Address = Address(country="2_5", district="5", city="5", street="5", building_number=3)
             # and
             # 1-2-3-4
-            self.fixtures._a_requested_and_completed_transit(
+            self.a_transit_from_to(
                 50,
                 datetime(2021, 1, 1, 0, 00).astimezone(pytz.utc),
                 datetime(2021, 1, 1, 0, 10).astimezone(pytz.utc),
@@ -198,7 +198,7 @@ class TestAnalyzeNearbyTransitsIntegration(IsolatedAsyncioTestCase):
                 address1,
                 address2,
             )
-            self.fixtures._a_requested_and_completed_transit(
+            self.a_transit_from_to(
                 50,
                 datetime(2021, 1, 1, 0, 15).astimezone(pytz.utc),
                 datetime(2021, 1, 1, 0, 20).astimezone(pytz.utc),
@@ -207,7 +207,7 @@ class TestAnalyzeNearbyTransitsIntegration(IsolatedAsyncioTestCase):
                 address2,
                 address3,
             )
-            self.fixtures._a_requested_and_completed_transit(
+            self.a_transit_from_to(
                 50,
                 datetime(2021, 1, 1, 0, 25).astimezone(pytz.utc),
                 datetime(2021, 1, 1, 0, 30).astimezone(pytz.utc),
@@ -217,7 +217,7 @@ class TestAnalyzeNearbyTransitsIntegration(IsolatedAsyncioTestCase):
                 address4,
             )
             # 1-2-3
-            self.fixtures._a_requested_and_completed_transit(
+            self.a_transit_from_to(
                 50,
                 datetime(2021, 1, 2, 0, 00).astimezone(pytz.utc),
                 datetime(2021, 1, 2, 0, 10).astimezone(pytz.utc),
@@ -226,7 +226,7 @@ class TestAnalyzeNearbyTransitsIntegration(IsolatedAsyncioTestCase):
                 address1,
                 address2,
             )
-            self.fixtures._a_requested_and_completed_transit(
+            self.a_transit_from_to(
                 50,
                 datetime(2021, 1, 2, 0, 15).astimezone(pytz.utc),
                 datetime(2021, 1, 2, 0, 20).astimezone(pytz.utc),
@@ -236,7 +236,7 @@ class TestAnalyzeNearbyTransitsIntegration(IsolatedAsyncioTestCase):
                 address3,
             )
             # 1-3
-            self.fixtures._a_requested_and_completed_transit(
+            self.a_transit_from_to(
                 50,
                 datetime(2021, 1, 3, 0, 00).astimezone(pytz.utc),
                 datetime(2021, 1, 3, 0, 10).astimezone(pytz.utc),
@@ -246,7 +246,7 @@ class TestAnalyzeNearbyTransitsIntegration(IsolatedAsyncioTestCase):
                 address3,
             )
             # 3-1-2-5-4-5
-            self.fixtures._a_requested_and_completed_transit(
+            self.a_transit_from_to(
                 50,
                 datetime(2021, 2, 1, 0, 00).astimezone(pytz.utc),
                 datetime(2021, 2, 1, 0, 10).astimezone(pytz.utc),
@@ -255,7 +255,7 @@ class TestAnalyzeNearbyTransitsIntegration(IsolatedAsyncioTestCase):
                 address3,
                 address1,
             )
-            self.fixtures._a_requested_and_completed_transit(
+            self.a_transit_from_to(
                 50,
                 datetime(2021, 2, 1, 0, 20).astimezone(pytz.utc),
                 datetime(2021, 2, 1, 0, 25).astimezone(pytz.utc),
@@ -264,7 +264,7 @@ class TestAnalyzeNearbyTransitsIntegration(IsolatedAsyncioTestCase):
                 address1,
                 address2,
             )
-            self.fixtures._a_requested_and_completed_transit(
+            self.a_transit_from_to(
                 50,
                 datetime(2021, 2, 1, 0, 30).astimezone(pytz.utc),
                 datetime(2021, 2, 1, 0, 35).astimezone(pytz.utc),
@@ -273,7 +273,7 @@ class TestAnalyzeNearbyTransitsIntegration(IsolatedAsyncioTestCase):
                 address2,
                 address5,
             )
-            self.fixtures._a_requested_and_completed_transit(
+            self.a_transit_from_to(
                 50,
                 datetime(2021, 2, 1, 0, 40).astimezone(pytz.utc),
                 datetime(2021, 2, 1, 0, 45).astimezone(pytz.utc),
@@ -282,7 +282,7 @@ class TestAnalyzeNearbyTransitsIntegration(IsolatedAsyncioTestCase):
                 address5,
                 address4,
             )
-            self.fixtures._a_requested_and_completed_transit(
+            self.a_transit_from_to(
                 50,
                 datetime(2021, 2, 1, 0, 50).astimezone(pytz.utc),
                 datetime(2021, 2, 1, 0, 55).astimezone(pytz.utc),
@@ -308,7 +308,7 @@ class TestAnalyzeNearbyTransitsIntegration(IsolatedAsyncioTestCase):
         # given
         client: Client = self.fixtures.a_client()
         # and
-        driver: Driver = self.fixtures.a_nearby_driver("WA001")
+        driver: Driver = self.fixtures.a_nearby_driver_default("WA001", 1, 1, CarType.CarClass.VAN, datetime.now())
         # and
         with freeze_time(datetime(2021, 1, 1, 0, 0).astimezone(pytz.utc)):
             address1: Address = Address(country="3_1", district="1", city="1", street="1", building_number=1)
@@ -318,7 +318,7 @@ class TestAnalyzeNearbyTransitsIntegration(IsolatedAsyncioTestCase):
             address5: Address = Address(country="3_5", district="5", city="5", street="5", building_number=3)
             # and
             # 1-2-3-4-(stop)-5-1
-            self.fixtures._a_requested_and_completed_transit(
+            self.a_transit_from_to(
                 50,
                 datetime(2021, 2, 1, 0, 0).astimezone(pytz.utc),
                 datetime(2021, 2, 1, 0, 5).astimezone(pytz.utc),
@@ -327,7 +327,7 @@ class TestAnalyzeNearbyTransitsIntegration(IsolatedAsyncioTestCase):
                 address1,
                 address2,
             )
-            self.fixtures._a_requested_and_completed_transit(
+            self.a_transit_from_to(
                 50,
                 datetime(2021, 2, 1, 0, 10).astimezone(pytz.utc),
                 datetime(2021, 2, 1, 0, 15).astimezone(pytz.utc),
@@ -336,7 +336,7 @@ class TestAnalyzeNearbyTransitsIntegration(IsolatedAsyncioTestCase):
                 address2,
                 address3,
             )
-            self.fixtures._a_requested_and_completed_transit(
+            self.a_transit_from_to(
                 50,
                 datetime(2021, 2, 1, 0, 20).astimezone(pytz.utc),
                 datetime(2021, 2, 1, 0, 25).astimezone(pytz.utc),
@@ -345,7 +345,7 @@ class TestAnalyzeNearbyTransitsIntegration(IsolatedAsyncioTestCase):
                 address3,
                 address4,
             )
-            self.fixtures._a_requested_and_completed_transit(
+            self.a_transit_from_to(
                 50,
                 datetime(2021, 2, 1, 1, 0).astimezone(pytz.utc),
                 datetime(2021, 2, 1, 1, 10).astimezone(pytz.utc),
@@ -354,7 +354,7 @@ class TestAnalyzeNearbyTransitsIntegration(IsolatedAsyncioTestCase):
                 address4,
                 address5,
             )
-            self.fixtures._a_requested_and_completed_transit(
+            self.a_transit_from_to(
                 50,
                 datetime(2021, 2, 1, 1, 10).astimezone(pytz.utc),
                 datetime(2021, 2, 1, 1, 15).astimezone(pytz.utc),
@@ -380,7 +380,7 @@ class TestAnalyzeNearbyTransitsIntegration(IsolatedAsyncioTestCase):
         # given
         client: Client = self.fixtures.a_client()
         # and
-        driver: Driver = self.fixtures.a_nearby_driver("WA001")
+        driver: Driver = self.fixtures.a_nearby_driver_default("WA001", 1, 1, CarType.CarClass.VAN, datetime.now())
         # and
         with freeze_time(datetime(2021, 1, 1, 0, 0).astimezone(pytz.utc)):
             address1: Address = Address(country="4_1", district="1", city="1", street="1", building_number=1)
@@ -390,7 +390,7 @@ class TestAnalyzeNearbyTransitsIntegration(IsolatedAsyncioTestCase):
             address5: Address = Address(country="4_5", district="5", city="5", street="5", building_number=3)
             # and
             # 5-1-2-3
-            self.fixtures._a_requested_and_completed_transit(
+            self.a_transit_from_to(
                 50,
                 datetime(2021, 1, 1, 0, 00).astimezone(pytz.utc),
                 datetime(2021, 1, 1, 0, 5).astimezone(pytz.utc),
@@ -399,7 +399,7 @@ class TestAnalyzeNearbyTransitsIntegration(IsolatedAsyncioTestCase):
                 address5,
                 address1,
             )
-            self.fixtures._a_requested_and_completed_transit(
+            self.a_transit_from_to(
                 50,
                 datetime(2021, 1, 1, 0, 6).astimezone(pytz.utc),
                 datetime(2021, 1, 1, 0, 10).astimezone(pytz.utc),
@@ -408,7 +408,7 @@ class TestAnalyzeNearbyTransitsIntegration(IsolatedAsyncioTestCase):
                 address1,
                 address2,
             )
-            self.fixtures._a_requested_and_completed_transit(
+            self.a_transit_from_to(
                 50,
                 datetime(2021, 1, 1, 0, 15).astimezone(pytz.utc),
                 datetime(2021, 1, 1, 0, 20).astimezone(pytz.utc),
@@ -418,7 +418,7 @@ class TestAnalyzeNearbyTransitsIntegration(IsolatedAsyncioTestCase):
                 address3,
             )
             # 3-2-1
-            self.fixtures._a_requested_and_completed_transit(
+            self.a_transit_from_to(
                 50,
                 datetime(2021, 1, 2, 0, 00).astimezone(pytz.utc),
                 datetime(2021, 1, 2, 0, 10).astimezone(pytz.utc),
@@ -427,7 +427,7 @@ class TestAnalyzeNearbyTransitsIntegration(IsolatedAsyncioTestCase):
                 address3,
                 address2,
             )
-            self.fixtures._a_requested_and_completed_transit(
+            self.a_transit_from_to(
                 50,
                 datetime(2021, 1, 2, 0, 15).astimezone(pytz.utc),
                 datetime(2021, 1, 2, 0, 20).astimezone(pytz.utc),
@@ -437,7 +437,7 @@ class TestAnalyzeNearbyTransitsIntegration(IsolatedAsyncioTestCase):
                 address1,
             )
             # 1-5
-            self.fixtures._a_requested_and_completed_transit(
+            self.a_transit_from_to(
                 50,
                 datetime(2021, 1, 3, 0, 00).astimezone(pytz.utc),
                 datetime(2021, 1, 3, 0, 10).astimezone(pytz.utc),
@@ -447,7 +447,7 @@ class TestAnalyzeNearbyTransitsIntegration(IsolatedAsyncioTestCase):
                 address5,
             )
             # 3-1-2-5-4-5
-            self.fixtures._a_requested_and_completed_transit(
+            self.a_transit_from_to(
                 50,
                 datetime(2021, 2, 1, 0, 00).astimezone(pytz.utc),
                 datetime(2021, 2, 1, 0, 10).astimezone(pytz.utc),
@@ -456,7 +456,7 @@ class TestAnalyzeNearbyTransitsIntegration(IsolatedAsyncioTestCase):
                 address3,
                 address1,
             )
-            self.fixtures._a_requested_and_completed_transit(
+            self.a_transit_from_to(
                 50,
                 datetime(2021, 2, 1, 0, 20).astimezone(pytz.utc),
                 datetime(2021, 2, 1, 0, 25).astimezone(pytz.utc),
@@ -465,7 +465,7 @@ class TestAnalyzeNearbyTransitsIntegration(IsolatedAsyncioTestCase):
                 address1,
                 address2,
             )
-            self.fixtures._a_requested_and_completed_transit(
+            self.a_transit_from_to(
                 50,
                 datetime(2021, 2, 1, 0, 30).astimezone(pytz.utc),
                 datetime(2021, 2, 1, 0, 35).astimezone(pytz.utc),
@@ -474,7 +474,7 @@ class TestAnalyzeNearbyTransitsIntegration(IsolatedAsyncioTestCase):
                 address2,
                 address5,
             )
-            self.fixtures._a_requested_and_completed_transit(
+            self.a_transit_from_to(
                 50,
                 datetime(2021, 2, 1, 0, 40).astimezone(pytz.utc),
                 datetime(2021, 2, 1, 0, 45).astimezone(pytz.utc),
@@ -483,7 +483,7 @@ class TestAnalyzeNearbyTransitsIntegration(IsolatedAsyncioTestCase):
                 address5,
                 address4,
             )
-            self.fixtures._a_requested_and_completed_transit(
+            self.a_transit_from_to(
                 50,
                 datetime(2021, 2, 1, 0, 50).astimezone(pytz.utc),
                 datetime(2021, 2, 1, 0, 55).astimezone(pytz.utc),
@@ -510,7 +510,7 @@ class TestAnalyzeNearbyTransitsIntegration(IsolatedAsyncioTestCase):
         # given
         client: Client = self.fixtures.a_client()
         # and
-        driver: Driver = self.fixtures.a_nearby_driver("WA001")
+        driver: Driver = self.fixtures.a_nearby_driver_default("WA001", 1, 1, CarType.CarClass.VAN, datetime.now())
         # and
         with freeze_time(datetime(2021, 1, 1, 0, 0).astimezone(pytz.utc)):
             address1: Address = Address(country="5_1", district="1", city="1", street="1", building_number=1)
@@ -520,7 +520,7 @@ class TestAnalyzeNearbyTransitsIntegration(IsolatedAsyncioTestCase):
             address5: Address = Address(country="5_5", district="5", city="5", street="5", building_number=3)
             # and
             # 1-2-3
-            self.fixtures._a_requested_and_completed_transit(
+            self.a_transit_from_to(
                 50,
                 datetime(2021, 1, 1, 0, 0).astimezone(pytz.utc),
                 datetime(2021, 1, 1, 0, 5).astimezone(pytz.utc),
@@ -529,7 +529,7 @@ class TestAnalyzeNearbyTransitsIntegration(IsolatedAsyncioTestCase):
                 address1,
                 address2,
             )
-            self.fixtures._a_requested_and_completed_transit(
+            self.a_transit_from_to(
                 50,
                 datetime(2021, 1, 1, 0, 10).astimezone(pytz.utc),
                 datetime(2021, 1, 1, 0, 15).astimezone(pytz.utc),
@@ -539,7 +539,7 @@ class TestAnalyzeNearbyTransitsIntegration(IsolatedAsyncioTestCase):
                 address3,
             )
             # 4-5
-            self.fixtures._a_requested_and_completed_transit(
+            self.a_transit_from_to(
                 50,
                 datetime(2021, 1, 1, 0, 20).astimezone(pytz.utc),
                 datetime(2021, 1, 1, 0, 25).astimezone(pytz.utc),
@@ -558,6 +558,19 @@ class TestAnalyzeNearbyTransitsIntegration(IsolatedAsyncioTestCase):
             # then
             # 1-2
             self.addresses_contain_exactly(analyzed_addresses_dto, (address1, address2, address3))
+
+    def a_transit_from_to(
+        self,
+        published_at: datetime,
+        completed_at: datetime,
+        client: Client,
+        pickup: Address,
+        destination: Address,
+    ) -> None:
+        when(self.geocoding_service.geocode_address(destination)).thenReturn([1.0, 1.0])
+        driver: Driver = self.fixtures.a_random_nearby_driver(self.geocoding_service, pickup)
+        self.fixtures.a_journey_with_fixed_clock(
+            40, published_at, completed_at, client, driver, pickup, destination,)
 
     def addresses_contain_exactly(
         self,

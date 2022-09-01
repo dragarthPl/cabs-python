@@ -4,15 +4,18 @@ from unittest import TestCase
 
 import pytz
 from dateutil.relativedelta import relativedelta
+from fastapi_events import middleware_identifier
 from freezegun import freeze_time
 from fastapi.params import Depends
 
+from cabs_application import CabsApplication
 from config.app_properties import AppProperties
 from core.database import create_db_and_tables, drop_db_and_tables
 from entity import Transit, Client, AwardedMiles
 from money import Money
 from repository.awards_account_repository import AwardsAccountRepositoryImp
 from service.awards_service import AwardsService, AwardsServiceImpl
+from service.geocoding_service import GeocodingService
 
 from tests.common.fixtures import DependencyResolver, Fixtures
 
@@ -30,11 +33,14 @@ class TestRemovingAwardMilesIntegration(TestCase):
         Depends(AwardsAccountRepositoryImp))
     fixtures: Fixtures = dependency_resolver.resolve_dependency(Depends(Fixtures))
     app_properties: AppProperties = dependency_resolver.resolve_dependency(Depends(AppProperties))
+    geocoding_service: GeocodingService = dependency_resolver.resolve_dependency(Depends(GeocodingService))
 
-    def setUp(self):
+    async def setUp(self):
         create_db_and_tables()
+        app = CabsApplication().create_app()
+        middleware_identifier.set(app.middleware_stack.app._id)
 
-    def test_by_default_remove_oldest_first_even_when_they_are_non_expiring(self):
+    async def test_by_default_remove_oldest_first_even_when_they_are_non_expiring(self):
         # given
         client = self.client_with_an_active_miles_program(Client.Type.NORMAL)
         # and
@@ -54,11 +60,11 @@ class TestRemovingAwardMilesIntegration(TestCase):
         self.assert_that_miles_were_reduced_to(middle, 0, awarded_miles)
         self.assert_that_miles_were_reduced_to(youngest, 9, awarded_miles)
 
-    def test_should_remove_oldest_miles_first_when_many_transits(self):
+    async def test_should_remove_oldest_miles_first_when_many_transits(self):
         # given
         client = self.client_with_an_active_miles_program(Client.Type.NORMAL)
         # and
-        self.fixtures.client_has_done_transits(client, 15)
+        self.fixtures.client_has_done_transits(client, 15, self.geocoding_service)
         # and
         transit = self.fixtures.a_transit_price(Money(100))
         # and
@@ -76,11 +82,11 @@ class TestRemovingAwardMilesIntegration(TestCase):
         self.assert_that_miles_were_reduced_to(middle, 5, awarded_miles)
         self.assert_that_miles_were_reduced_to(youngest, 10, awarded_miles)
 
-    def test_should_remove_non_expiring_miles_last_when_many_transits(self):
+    async def test_should_remove_non_expiring_miles_last_when_many_transits(self):
         # given
         client = self.client_with_an_active_miles_program(Client.Type.NORMAL)
         # and
-        self.fixtures.client_has_done_transits(client, 15)
+        self.fixtures.client_has_done_transits(client, 15, self.geocoding_service)
         # and
         transit = self.fixtures.a_transit_price(Money(80))
 
@@ -96,7 +102,7 @@ class TestRemovingAwardMilesIntegration(TestCase):
         self.assert_that_miles_were_reduced_to(regular_miles, 0, awarded_miles)
         self.assert_that_miles_were_reduced_to(oldest_non_expiring_miles, 2, awarded_miles)
 
-    def test_should_remove_soon_to_expire_miles_first_when_client_is_vip(self):
+    async def test_should_remove_soon_to_expire_miles_first_when_client_is_vip(self):
         # given
         client = self.client_with_an_active_miles_program(Client.Type.VIP)
         # and
@@ -123,11 +129,11 @@ class TestRemovingAwardMilesIntegration(TestCase):
         self.assert_that_miles_were_reduced_to(second_to_expire, 4, awarded_miles)
         self.assert_that_miles_were_reduced_to(third_to_expire, 5, awarded_miles)
 
-    def test_should_remove_soon_to_expire_miles_first_when_removing_on_sunday_and_client_has_done_many_transits(self):
+    async def test_should_remove_soon_to_expire_miles_first_when_removing_on_sunday_and_client_has_done_many_transits(self):
         # given
         client = self.client_with_an_active_miles_program(Client.Type.NORMAL)
         # and
-        self.fixtures.client_has_done_transits(client, 15)
+        self.fixtures.client_has_done_transits(client, 15, self.geocoding_service)
         # and
         transit = self.fixtures.a_transit_price(Money(80))
         # and
@@ -151,11 +157,11 @@ class TestRemovingAwardMilesIntegration(TestCase):
         self.assert_that_miles_were_reduced_to(second_to_expire, 4, awarded_miles)
         self.assert_that_miles_were_reduced_to(third_to_expire, 5, awarded_miles)
 
-    def test_should_remove_expiring_miles_first_when_client_has_many_claims(self):
+    async def test_should_remove_expiring_miles_first_when_client_has_many_claims(self):
         # given
         client = self.client_with_an_active_miles_program(Client.Type.NORMAL)
         # and
-        self.fixtures.client_has_done_claims(client, 3)
+        self.fixtures.client_has_done_claim_after_completed_transit(client, 3)
         # and
         transit = self.fixtures.a_transit_price(Money(80))
         # and
@@ -227,7 +233,7 @@ class TestRemovingAwardMilesIntegration(TestCase):
     def miles_will_expire_in_days(self, days: int):
         self.awards_service.app_properties.miles_expiration_in_days = days
 
-    def tearDown(self) -> None:
+    async def tearDown(self) -> None:
         drop_db_and_tables()
 
     def default_miles_bonus_is(self, miles: int):

@@ -1,17 +1,19 @@
 from datetime import datetime
 from unittest import TestCase
 
-import pytz
 from fastapi.params import Depends
+from fastapi_events import middleware_identifier
 from mockito import when, verify, mock, ANY, verifyZeroInteractions
 
+from cabs_application import CabsApplication
 from config.app_properties import AppProperties
 from core.database import create_db_and_tables, drop_db_and_tables
-from entity import Client, Driver, Transit, Claim
+from entity import Client, Driver, Transit, Claim, Address
 from service.awards_service import AwardsService, AwardsServiceImpl
 from service.claim_service import ClaimService
 from service.client_notification_service import ClientNotificationService
 from service.driver_notification_service import DriverNotificationService
+from service.geocoding_service import GeocodingService
 from tests.common.fixtures import DependencyResolver, Fixtures
 
 dependency_resolver = DependencyResolver()
@@ -31,18 +33,24 @@ class TestClaimAutomaticResolvingIntegration(TestCase):
 
     fixtures: Fixtures = dependency_resolver.resolve_dependency(Depends(Fixtures))
 
-    def setUp(self):
-        create_db_and_tables()
+    geocoding_service: GeocodingService = dependency_resolver.resolve_dependency(Depends(GeocodingService))
 
-    def test_second_claim_for_the_same_transit_will_be_escalated(self):
+    async def setUp(self):
+        create_db_and_tables()
+        app = CabsApplication().create_app()
+        middleware_identifier.set(app.middleware_stack.app._id)
+
+    async def test_second_claim_for_the_same_transit_will_be_escalated(self):
         # given
         self.low_cost_threshold_is(40)
         # and
-        driver: Driver = self.fixtures.an_active_regular_driver()
+        pickup: Address = self.fixtures.an_address()
+        # and
+        driver: Driver = self.fixtures.a_random_nearby_driver(self.geocoding_service, pickup)
         # and
         client: Client = self.fixtures.a_client_with_type(Client.Type.VIP)
         # and
-        transit: Transit = self.a_transit(client, driver, 39)
+        transit: Transit = self.a_transit(pickup, client, driver, 39)
         # and
 
         claim: Claim = self.fixtures.create_claim(client, transit)
@@ -60,15 +68,17 @@ class TestClaimAutomaticResolvingIntegration(TestCase):
         self.assertEquals(Claim.Status.ESCALATED, claim2.status)
         self.assertEquals(Claim.CompletionMode.MANUAL, claim2.completion_mode)
 
-    def test_low_cost_transits_are_refunded_if_client_is_vip(self):
+    async def test_low_cost_transits_are_refunded_if_client_is_vip(self):
         # given
         self.low_cost_threshold_is(40)
         # and
         client: Client = self.fixtures.a_client_with_claims(Client.Type.VIP, 3)
         # and
-        driver = self.fixtures.an_active_regular_driver()
+        pickup: Address = self.fixtures.an_address()
         # and
-        transit: Transit = self.a_transit(client, driver, 39)
+        driver: Driver = self.fixtures.a_random_nearby_driver(self.geocoding_service, pickup)
+        # and
+        transit: Transit = self.a_transit(pickup, client, driver, 39)
         # and
         claim: Claim = self.fixtures.create_claim(client, transit)
 
@@ -84,15 +94,17 @@ class TestClaimAutomaticResolvingIntegration(TestCase):
                                                                                           claim.owner.id)
         verify(self.claim_service.awards_service).register_non_expiring_miles(claim.owner.id, 10)
 
-    def test_high_cost_transits_are_escalated_even_when_client_is_vip(self):
+    async def test_high_cost_transits_are_escalated_even_when_client_is_vip(self):
         # given
         self.low_cost_threshold_is(40)
         # and
         client: Client = self.fixtures.a_client_with_claims(Client.Type.VIP, 3)
         # and
-        driver = self.fixtures.an_active_regular_driver()
+        pickup: Address = self.fixtures.an_address()
         # and
-        transit: Transit = self.a_transit(client, driver, 50)
+        driver: Driver = self.fixtures.a_random_nearby_driver(self.geocoding_service, pickup)
+        # and
+        transit: Transit = self.a_transit(pickup, client, driver, 50)
         # and
         claim: Claim = self.fixtures.create_claim(client, transit)
 
@@ -109,7 +121,7 @@ class TestClaimAutomaticResolvingIntegration(TestCase):
         ).ask_driver_for_details_about_claim(claim.claim_no, driver.id)
         verifyZeroInteractions(self.claim_service.awards_service)
 
-    def test_first_three_claims_are_refunded(self):
+    async def test_first_three_claims_are_refunded(self):
         # given
         self.low_cost_threshold_is(40)
         # and
@@ -117,22 +129,24 @@ class TestClaimAutomaticResolvingIntegration(TestCase):
         # and
         client: Client = self.a_client(Client.Type.NORMAL)
         # and
-        driver = self.fixtures.an_active_regular_driver()
+        pickup: Address = self.fixtures.an_address()
+        # and
+        driver: Driver = self.fixtures.a_random_nearby_driver(self.geocoding_service, pickup)
 
         # when
         self.claim_service.awards_service = mock()
         self.claim_service.client_notification_service = mock()
         claim1: Claim = self.claim_service.try_to_automatically_resolve(
-            self.fixtures.create_claim(client, self.a_transit(client, driver, 50)).id)
+            self.fixtures.create_claim(client, self.a_transit(pickup, client, driver, 50)).id)
 
         claim2: Claim = self.claim_service.try_to_automatically_resolve(
-            self.fixtures.create_claim(client, self.a_transit(client, driver, 50)).id)
+            self.fixtures.create_claim(client, self.a_transit(pickup, client, driver, 50)).id)
 
         claim3: Claim = self.claim_service.try_to_automatically_resolve(
-            self.fixtures.create_claim(client, self.a_transit(client, driver, 50)).id)
+            self.fixtures.create_claim(client, self.a_transit(pickup, client, driver, 50)).id)
 
         claim4: Claim = self.claim_service.try_to_automatically_resolve(
-            self.fixtures.create_claim(client, self.a_transit(client, driver, 50)).id)
+            self.fixtures.create_claim(client, self.a_transit(pickup, client, driver, 50)).id)
 
         # then
         self.assertEqual(Claim.Status.REFUNDED, claim1.status)
@@ -158,7 +172,7 @@ class TestClaimAutomaticResolvingIntegration(TestCase):
         ).notify_client_about_refund(claim3.claim_no, client.id)
         verifyZeroInteractions(self.claim_service.awards_service)
 
-    def test_low_cost_transits_are_refunded_when_many_transits(self):
+    async def test_low_cost_transits_are_refunded_when_many_transits(self):
         # given
         self.low_cost_threshold_is(40)
         # and
@@ -166,9 +180,13 @@ class TestClaimAutomaticResolvingIntegration(TestCase):
         # and
         client: Client = self.fixtures.a_client_with_claims(Client.Type.NORMAL, 3)
         # and
-        self.fixtures.client_has_done_transits(client, 12)
+        self.fixtures.client_has_done_transits(client, 12, self.geocoding_service)
         # and
-        transit: Transit = self.a_transit(client, self.fixtures.an_active_regular_driver(), 39)
+        pickup: Address = self.fixtures.an_address()
+        # and
+        driver: Driver = self.fixtures.a_random_nearby_driver(self.geocoding_service, pickup)
+        # and
+        transit: Transit = self.a_transit(pickup, client, driver, 39)
         # and
         claim = self.fixtures.create_claim(client, transit)
 
@@ -184,7 +202,7 @@ class TestClaimAutomaticResolvingIntegration(TestCase):
         ).notify_client_about_refund(claim.claim_no, client.id)
         verifyZeroInteractions(self.claim_service.awards_service)
 
-    def test_high_cost_transits_are_escalated_even_with_many_transits(self):
+    async def test_high_cost_transits_are_escalated_even_with_many_transits(self):
         # given
         self.low_cost_threshold_is(40)
         # and
@@ -192,9 +210,13 @@ class TestClaimAutomaticResolvingIntegration(TestCase):
         # and
         client: Client = self.fixtures.a_client_with_claims(Client.Type.NORMAL, 3)
         # and
-        self.fixtures.client_has_done_transits(client, 12)
+        self.fixtures.client_has_done_transits(client, 12, self.geocoding_service)
         # and
-        transit: Transit = self.a_transit(client, self.fixtures.an_active_regular_driver(), 50)
+        pickup: Address = self.fixtures.an_address()
+        # and
+        driver: Driver = self.fixtures.a_random_nearby_driver(self.geocoding_service, pickup)
+        # and
+        transit: Transit = self.a_transit(pickup, client, driver, 50)
         # and
         claim = self.fixtures.create_claim(client, transit)
 
@@ -210,7 +232,7 @@ class TestClaimAutomaticResolvingIntegration(TestCase):
         ).ask_for_more_information(claim.claim_no, client.id)
         verifyZeroInteractions(self.claim_service.awards_service)
 
-    def test_high_cost_transits_are_escalated_when_few_transits(self):
+    async def test_high_cost_transits_are_escalated_when_few_transits(self):
         # given
         self.low_cost_threshold_is(40)
         # and
@@ -218,11 +240,13 @@ class TestClaimAutomaticResolvingIntegration(TestCase):
         # and
         client: Client = self.fixtures.a_client_with_claims(Client.Type.NORMAL, 3)
         # and
-        self.fixtures.client_has_done_transits(client, 2)
+        self.fixtures.client_has_done_transits(client, 2, self.geocoding_service)
         # and
-        driver: Driver = self.fixtures.an_active_regular_driver()
+        pickup: Address = self.fixtures.an_address()
         # and
-        claim = self.fixtures.create_claim(client, self.a_transit(client, driver, 50))
+        driver: Driver = self.fixtures.a_random_nearby_driver(self.geocoding_service, pickup)
+        # and
+        claim = self.fixtures.create_claim(client, self.a_transit(pickup, client, driver, 50))
 
         # when
         self.claim_service.awards_service = mock()
@@ -237,17 +261,17 @@ class TestClaimAutomaticResolvingIntegration(TestCase):
         ).ask_driver_for_details_about_claim(claim.claim_no, driver.id)
         verifyZeroInteractions(self.claim_service.awards_service)
 
-    def a_transit(self, client: Client, driver: Driver, price: int) -> Transit:
-        return self.fixtures.a_completed_transit_at(price, datetime.now().astimezone(pytz.utc), client, driver)
+    async def a_transit(self, pickup: Address, client: Client, driver: Driver, price: int) -> Transit:
+        return self.fixtures.a_journey(price, client, driver, pickup, self.fixtures.an_address())
 
-    def low_cost_threshold_is(self, price: int) -> None:
+    async def low_cost_threshold_is(self, price: int) -> None:
         self.claim_service.app_properties.automatic_refund_for_vip_threshold = price
 
-    def no_of_transits_for_automatic_refund_is(self, no: int) -> None:
+    async def no_of_transits_for_automatic_refund_is(self, no: int) -> None:
         self.claim_service.app_properties.no_of_transits_for_claim_automatic_refund = no
 
-    def a_client(self, client_type: Client.Type) -> Client:
+    async def a_client(self, client_type: Client.Type) -> Client:
         return self.fixtures.a_client_with_claims(client_type, 0)
 
-    def tearDown(self) -> None:
+    async def tearDown(self) -> None:
         drop_db_and_tables()

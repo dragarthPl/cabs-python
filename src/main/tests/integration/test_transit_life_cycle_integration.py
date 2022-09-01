@@ -36,7 +36,6 @@ class TestTransitLifeCycleIntegration(IsolatedAsyncioTestCase):
 
         self.client = AsyncClient(app=app)
         self.fixtures.an_active_car_category(CarType.CarClass.VAN)
-        # when(geocodingService.geocodeAddress(any(Address.class ))).thenReturn(new double[]{ 1, 1 })
         when(self.geocoding_service).geocode_address(ANY).thenReturn([1.0, 1.0])
 
     async def test_can_create_transit(self):
@@ -426,18 +425,14 @@ class TestTransitLifeCycleIntegration(IsolatedAsyncioTestCase):
         self.assertEqual(Transit.Status.WAITING_FOR_DRIVER_ASSIGNMENT, loaded.status)
         self.assertIsNone(loaded.accepted_at)
 
-    def far_away_address(self, transit: Transit):
-        address_dto = AddressDTO(country="Dania", city="Kopenhaga", street="Mylve", building_number=2);
+    def far_away_address(self, address_from: AddressDTO):
+        address_dto = AddressDTO(country="Dania", city="Kopenhaga", street="Mylve", building_number=2)
         when(self.geocoding_service).geocode_address(ANY).thenReturn([1000.0, 1000.0])
-        when(self.geocoding_service).geocode_address(transit.address_from).thenReturn([1.0, 1.0])
+        when(self.geocoding_service).geocode_address(address_from.to_address_entity()).thenReturn([1.0, 1.0])
         return address_dto
 
     def a_nearby_driver(self, plate_number: str) -> int:
-        driver = self.fixtures.an_active_regular_driver()
-        self.fixtures.driver_has_fee(driver, DriverFee.FeeType.FLAT, 10)
-        self.driver_session_service.log_in(driver.id, plate_number, CarType.CarClass.VAN, "BRAND")
-        self.driver_tracking_service.register_position(driver.id, 1, 1, datetime.now())
-        return driver.id
+        return self.fixtures.a_nearby_driver(plate_number, 1, 1, CarType.CarClass.VAN, datetime.now(), "BRAND").id
 
     def request_transit_from_to(self, pickup: AddressDTO, destination: AddressDTO) -> Transit:
         return self.transit_service.create_transit(
@@ -445,11 +440,7 @@ class TestTransitLifeCycleIntegration(IsolatedAsyncioTestCase):
         )
 
     def a_far_away_driver(self, plate_number: str) -> int:
-        driver = self.fixtures.an_active_regular_driver()
-        self.fixtures.driver_has_fee(driver, DriverFee.FeeType.FLAT, 10)
-        self.driver_session_service.log_in(driver.id, plate_number, CarType.CarClass.VAN, "BRAND")
-        self.driver_tracking_service.register_position(driver.id, 1000, 1000, datetime.now())
-        return driver.id
+        return self.fixtures.a_nearby_driver(plate_number, 1000, 1000, CarType.CarClass.VAN, datetime.now(), "BRAND").id
 
     async def asyncTearDown(self) -> None:
         drop_db_and_tables()

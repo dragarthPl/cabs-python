@@ -1,0 +1,17 @@
+from entity import Address
+from repository.address_repository import AddressRepositoryImp
+from fastapi.params import Depends
+
+class AddressFixture:
+
+    address_repository: AddressRepositoryImp
+
+    def __init__(
+        self,
+        address_repository: AddressRepositoryImp = Depends(AddressRepositoryImp)
+    ):
+        self.address_repository = address_repository
+
+    def an_address(self) -> Address:
+        return self.address_repository.save(
+            Address(country="Polska", city="Warszawa", street="Młynarska", building_number=20))
