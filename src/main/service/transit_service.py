@@ -413,8 +413,7 @@ class TransitService:
         )
         now = datetime.now()
         transit.complete_ride_at(now, destination_address, distance)
-        driver_fee: Money = self.driver_fee_service.calculate_driver_fee(transit_id)
-        transit.set_drivers_fee(driver_fee)
+        driver_fee: Money = self.driver_fee_service.calculate_driver_fee(transit.get_price(), driver_id)
         driver.is_occupied = False
         self.driver_repository.save(driver)
         self.awards_service.register_miles(transit_details.client.id, transit_id)

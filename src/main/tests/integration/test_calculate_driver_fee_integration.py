@@ -25,12 +25,10 @@ class TestCalculateDriverFeeIntegration(TestCase):
         # given
         driver = self.fixtures.an_active_regular_driver()
         # and
-        transit = self.fixtures.a_transit_now(driver, 60)
-        # and
         self.fixtures.driver_has_fee(driver, DriverFee.FeeType.FLAT, 10)
 
         # when
-        fee: Money = self.driver_fee_service.calculate_driver_fee(transit.id)
+        fee: Money = self.driver_fee_service.calculate_driver_fee(Money(60), driver.id)
 
         # then
         self.assertEqual(Money(50), fee)
@@ -39,12 +37,10 @@ class TestCalculateDriverFeeIntegration(TestCase):
         # given
         driver = self.fixtures.an_active_regular_driver()
         # and
-        transit = self.fixtures.a_transit_now(driver, 80)
-        # and
         self.fixtures.driver_has_fee(driver, DriverFee.FeeType.PERCENTAGE, 50)
 
         # when
-        fee: Money = self.driver_fee_service.calculate_driver_fee(transit.id)
+        fee: Money = self.driver_fee_service.calculate_driver_fee(Money(80), driver.id)
 
         # then
         self.assertEqual(Money(40), fee)
@@ -53,12 +49,10 @@ class TestCalculateDriverFeeIntegration(TestCase):
         # given
         driver = self.fixtures.an_active_regular_driver()
         # and
-        transit = self.fixtures.a_transit_now(driver, 10)
-        # and
         self.fixtures.driver_has_min_fee(driver, DriverFee.FeeType.PERCENTAGE, 7, 5)
 
         # when
-        fee: Money = self.driver_fee_service.calculate_driver_fee(transit.id)
+        fee: Money = self.driver_fee_service.calculate_driver_fee(Money(10), driver.id)
 
         # then
         self.assertEqual(Money(5), fee)

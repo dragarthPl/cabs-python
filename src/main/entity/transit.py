@@ -1,16 +1,12 @@
 from __future__ import annotations
 
-import calendar
 import enum
 from datetime import datetime
-from decimal import ROUND_HALF_UP, Decimal
 from typing import Optional, Set, Any
 
-import pytz
 from dateutil.relativedelta import relativedelta
 from dateutil.tz import tzlocal
 
-from zoneinfo import ZoneInfo
 
 from common.base_entity import BaseEntity
 from distance.distance import Distance
@@ -71,7 +67,7 @@ class Transit(BaseEntity, table=True):
     driver_id: Optional[int] = Field(default=None, foreign_key="driver.id")
     driver: Optional[Driver] = Relationship(
         sa_relationship=relationship(
-            "entity.driver.Driver", back_populates="transits")
+            "entity.driver.Driver")
     )
 
     # @ManyToMany
@@ -93,7 +89,6 @@ class Transit(BaseEntity, table=True):
 
     price: Optional[int] = 0
     estimated_price: Optional[int] = 0
-    drivers_fee: Optional[int] = 0
 
     published: Optional[datetime] = Field(default=None, sa_column=Column(DateTime, nullable=True))
 
@@ -116,8 +111,6 @@ class Transit(BaseEntity, table=True):
             self.set_price(data["price"])
         if data.get("estimated_price"):
             self.set_estimated_price(data["estimated_price"])
-        if data.get("drivers_fee"):
-            self.set_price(data["drivers_fee"])
         if data.get("distance"):
             self.km = data["distance"].to_km_in_float()
         if data.get("client"):
@@ -270,12 +263,6 @@ class Transit(BaseEntity, table=True):
 
     def set_date_time(self, date_time: datetime) -> None:
         self.set_tariff(Tariff.of_time(date_time.astimezone(tzlocal())))
-
-    def get_drivers_fee(self) -> Money:
-        return Money(self.drivers_fee)
-
-    def set_drivers_fee(self, drivers_fee: Money) -> None:
-        self.drivers_fee = drivers_fee.value
 
     def __eq__(self, o):
         if not isinstance(o, Transit):

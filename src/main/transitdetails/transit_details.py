@@ -119,8 +119,8 @@ class TransitDetails(BaseEntity, table=True):
 
     def set_completed_at(self, when: datetime, price: Money, driver_fee: Money):
         self.complete_at = when
-        self.price = price.value
-        self.drivers_fee = driver_fee.value
+        self.price = price.value if price else None
+        self.drivers_fee = driver_fee.value if driver_fee else None
         self.status = Transit.Status.COMPLETED
 
     def pickup_changed_to(self, new_address: Address, new_distance: Distance):

@@ -23,6 +23,8 @@ dependency_resolver = DependencyResolver()
 
 
 class TestRemovingAwardMilesIntegration(TestCase):
+    TRANSIT_ID: int = 1
+
     DAY_BEFORE_YESTERDAY = datetime(1989, 12, 12, 12, 12).astimezone(pytz.utc)
     YESTERDAY = DAY_BEFORE_YESTERDAY + relativedelta(days=1)
     TODAY = YESTERDAY + relativedelta(days=1)
@@ -44,11 +46,9 @@ class TestRemovingAwardMilesIntegration(TestCase):
         # given
         client = self.client_with_an_active_miles_program(Client.Type.NORMAL)
         # and
-        transit = self.fixtures.a_transit_price(Money(80))
-        # and
-        middle = self.granted_miles_that_will_expire_in_days(10, 365, self.YESTERDAY, client, transit)
-        youngest = self.granted_miles_that_will_expire_in_days(10, 365, self.TODAY, client, transit)
-        oldest_non_expiring_miles = self.granted_non_expiring_miles(5, self.DAY_BEFORE_YESTERDAY, client)
+        middle: AwardedMiles = self.granted_miles_that_will_expire_in_days(10, 365, self.YESTERDAY, client)
+        youngest: AwardedMiles = self.granted_miles_that_will_expire_in_days(10, 365, self.TODAY, client)
+        oldest_non_expiring_miles: AwardedMiles = self.granted_non_expiring_miles(5, self.DAY_BEFORE_YESTERDAY, client)
 
         # when
         with freeze_time(self.DAY_BEFORE_YESTERDAY):
@@ -66,11 +66,9 @@ class TestRemovingAwardMilesIntegration(TestCase):
         # and
         self.fixtures.client_has_done_transits(client, 15, self.geocoding_service)
         # and
-        transit = self.fixtures.a_transit_price(Money(100))
-        # and
-        oldest = self.granted_miles_that_will_expire_in_days(10, 60, self.DAY_BEFORE_YESTERDAY, client, transit)
-        middle = self.granted_miles_that_will_expire_in_days(10, 365, self.YESTERDAY, client, transit)
-        youngest = self.granted_miles_that_will_expire_in_days(10, 60, self.TODAY, client, transit)
+        oldest = self.granted_miles_that_will_expire_in_days(10, 60, self.DAY_BEFORE_YESTERDAY, client)
+        middle = self.granted_miles_that_will_expire_in_days(10, 365, self.YESTERDAY, client)
+        youngest = self.granted_miles_that_will_expire_in_days(10, 60, self.TODAY, client)
 
         # when
         with freeze_time(self.TODAY):
@@ -87,10 +85,8 @@ class TestRemovingAwardMilesIntegration(TestCase):
         client = self.client_with_an_active_miles_program(Client.Type.NORMAL)
         # and
         self.fixtures.client_has_done_transits(client, 15, self.geocoding_service)
-        # and
-        transit = self.fixtures.a_transit_price(Money(80))
 
-        regular_miles: AwardedMiles = self.granted_miles_that_will_expire_in_days(10, 365, self.TODAY, client, transit)
+        regular_miles: AwardedMiles = self.granted_miles_that_will_expire_in_days(10, 365, self.TODAY, client)
         oldest_non_expiring_miles: AwardedMiles = self.granted_non_expiring_miles(5, self.DAY_BEFORE_YESTERDAY, client)
 
         # when
@@ -106,15 +102,13 @@ class TestRemovingAwardMilesIntegration(TestCase):
         # given
         client = self.client_with_an_active_miles_program(Client.Type.VIP)
         # and
-        transit = self.fixtures.a_transit_price(Money(80))
-        # and
 
         second_to_expire: AwardedMiles = self.granted_miles_that_will_expire_in_days(
-            10, 60, self.YESTERDAY, client, transit)
+            10, 60, self.YESTERDAY, client)
         third_to_expire: AwardedMiles = self.granted_miles_that_will_expire_in_days(
-            5, 365, self.DAY_BEFORE_YESTERDAY, client, transit)
+            5, 365, self.DAY_BEFORE_YESTERDAY, client)
         first_to_expire: AwardedMiles = self.granted_miles_that_will_expire_in_days(
-            15, 30, self.TODAY, client, transit)
+            15, 30, self.TODAY, client)
         non_expiring: AwardedMiles = self.granted_non_expiring_miles(
             1, self.DAY_BEFORE_YESTERDAY, client)
 
@@ -135,14 +129,12 @@ class TestRemovingAwardMilesIntegration(TestCase):
         # and
         self.fixtures.client_has_done_transits(client, 15, self.geocoding_service)
         # and
-        transit = self.fixtures.a_transit_price(Money(80))
-        # and
         second_to_expire: AwardedMiles = self.granted_miles_that_will_expire_in_days(
-            10, 60, self.YESTERDAY, client, transit)
+            10, 60, self.YESTERDAY, client)
         third_to_expire: AwardedMiles = self.granted_miles_that_will_expire_in_days(
-            5, 365, self.DAY_BEFORE_YESTERDAY, client, transit)
+            5, 365, self.DAY_BEFORE_YESTERDAY, client)
         first_to_expire: AwardedMiles = self.granted_miles_that_will_expire_in_days(
-            15, 10, self.TODAY, client, transit)
+            15, 10, self.TODAY, client)
         non_expiring: AwardedMiles = self.granted_non_expiring_miles(
             100, self.YESTERDAY, client)
 
@@ -163,14 +155,12 @@ class TestRemovingAwardMilesIntegration(TestCase):
         # and
         self.fixtures.client_has_done_claim_after_completed_transit(client, 3)
         # and
-        transit = self.fixtures.a_transit_price(Money(80))
-        # and
         second_to_expire: AwardedMiles = self.granted_miles_that_will_expire_in_days(
-            4, 60, self.YESTERDAY, client, transit)
+            4, 60, self.YESTERDAY, client)
         third_to_expire: AwardedMiles = self.granted_miles_that_will_expire_in_days(
-            10, 365, self.DAY_BEFORE_YESTERDAY, client, transit)
+            10, 365, self.DAY_BEFORE_YESTERDAY, client)
         first_to_expire: AwardedMiles = self.granted_miles_that_will_expire_in_days(
-            5, 10, self.YESTERDAY, client, transit)
+            5, 10, self.YESTERDAY, client)
         non_expiring: AwardedMiles = self.granted_non_expiring_miles(
             10, self.YESTERDAY, client)
 
@@ -191,11 +181,10 @@ class TestRemovingAwardMilesIntegration(TestCase):
             expiration_in_days: int,
             when: datetime,
             client: Client,
-            transit: Transit
     ) -> AwardedMiles:
         self.miles_will_expire_in_days(expiration_in_days)
         self.default_miles_bonus_is(miles)
-        return self.miles_registered_at(when, client, transit)
+        return self.miles_registered_at(when, client)
 
     def granted_non_expiring_miles(self, miles: int, when: datetime, client: Client) -> AwardedMiles:
         self.default_miles_bonus_is(miles)
@@ -220,9 +209,9 @@ class TestRemovingAwardMilesIntegration(TestCase):
         )
         self.assertEqual(miles_after_reduction, actual[0])
 
-    def miles_registered_at(self, when: datetime, client: Client, transit: Transit) -> AwardedMiles:
+    def miles_registered_at(self, when: datetime, client: Client) -> AwardedMiles:
         with freeze_time(when):
-            return self.awards_service.register_miles(client.id, transit.id)
+            return self.awards_service.register_miles(client.id, self.TRANSIT_ID)
 
     def client_with_an_active_miles_program(self, client_type: Client.Type) -> Client:
         with freeze_time(self.DAY_BEFORE_YESTERDAY):

@@ -5,11 +5,11 @@ import pytz
 from dateutil.relativedelta import relativedelta
 from freezegun import freeze_time
 from fastapi.params import Depends
+from mockito import when
 
 from config.app_properties import AppProperties
 from core.database import create_db_and_tables, drop_db_and_tables
 from entity import Transit, Client
-from money import Money
 from service.awards_service import AwardsService, AwardsServiceImpl
 
 from tests.common.fixtures import DependencyResolver, Fixtures
@@ -17,6 +17,7 @@ from tests.common.fixtures import DependencyResolver, Fixtures
 dependency_resolver = DependencyResolver()
 
 class TestExpiringMilesIntegration(TestCase):
+    TRANSIT_ID: int = 1
     _1989_12_12 = datetime(1989, 12, 12, 12, 12).astimezone(pytz.utc)
     _1989_12_13 = datetime(1989, 12, 13, 12, 12).astimezone(pytz.utc)
     _1989_12_14 = datetime(1989, 12, 14, 12, 12).astimezone(pytz.utc)
@@ -27,6 +28,7 @@ class TestExpiringMilesIntegration(TestCase):
 
     def setUp(self):
         create_db_and_tables()
+        when(self.awards_service.transit_repository).get_one(self.TRANSIT_ID).thenReturn(Transit())
 
     @freeze_time(_1989_12_12)
     def test_should_take_into_account_expired_miles_when_calculating_balance(self):
@@ -38,19 +40,17 @@ class TestExpiringMilesIntegration(TestCase):
         self.default_miles_expiration_in_days_is(365)
         # and
         self.fixtures.active_awards_account(client)
-        # and
-        transit = self.fixtures.a_transit_price(Money(80))
 
         # when
-        self.register_miles_at(transit, client, self._1989_12_12)
+        self.register_miles_at(client, self._1989_12_12)
         # then
         self.assertEqual(10, self.calculate_balance_at(client, self._1989_12_12))
         # when
-        self.register_miles_at(transit, client, self._1989_12_13)
+        self.register_miles_at(client, self._1989_12_13)
         # then
         self.assertEqual(20, self.calculate_balance_at(client, self._1989_12_12))
         # when
-        self.register_miles_at(transit, client, self._1989_12_14)
+        self.register_miles_at(client, self._1989_12_14)
         # then
         self.assertEqual(30, self.calculate_balance_at(client, self._1989_12_14))
         self.assertEqual(30, self.calculate_balance_at(client, self._1989_12_12 + relativedelta(days=300)))
@@ -64,9 +64,9 @@ class TestExpiringMilesIntegration(TestCase):
     def default_miles_expiration_in_days_is(self, days: int) -> None:
         self.app_properties.miles_expiration_in_days = days
 
-    def register_miles_at(self, transit: Transit, client: Client, when: datetime) -> None:
+    def register_miles_at(self, client: Client, when: datetime) -> None:
         with freeze_time(when):
-            self.awards_service.register_miles(client.id, transit.id)
+            self.awards_service.register_miles(client.id, self.TRANSIT_ID)
 
     def calculate_balance_at(self, client: Client, when: datetime):
         with freeze_time(when):

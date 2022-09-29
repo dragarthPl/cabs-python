@@ -40,7 +40,7 @@ class DriverFixture:
         self.driver_fee_service = driver_fee_service
 
     def driver_has_min_fee(self, driver: Driver, fee_type: DriverFee.FeeType, amount: int, min: int):
-        driver_fee = self.fee_repository.find_by_driver(driver)
+        driver_fee = self.fee_repository.find_by_driver_id(driver.id)
         if not driver_fee:
             driver_fee = DriverFee()
         driver_fee.driver = driver

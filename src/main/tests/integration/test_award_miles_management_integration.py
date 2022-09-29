@@ -5,7 +5,10 @@ from unittest import TestCase
 import fastapi
 import pytz
 from fastapi.params import Depends
+from mockito import when
+
 from core.database import create_db_and_tables, drop_db_and_tables
+from entity import Transit
 from money import Money
 from repository.awards_account_repository import AwardsAccountRepositoryImp
 from service.awards_service import AwardsService, AwardsServiceImpl
@@ -15,6 +18,7 @@ from tests.common.fixtures import DependencyResolver, Fixtures
 dependency_resolver = DependencyResolver()
 
 class TestAwardMilesManagementIntegration(TestCase):
+    TRANSIT_ID: int = 1
     NOW = datetime(1989, 12, 12, 12, 12).astimezone(pytz.utc)
 
     awards_service: AwardsService = dependency_resolver.resolve_dependency(Depends(AwardsServiceImpl))
@@ -24,6 +28,7 @@ class TestAwardMilesManagementIntegration(TestCase):
 
     def setUp(self):
         create_db_and_tables()
+        when(self.awards_service.transit_repository).get_one(self.TRANSIT_ID).thenReturn(Transit())
 
     def test_can_register_account(self):
         # given
@@ -70,11 +75,9 @@ class TestAwardMilesManagementIntegration(TestCase):
         client = self.fixtures.a_client()
         # and
         self.fixtures.active_awards_account(client)
-        # and
-        transit = self.fixtures.a_transit_price(Money(80))
 
         # when
-        self.awards_service.register_miles(client.id, transit.id)
+        self.awards_service.register_miles(client.id, self.TRANSIT_ID)
 
         # then
         account = self.awards_service.find_by(client.id)
@@ -106,13 +109,11 @@ class TestAwardMilesManagementIntegration(TestCase):
         client = self.fixtures.a_client()
         # and
         self.fixtures.active_awards_account(client)
-        # and
-        transit = self.fixtures.a_transit_price(Money(80))
 
         # when
         self.awards_service.register_non_expiring_miles(client.id, 20)
-        self.awards_service.register_miles(client.id, transit.id)
-        self.awards_service.register_miles(client.id, transit.id)
+        self.awards_service.register_miles(client.id, self.TRANSIT_ID)
+        self.awards_service.register_miles(client.id, self.TRANSIT_ID)
 
         # then
         account = self.awards_service.find_by(client.id)
@@ -196,11 +197,9 @@ class TestAwardMilesManagementIntegration(TestCase):
         # and
         self.fixtures.active_awards_account(client)
         # and
-        transit = self.fixtures.a_transit_price(Money(80))
-        # and
-        self.awards_service.register_miles(client.id, transit.id)
-        self.awards_service.register_miles(client.id, transit.id)
-        self.awards_service.register_miles(client.id, transit.id)
+        self.awards_service.register_miles(client.id, self.TRANSIT_ID)
+        self.awards_service.register_miles(client.id, self.TRANSIT_ID)
+        self.awards_service.register_miles(client.id, self.TRANSIT_ID)
 
         # when
         self.awards_service.remove_miles(client.id, 20)
@@ -214,13 +213,11 @@ class TestAwardMilesManagementIntegration(TestCase):
         client = self.fixtures.a_client()
         # and
         self.fixtures.active_awards_account(client)
-        # and
-        transit = self.fixtures.a_transit_price(Money(80))
 
         # when
-        self.awards_service.register_miles(client.id, transit.id)
-        self.awards_service.register_miles(client.id, transit.id)
-        self.awards_service.register_miles(client.id, transit.id)
+        self.awards_service.register_miles(client.id, self.TRANSIT_ID)
+        self.awards_service.register_miles(client.id, self.TRANSIT_ID)
+        self.awards_service.register_miles(client.id, self.TRANSIT_ID)
 
         # then
         with self.assertRaises(AttributeError):
@@ -232,12 +229,10 @@ class TestAwardMilesManagementIntegration(TestCase):
         # and
         self.awards_service.register_to_program(client.id)
         # and
-        transit = self.fixtures.a_transit_price(Money(80))
-        # and
         current_miles = self.awards_service.calculate_balance(client.id)
 
         # when
-        self.awards_service.register_miles(client.id, transit.id)
+        self.awards_service.register_miles(client.id, self.TRANSIT_ID)
 
         # then
         self.assertEqual(current_miles, self.awards_service.calculate_balance(client.id))

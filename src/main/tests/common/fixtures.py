@@ -16,18 +16,6 @@ from dto.claim_dto import ClaimDTO
 from dto.client_dto import ClientDTO
 from dto.transit_dto import TransitDTO
 from entity import Driver, Transit, DriverFee, Address, Client, CarType, Claim, DriverAttribute
-from money import Money
-from repository.address_repository import AddressRepositoryImp
-from repository.client_repository import ClientRepositoryImp
-from repository.driver_attribute_repository import DriverAttributeRepositoryImp
-from repository.driver_fee_repository import DriverFeeRepositoryImp
-from repository.transit_repository import TransitRepositoryImp
-from service.awards_service import AwardsService, AwardsServiceImpl
-from service.car_type_service import CarTypeService
-from service.claim_service import ClaimService
-from service.driver_service import DriverService
-from service.driver_session_service import DriverSessionService
-from service.driver_tracking_service import DriverTrackingService
 from service.geocoding_service import GeocodingService
 from service.transit_service import TransitService
 from tests.common.address_fixture import AddressFixture
@@ -126,20 +114,13 @@ class Fixtures:
     def a_client_with_type(self, client_type: Client.Type) -> Client:
         return self.client_fixture.a_client(client_type)
 
-    def a_transit(self, driver: Driver, price: int, when: datetime, client: Client) -> Transit:
-        return self.transit_fixture.a_transit(driver, price, when, client)
+    def transit_details_client(self, driver: Driver, price: int, when: datetime, client: Client) -> Transit:
+        return self.transit_fixture.transit_details(
+            driver, price, when, client, self.an_address(), self.an_address())
 
-    def a_transit_price(self, price: Money) -> Transit:
-        return self.transit_fixture.a_transit_when(
-            self.driver_fixture.an_active_regular_driver(),
-            price.to_int()
-        )
-
-    def a_transit_when(self, driver: Driver, price: int, when: datetime) -> Transit:
-        return self.transit_fixture.a_transit(driver, price, when, None)
-
-    def a_transit_now(self, driver: Driver, price: int) -> Transit:
-        return self.transit_fixture.a_transit(driver, price, datetime.now(), None)
+    def transit_details(self, driver: Driver, price: int, when: datetime) -> Transit:
+        return self.transit_fixture.transit_details(
+            driver, price, when, self.a_client(), self.an_address(), self.an_address())
 
     def a_transit_dto(self, address_from: AddressDTO, address_to: AddressDTO) -> TransitDTO:
         return self.transit_fixture.a_transit_dto_for_client(self.a_client(), address_from, address_to)
@@ -227,7 +208,9 @@ class Fixtures:
     def client_has_done_claim_after_completed_transit(self, client: Client, how_many: int) -> None:
         [
             self.create_and_resolve_claim(
-                client, self.a_transit(self.driver_fixture.an_active_regular_driver(), 20, datetime.now(), client))
+                client, self.transit_details_client(
+                    self.driver_fixture.an_active_regular_driver(), 20, datetime.now(), client)
+            )
             for _ in range(1, how_many + 1)
         ]
 

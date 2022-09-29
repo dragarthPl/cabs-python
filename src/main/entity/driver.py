@@ -46,12 +46,6 @@ class Driver(BaseEntity, table=True):
             "entity.driver_attribute.DriverAttribute", back_populates="driver")
     )
 
-    # @OneToMany(mappedBy = "driver")
-    transits: Set[Transit] = Relationship(
-        sa_relationship=relationship(
-            "entity.transit.Transit", back_populates="driver")
-    )
-
     def __init__(self, **data: Any):
         super().__init__(**data)
         if "driver_license" in data:

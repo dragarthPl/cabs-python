@@ -7,10 +7,11 @@ from distance.distance import Distance
 from dto.address_dto import AddressDTO
 from dto.client_dto import ClientDTO
 from dto.transit_dto import TransitDTO
-from entity import Driver, Client, Transit
+from entity import Driver, Client, Transit, Address, CarType, Tariff
 from money import Money
 from repository.transit_repository import TransitRepositoryImp
 from service.transit_service import TransitService
+from tests.common.stubbed_transit_price import StubbedTransitPrice
 from transitdetails.transit_details_facade import TransitDetailsFacade
 
 
@@ -18,42 +19,47 @@ class TransitFixture:
     transit_service: TransitService
     transit_repository: TransitRepositoryImp
     transit_details_facade: TransitDetailsFacade
+    stubbed_transit_price: StubbedTransitPrice
 
     def __init__(
         self,
         transit_service: TransitService = Depends(TransitService),
         transit_repository: TransitRepositoryImp = Depends(TransitRepositoryImp),
         transit_details_facade: TransitDetailsFacade = Depends(TransitDetailsFacade),
+        stubbed_transit_price: StubbedTransitPrice = Depends(StubbedTransitPrice),
     ):
         self.transit_service = transit_service
         self.transit_repository = transit_repository
         self.transit_details_facade = transit_details_facade
+        self.stubbed_transit_price = stubbed_transit_price
 
-    def a_transit(self, driver: Driver, price: int, when: datetime, client: Client) -> Transit:
-        date_time = when.astimezone(pytz.UTC)
-        transit: Transit = Transit(
-            when=date_time,
-            distance=Distance.ZERO,
-        )
-        transit.set_price(Money(price))
-        transit.propose_to(driver)
-        transit.accept_by(driver, datetime.now())
-        transit = self.transit_repository.save(transit)
+    def transit_details(
+        self,
+        driver: Driver,
+        price: int,
+        when: datetime,
+        client: Client,
+        address_from: Address,
+        address_to: Address
+    ) -> Transit:
+        transit: Transit = self.transit_repository.save(Transit())
+        self.stubbed_transit_price.stub(transit.id, Money(price))
+        transit_id: int = transit.id
         self.transit_details_facade.transit_requested(
-            when=date_time,
-            transit_id=transit.id,
-            address_from=None,
-            address_to=None,
-            distance=Distance.ZERO,
-            client=client,
-            car_class=None,
-            estimated_price=Money(price),
-            tariff=transit.get_tariff(),
+            when.astimezone(pytz.utc),
+            transit_id,
+            address_from,
+            address_to,
+            Distance.ZERO,
+            client,
+            CarType.CarClass.VAN,
+            Money(price),
+            Tariff.of_time(when)
         )
+        self.transit_details_facade.transit_accepted(transit_id, when.astimezone(pytz.utc), driver.id)
+        self.transit_details_facade.transit_started(transit_id, when.astimezone(pytz.utc))
+        self.transit_details_facade.transit_completed(transit_id, when.astimezone(pytz.utc), Money(price), None)
         return transit
-
-    def a_transit_when(self, driver: Driver, price: int) -> Transit:
-        return self.a_transit(driver, price, datetime.now(), None)
 
     def a_transit_dto_for_client(self, client: Client, address_from: AddressDTO, address_to: AddressDTO):
         transit_dto = TransitDTO()

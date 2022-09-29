@@ -24,13 +24,5 @@ class ClaimRepositoryImp:
         self.session.refresh(claim)
         return claim
 
-    def find_by_owner(self, owner: Client) -> List[Claim]:
-        return self.session.query(Claim).filter(Claim.owner == owner).all()
-
-    def find_by_owner_and_transit(self, owner: Client, transit: Transit) -> List[Claim]:
-        if owner:
-            return self.session.query(Claim).filter(
-                Claim.owner_id == owner.id, Claim.transit_id == transit.id).all()
-
     def get_one(self, claim_id: int) -> Optional[Claim]:
         return self.session.query(Claim).filter(Claim.id == claim_id).first()

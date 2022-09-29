@@ -29,11 +29,7 @@ class AwardedMiles(BaseEntity, table=True):
 
     miles_json: str = None
 
-    # @ManyToOne
-    transit_id: Optional[int] = Field(default=None, foreign_key="transit.id")
-    transit: Optional[Transit] = Relationship(
-        sa_relationship_kwargs=dict(foreign_keys="[AwardedMiles.transit_id]")
-    )
+    transit_id: Optional[int] = Field(default=0, sa_column=Column(Integer, nullable=True))
 
     # @ManyToOne
     account_id: Optional[int] = Field(default=None, foreign_key="awardsaccount.id")
@@ -45,7 +41,7 @@ class AwardedMiles(BaseEntity, table=True):
             self,
             *,
             awards_account: AwardsAccount,
-            transit: Transit,
+            transit_id: int,
             client: Client,
             when: datetime,
             constant_until: Miles,
@@ -53,7 +49,7 @@ class AwardedMiles(BaseEntity, table=True):
     ):
         super().__init__(**data)
         self.account = awards_account
-        self.transit = transit
+        self.transit_id = transit_id
         self.client = client
         self.date = when
         self.__set_miles(constant_until)

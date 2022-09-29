@@ -12,10 +12,12 @@ from service.transit_service import TransitService
 from tests.common.car_type_fixture import CarTypeFixture
 from tests.common.driver_fixture import DriverFixture
 from tests.common.stubbed_transit_price import StubbedTransitPrice
+from transitdetails.transit_details_facade import TransitDetailsFacade
 
 
 class RideFixture:
     transit_service: TransitService
+    transit_details_facade: TransitDetailsFacade
     transit_repository: TransitRepositoryImp
     address_repository: AddressRepositoryImp
 
@@ -27,6 +29,7 @@ class RideFixture:
     def __init__(
             self,
             transit_service: TransitService = Depends(TransitService),
+            transit_details_facade: TransitDetailsFacade = Depends(TransitDetailsFacade),
             transit_repository: TransitRepositoryImp = Depends(TransitRepositoryImp),
             address_repository: AddressRepositoryImp = Depends(AddressRepositoryImp),
             driver_fixture: DriverFixture = Depends(DriverFixture),
@@ -35,6 +38,7 @@ class RideFixture:
             driver_session_service: DriverSessionService = Depends(DriverSessionService),
     ):
         self.transit_service = transit_service
+        self.transit_details_facade = transit_details_facade
         self.transit_repository = transit_repository
         self.address_repository = address_repository
         self.driver_fixture = driver_fixture
@@ -60,8 +64,13 @@ class RideFixture:
         self.transit_service.accept_transit(driver.id, transit.id)
         self.transit_service.start_transit(driver.id, transit.id)
         self.transit_service._complete_transit(driver.id, transit.id, destination)
-        self.stubbed_price.stub(transit.id, Money(price))
+        self.__stub_price(price, transit)
         return self.transit_repository.get_one(transit.id)
+
+    def __stub_price(self, price: int, transit: Transit):
+        fake_price: Money = Money(price)
+        self.stubbed_price.stub(transit.id, fake_price)
+        self.transit_details_facade.transit_completed(transit.id, datetime.now(), fake_price, fake_price)
 
     def a_ride_with_fixed_clock(
             self,

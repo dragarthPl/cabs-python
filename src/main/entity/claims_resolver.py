@@ -35,29 +35,29 @@ class ClaimsResolver(BaseEntity, table=True):
         number_of_transits: int,
         no_of_transits_for_claim_automatic_refund: int,
     ) -> Result:
-        transit_id = claim.transit.id
+        transit_id = claim.transit_id
         if str(transit_id) in self.claimed_transits_ids:
             return self.Result(WhoToAsk.ASK_NOONE, Claim.Status.ESCALATED)
-        self.add_new_claim_for(claim.transit)
+        self.add_new_claim_for(claim.transit_id)
         if self.number_of_claims() <= 3:
             return self.Result(WhoToAsk.ASK_NOONE, Claim.Status.REFUNDED)
         if claim.owner.type == Client.Type.VIP:
-            if claim.transit.get_price().to_int() < automatic_refund_for_vip_threshold:
+            if claim.get_transit_price().to_int() < automatic_refund_for_vip_threshold:
                 return self.Result(WhoToAsk.ASK_NOONE, Claim.Status.REFUNDED)
             else:
                 return self.Result(WhoToAsk.ASK_DRIVER, Claim.Status.ESCALATED)
         else:
             if (number_of_transits >= no_of_transits_for_claim_automatic_refund):
-                if claim.transit.get_price().to_int() < automatic_refund_for_vip_threshold:
+                if claim.get_transit_price().to_int() < automatic_refund_for_vip_threshold:
                     return self.Result(WhoToAsk.ASK_NOONE, Claim.Status.REFUNDED)
                 else:
                     return self.Result(WhoToAsk.ASK_CLIENT, Claim.Status.ESCALATED)
             else:
                 return self.Result(WhoToAsk.ASK_DRIVER, Claim.Status.ESCALATED)
 
-    def add_new_claim_for(self, transit: Transit):
+    def add_new_claim_for(self, transit_id: int):
         transits_ids = self.get_claimed_transits_ids()
-        transits_ids.add(transit.id)
+        transits_ids.add(transit_id)
         self.claimed_transits_ids = json.dumps(list(transits_ids))
 
     def get_claimed_transits_ids(self) -> Set[int]:

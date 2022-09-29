@@ -13,5 +13,5 @@ class StubbedTransitPrice:
 
     def stub(self, transit_id: int, faked: Money) -> Transit:
         transit: Transit = self.transit_repository.get_one(transit_id)
-        transit.price = faked
+        transit.set_price(faked)
         return transit

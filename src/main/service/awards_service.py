@@ -109,7 +109,7 @@ class AwardsServiceImpl(AwardsService):
             miles = account.add_expiring_miles(
                 self.app_properties.default_miles_bonus,
                 expire_at,
-                transit,
+                transit_id,
                 datetime.now()
             )
             self.account_repository.save(account)

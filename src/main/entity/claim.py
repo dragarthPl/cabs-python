@@ -9,6 +9,8 @@ from sqlalchemy import Column, DateTime, Enum, ForeignKey, Integer, String
 from sqlalchemy.orm import backref, relationship
 from sqlmodel import Field, Relationship
 
+from money import Money
+
 
 class Claim(BaseEntity, table=True):
     __table_args__ = {'extend_existing': True}
@@ -32,12 +34,8 @@ class Claim(BaseEntity, table=True):
             "entity.client.Client", back_populates="claims")
     )
 
-    # @OneToOne
-    transit_id: Optional[int] = Field(sa_column=Column(Integer, ForeignKey('transit.id')))
-    transit: Optional[Transit] = Relationship(
-        sa_relationship=relationship(
-            "entity.transit.Transit", backref=backref("claim", uselist=False))
-    )
+    transit_id: Optional[int] = Field(default=0, sa_column=Column(Integer, nullable=True))
+
     creation_date: datetime = Field(sa_column=Column(DateTime, nullable=False))
     completion_date: Optional[datetime]
     change_date: Optional[datetime]
@@ -46,6 +44,8 @@ class Claim(BaseEntity, table=True):
     completion_mode: Optional[CompletionMode] = Field(sa_column=Column(Enum(CompletionMode)))
     status: Status = Field(sa_column=Column(Enum(Status), nullable=False))
     claim_no: str = Field(sa_column=Column(String, nullable=False))
+
+    transit_price: int = Field(default=0, sa_column=Column(Integer, nullable=False))
 
     def escalate(self) -> None:
         self.status = Claim.Status.ESCALATED
@@ -58,6 +58,15 @@ class Claim(BaseEntity, table=True):
         self.completion_date = datetime.now()
         self.change_date = datetime.now()
         self.completion_mode = Claim.CompletionMode.AUTOMATIC
+
+    def get_transit_price(self) -> Money:
+        return Money(self.transit_price)
+
+    def set_transit(self, transit_id: int):
+        self.transit_id = transit_id
+
+    def set_transit_price(self, transit_price: Money) -> None:
+        self.transit_price = transit_price.to_int()
 
     def __eq__(self, o):
         if not isinstance(o, Claim):

@@ -12,8 +12,8 @@ class DriverFeeRepositoryImp:
     def __init__(self, session: Session = Depends(get_session)):
         self.session = session
 
-    def find_by_driver(self, driver: Driver) -> Optional[DriverFee]:
-        return self.session.query(DriverFee).where(DriverFee.driver_id == driver.id).first()
+    def find_by_driver_id(self, driver_id: int) -> Optional[DriverFee]:
+        return self.session.query(DriverFee).where(DriverFee.driver_id == driver_id).first()
 
     def save(self, driver_fee: DriverFee) -> Optional[DriverFee]:
         self.session.add(driver_fee)

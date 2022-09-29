@@ -42,10 +42,16 @@ class AwardsAccount(BaseEntity, table=True):
     def not_active_account(client: Client, when: datetime):
         return AwardsAccount(client, False, when)
 
-    def add_expiring_miles(self, amount: int, expire_at: datetime, transit: Transit, when: datetime) -> AwardedMiles:
+    def add_expiring_miles(
+        self,
+        amount: int,
+        expire_at: datetime,
+        transit_id: int,
+        when: datetime,
+    ) -> AwardedMiles:
         expiring_miles = AwardedMiles(
             awards_account=self,
-            transit=transit,
+            transit_id=transit_id,
             client=self.client,
             when=when,
             constant_until=ConstantUntil.constant_until(amount, expire_at)
@@ -57,7 +63,7 @@ class AwardsAccount(BaseEntity, table=True):
     def add_non_expiring_miles(self, amount: int, when: datetime) -> AwardedMiles:
         non_expiring_miles = AwardedMiles(
             awards_account=self,
-            transit=None,
+            transit_id=None,
             client=self.client,
             when=when,
             constant_until=ConstantUntil.constant_until_forever(amount)

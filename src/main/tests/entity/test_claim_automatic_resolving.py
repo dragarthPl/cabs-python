@@ -151,12 +151,14 @@ class TestClaimAutomaticResolving(TestCase):
 
     def create_claim(self, transit: Transit) -> Claim:
         claim = Claim()
-        claim.transit = transit
+        claim.set_transit(transit.id)
+        claim.set_transit_price(transit.get_price())
         return claim
 
     def create_client_claim(self, transit: Transit, client: Client) -> Claim:
         claim = Claim()
-        claim.transit = transit
+        claim.set_transit(transit.id)
+        claim.set_transit_price(transit.get_price())
         claim.owner_id = client.id
         claim.owner = client
         return claim

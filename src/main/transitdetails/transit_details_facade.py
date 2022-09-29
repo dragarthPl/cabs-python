@@ -1,5 +1,5 @@
 from datetime import datetime
-from typing import Optional
+from typing import Optional, List
 
 from fastapi import Depends
 
@@ -76,6 +76,18 @@ class TransitDetailsFacade:
         details: TransitDetails = self.load(transit_id)
         details.set_completed_at(when, price, driver_fee)
         self.transit_details_repository.save(details)
+
+    def find_by_client(self, client_id: int) -> List[TransitDetailsDTO]:
+        return list(map(
+            lambda td: TransitDetailsDTO(td),
+            self.transit_details_repository.find_by_client_id(client_id)
+        ))
+
+    def find_by_driver(self, driver_id: int, since: datetime, to: datetime) -> List[TransitDetailsDTO]:
+        return list(map(
+            lambda td: TransitDetailsDTO(td),
+            self.transit_details_repository.find_all_by_driver_and_date_time_between(driver_id, since, to)
+        ))
 
     def load(self, transit_id: int):
         return self.transit_details_repository.find_by_transit_id(transit_id)

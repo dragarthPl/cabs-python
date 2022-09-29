@@ -1,4 +1,5 @@
 from datetime import datetime
+from typing import List
 
 from config.app_properties import AppProperties, get_app_properties
 from core.database import get_engine
@@ -14,14 +15,14 @@ from service.awards_service import AwardsService, AwardsServiceImpl
 from service.claim_number_generator import ClaimNumberGenerator
 from service.client_notification_service import ClientNotificationService
 from service.driver_notification_service import DriverNotificationService
-from sqlalchemy.future import Engine
-from sqlmodel import Session
+from transitdetails.transit_details_dto import TransitDetailsDTO
+from transitdetails.transit_details_facade import TransitDetailsFacade
 
 
 class ClaimService:
     # clock: Clock
     client_repository: ClientRepositoryImp
-    transit_repository: TransitRepositoryImp
+    transit_details_facade: TransitDetailsFacade
     claim_repository: ClaimRepositoryImp
     claim_number_generator: ClaimNumberGenerator
     app_properties: AppProperties
@@ -33,7 +34,7 @@ class ClaimService:
     def __init__(
             self,
             client_repository: ClientRepositoryImp = Depends(ClientRepositoryImp),
-            transit_repository: TransitRepositoryImp = Depends(TransitRepositoryImp),
+            transit_details_facade: TransitDetailsFacade = Depends(TransitDetailsFacade),
             claim_repository: ClaimRepositoryImp = Depends(ClaimRepositoryImp),
             claim_number_generator: ClaimNumberGenerator = Depends(ClaimNumberGenerator),
             app_properties: AppProperties = Depends(get_app_properties),
@@ -43,7 +44,7 @@ class ClaimService:
             claims_resolver_repository: ClaimsResolverRepositoryImp = Depends(ClaimsResolverRepositoryImp)
     ):
         self.client_repository = client_repository
-        self.transit_repository = transit_repository
+        self.transit_details_facade = transit_details_facade
         self.claim_repository = claim_repository
         self.claim_number_generator = claim_number_generator
         self.app_properties = app_properties
@@ -67,7 +68,7 @@ class ClaimService:
 
     def update(self, claim_dto: ClaimDTO, claim: Claim) -> Claim:
         client = self.client_repository.get_one(claim_dto.client_id)
-        transit = self.transit_repository.get_one(claim_dto.transit_id)
+        transit = self.transit_details_facade.find(claim_dto.transit_id)
         if client is None:
             raise AttributeError("Client does not exists")
         if transit is None:
@@ -78,7 +79,8 @@ class ClaimService:
             claim.status = Claim.Status.NEW
         claim.owner = client
         claim.owner_id = client.id
-        claim.transit_id = transit.id
+        claim.set_transit(transit.transit_id)
+        claim.set_transit_price(transit.price)
         claim.creation_date = datetime.now()
         claim.reason = claim_dto.reason
         claim.incident_description = claim_dto.incident_description
@@ -94,7 +96,7 @@ class ClaimService:
         claim = self.find(claim_id)
 
         claims_resolver = self.find_or_create_resolver(claim.owner)
-        transits_done_by_client = self.transit_repository.find_by_client(claim.owner)
+        transits_done_by_client: List[TransitDetailsDTO] = self.transit_details_facade.find_by_client(claim.owner.id)
         result = claims_resolver.resolve(
             claim,
             self.app_properties.automatic_refund_for_vip_threshold,
@@ -109,7 +111,9 @@ class ClaimService:
         if result.decision == Claim.Status.ESCALATED:
             claim.escalate()
         if result.who_to_ask == ClaimsResolver.WhoToAsk.ASK_DRIVER:
-            self.driver_notification_service.ask_driver_for_details_about_claim(claim.claim_no, claim.transit.driver.id)
+            transit_details_dto: TransitDetailsDTO = self.transit_details_facade.find(claim.transit_id)
+            self.driver_notification_service.ask_driver_for_details_about_claim(
+                claim.claim_no, transit_details_dto.driver_id)
         if result.who_to_ask == ClaimsResolver.WhoToAsk.ASK_CLIENT:
             self.client_notification_service.ask_for_more_information(claim.claim_no, claim.owner.id)
         return claim

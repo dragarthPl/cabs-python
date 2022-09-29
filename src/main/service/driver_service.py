@@ -3,7 +3,7 @@ import calendar
 import re
 from datetime import datetime
 from functools import reduce
-from typing import Dict
+from typing import Dict, List
 
 from dto.driver_dto import DriverDTO
 from entity import Driver, DriverAttribute, DriverLicense
@@ -14,6 +14,8 @@ from repository.driver_attribute_repository import DriverAttributeRepositoryImp
 from repository.driver_repository import DriverRepositoryImp
 from repository.transit_repository import TransitRepositoryImp
 from service.driver_fee_service import DriverFeeService
+from transitdetails.transit_details_dto import TransitDetailsDTO
+from transitdetails.transit_details_facade import TransitDetailsFacade
 
 
 def is_base_64(s):
@@ -27,19 +29,19 @@ class DriverService:
     DRIVER_LICENSE_REGEX = "^[A-Z9]{5}\\d{6}[A-Z9]{2}\\d[A-Z]{2}$"
     driver_repository: DriverRepositoryImp
     driver_attribute_repository: DriverAttributeRepositoryImp
-    transit_repository: TransitRepositoryImp
+    transit_details_facade: TransitDetailsFacade
     driver_fee_service: DriverFeeService
 
     def __init__(
             self,
             driver_repository: DriverRepositoryImp = Depends(DriverRepositoryImp),
             driver_attribute_repository: DriverAttributeRepositoryImp = Depends(DriverAttributeRepositoryImp),
-            transit_repository: TransitRepositoryImp = Depends(TransitRepositoryImp),
+            transit_details_facade: TransitDetailsFacade = Depends(TransitDetailsFacade),
             driver_fee_service: DriverFeeService = Depends(DriverFeeService),
     ):
         self.driver_repository = driver_repository
         self.driver_attribute_repository = driver_attribute_repository
-        self.transit_repository = transit_repository
+        self.transit_details_facade = transit_details_facade
         self.driver_fee_service = driver_fee_service
 
     def create_driver(
@@ -111,11 +113,11 @@ class DriverService:
         from_date = datetime(year, month, 1)
         to_date = datetime(year, month, calendar.monthrange(year, month)[1])
 
-        transit_list = self.transit_repository.find_all_by_driver_and_date_time_between(driver, from_date, to_date)
+        transit_list: List[TransitDetailsDTO] = self.transit_details_facade.find_by_driver(driver_id, from_date, to_date)
 
         sum: Money = reduce(
             lambda a, b: a.add(b),
-            map(lambda t: self.driver_fee_service.calculate_driver_fee(t.id), transit_list), Money.ZERO
+            map(lambda t: self.driver_fee_service.calculate_driver_fee(t.price, driver_id), transit_list), Money.ZERO
         )
 
         return sum
