@@ -1,4 +1,4 @@
-from fastapi import Depends
+from injector import inject
 
 from party.api.party_id import PartyId
 from party.infra.party_relationship_repository_impl import PartyRelationshipRepositoryImpl
@@ -14,10 +14,11 @@ class ContractManager:
     party_repository: PartyRepository
     party_relationship_repository: PartyRelationshipRepository
 
+    @inject
     def __init__(
         self,
-        party_repository: PartyRepository = Depends(PartyRepositoryImpl),
-        party_relationship_repository: PartyRelationshipRepository = Depends(PartyRelationshipRepositoryImpl),
+        party_repository: PartyRepository,
+        party_relationship_repository: PartyRelationshipRepository,
     ):
         self.party_repository = party_repository
         self.party_relationship_repository = party_relationship_repository

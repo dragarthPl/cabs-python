@@ -19,10 +19,10 @@ from tests.common.fixtures import DependencyResolver, Fixtures
 dependency_resolver = DependencyResolver()
 
 class TestPopulateGraphServiceIntegration(TestCase):
-    fixtures: Fixtures = dependency_resolver.resolve_dependency(Depends(Fixtures))
-    populate_graph_service: PopulateGraphService = dependency_resolver.resolve_dependency(Depends(PopulateGraphService))
-    analyzer: GraphTransitAnalyzer = dependency_resolver.resolve_dependency(Depends(GraphTransitAnalyzer))
-    geocoding_service: GeocodingService = dependency_resolver.resolve_dependency(Depends(GeocodingService))
+    fixtures: Fixtures = dependency_resolver.resolve_dependency(Fixtures)
+    populate_graph_service: PopulateGraphService = dependency_resolver.resolve_dependency(PopulateGraphService)
+    analyzer: GraphTransitAnalyzer = dependency_resolver.resolve_dependency(GraphTransitAnalyzer)
+    geocoding_service: GeocodingService = dependency_resolver.resolve_dependency(GeocodingService)
 
     async def setUp(self):
         create_db_and_tables()

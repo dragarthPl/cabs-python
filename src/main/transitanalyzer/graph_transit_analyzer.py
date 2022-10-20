@@ -3,12 +3,9 @@ import sys
 from datetime import datetime
 from typing import List, Tuple
 
-from fastapi import Depends
 from neo4j import GraphDatabase, Query
-from py2neo import Graph
 
 from entity.events.transit_completed import TransitCompleted
-from fastapi_events.handlers.base import BaseEventHandler
 from fastapi_events.handlers.local import local_handler
 from fastapi_events.typing import Event
 

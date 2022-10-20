@@ -1,11 +1,11 @@
 from datetime import datetime
 from typing import List, Optional
 
-from core.database import get_session
+from injector import inject
+
 from dto.driver_position_dtov_2 import DriverPositionDTOV2
 from entity import Driver
 from entity.driver_position import DriverPosition
-from fastapi import Depends
 from sqlalchemy import text, Float, DateTime, Integer
 from sqlmodel import Session
 
@@ -13,7 +13,8 @@ from sqlmodel import Session
 class DriverPositionRepositoryImp:
     session: Session
 
-    def __init__(self, session: Session = Depends(get_session)):
+    @inject
+    def __init__(self, session: Session):
         self.session = session
 
     def save(self, driver_position: DriverPosition) -> Optional[DriverPosition]:

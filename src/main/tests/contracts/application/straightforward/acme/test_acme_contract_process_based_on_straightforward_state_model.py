@@ -31,17 +31,15 @@ class DefaultFakeApplicationEventPublisher(ApplicationEventPublisher):
         ...
 
 
-dependency_resolver = DependencyResolver(abstract_map={
-    "Depends(ApplicationEventPublisher)": fastapi.Depends(DefaultFakeApplicationEventPublisher)
-})
+dependency_resolver = DependencyResolver()
 
 
 class TestAcmeContractProcessBasedOnStraightforwardStateModel(TestCase):
-    editor: DocumentEditor = dependency_resolver.resolve_dependency(Depends(DocumentEditor))
+    editor: DocumentEditor = dependency_resolver.resolve_dependency(DocumentEditor)
     contract_process: AcmeContractProcessBasedOnStraightforwardDocumentModel = dependency_resolver.resolve_dependency(
-        Depends(AcmeContractProcessBasedOnStraightforwardDocumentModel)
+        AcmeContractProcessBasedOnStraightforwardDocumentModel
     )
-    user_repository: UserRepository = dependency_resolver.resolve_dependency(Depends(UserRepository))
+    user_repository: UserRepository = dependency_resolver.resolve_dependency(UserRepository)
 
     CONTENT_1: str = "content 1"
     CONTENT_2: str = "content 2"

@@ -1,19 +1,19 @@
 from datetime import datetime
 from typing import List, Optional
 
+from injector import inject
 from sqlalchemy import desc
 
-from core.database import get_session
 from entity import Driver, CarType
 from entity.driver_session import DriverSession
-from fastapi import Depends
 from sqlmodel import Session
 
 
 class DriverSessionRepositoryImp:
     session: Session
 
-    def __init__(self, session: Session = Depends(get_session)):
+    @inject
+    def __init__(self, session: Session):
         self.session = session
 
     def find_all_by_logged_out_at_null_and_driver_in_and_car_class_in(

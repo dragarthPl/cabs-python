@@ -1,10 +1,9 @@
 import uuid as uuid_pkg
 from typing import Optional, List, Set
 
+from injector import inject
 from sqlalchemy import text
 
-from core.database import get_session
-from fastapi import Depends
 from sqlmodel import Session
 
 from entity import ContractAttachmentData
@@ -13,7 +12,8 @@ from entity import ContractAttachmentData
 class ContractAttachmentDataRepositoryImp:
     session: Session
 
-    def __init__(self, session: Session = Depends(get_session)):
+    @inject
+    def __init__(self, session: Session):
         self.session = session
 
     def find_by_contract_attachment_no_in(

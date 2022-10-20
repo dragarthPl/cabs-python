@@ -1,15 +1,16 @@
 from typing import Optional
 
-from core.database import get_session
+from injector import inject
+
 from entity import DriverAttribute
-from fastapi import Depends
 from sqlmodel import Session
 
 
 class DriverAttributeRepositoryImp:
     session: Session
 
-    def __init__(self, session: Session = Depends(get_session)):
+    @inject
+    def __init__(self, session: Session):
         self.session = session
 
     def save(self, driver_attribute: DriverAttribute) -> Optional[DriverAttribute]:

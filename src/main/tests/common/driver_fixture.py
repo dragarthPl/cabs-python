@@ -2,6 +2,7 @@ from datetime import datetime
 from random import random
 
 from fastapi import Depends
+from injector import inject
 from mockito import when, ANY
 
 from entity import Driver, DriverFee, Address, CarType, DriverAttribute
@@ -23,14 +24,15 @@ class DriverFixture:
     driver_tracking_service: DriverTrackingService
     driver_fee_service: DriverFeeService
 
+    @inject
     def __init__(
         self,
-        fee_repository: DriverFeeRepositoryImp = Depends(DriverFeeRepositoryImp),
-        driver_service: DriverService = Depends(DriverService),
-        driver_attribute_repository: DriverAttributeRepositoryImp = Depends(DriverAttributeRepositoryImp),
-        driver_session_service: DriverSessionService = Depends(DriverSessionService),
-        driver_tracking_service: DriverTrackingService = Depends(DriverTrackingService),
-        driver_fee_service: DriverFeeService = Depends(DriverFeeService),
+        fee_repository: DriverFeeRepositoryImp,
+        driver_service: DriverService,
+        driver_attribute_repository: DriverAttributeRepositoryImp,
+        driver_session_service: DriverSessionService,
+        driver_tracking_service: DriverTrackingService,
+        driver_fee_service: DriverFeeService,
     ):
         self.fee_repository = fee_repository
         self.driver_service = driver_service

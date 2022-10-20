@@ -1,4 +1,4 @@
-from fastapi import Depends
+from injector import inject
 
 from entity import Transit
 from money import Money
@@ -8,7 +8,8 @@ from repository.transit_repository import TransitRepositoryImp
 class StubbedTransitPrice:
     transit_repository: TransitRepositoryImp
 
-    def __init__(self, transit_repository: TransitRepositoryImp = Depends(TransitRepositoryImp)):
+    @inject
+    def __init__(self, transit_repository: TransitRepositoryImp):
         self.transit_repository = transit_repository
 
     def stub(self, transit_id: int, faked: Money) -> Transit:

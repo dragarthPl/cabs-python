@@ -1,14 +1,16 @@
+from injector import inject
+
 from entity import Address
 from repository.address_repository import AddressRepositoryImp
-from fastapi.params import Depends
 
 class AddressFixture:
 
     address_repository: AddressRepositoryImp
 
+    @inject
     def __init__(
         self,
-        address_repository: AddressRepositoryImp = Depends(AddressRepositoryImp)
+        address_repository: AddressRepositoryImp,
     ):
         self.address_repository = address_repository
 

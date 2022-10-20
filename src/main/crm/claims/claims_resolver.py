@@ -3,6 +3,7 @@ import json
 from typing import Optional, Set
 
 from common.base_entity import BaseEntity
+from crm.claims.status import Status
 from entity import Claim, Client, Transit
 
 
@@ -19,9 +20,9 @@ class ClaimsResolver(BaseEntity, table=True):
 
     class Result:
         who_to_ask: WhoToAsk
-        decision: Claim.Status
+        decision: Status
 
-        def __init__(self, who_to_ask: WhoToAsk, decision: Claim.Status):
+        def __init__(self, who_to_ask: WhoToAsk, decision: Status):
             self.who_to_ask = who_to_ask
             self.decision = decision
 
@@ -31,29 +32,30 @@ class ClaimsResolver(BaseEntity, table=True):
     def resolve(
         self,
         claim: Claim,
+        client_type: Client.Type,
         automatic_refund_for_vip_threshold: float,
         number_of_transits: int,
         no_of_transits_for_claim_automatic_refund: int,
     ) -> Result:
         transit_id = claim.transit_id
         if str(transit_id) in self.claimed_transits_ids:
-            return self.Result(WhoToAsk.ASK_NOONE, Claim.Status.ESCALATED)
+            return self.Result(WhoToAsk.ASK_NOONE, Status.ESCALATED)
         self.add_new_claim_for(claim.transit_id)
         if self.number_of_claims() <= 3:
-            return self.Result(WhoToAsk.ASK_NOONE, Claim.Status.REFUNDED)
-        if claim.owner.type == Client.Type.VIP:
+            return self.Result(WhoToAsk.ASK_NOONE, Status.REFUNDED)
+        if client_type == Client.Type.VIP:
             if claim.get_transit_price().to_int() < automatic_refund_for_vip_threshold:
-                return self.Result(WhoToAsk.ASK_NOONE, Claim.Status.REFUNDED)
+                return self.Result(WhoToAsk.ASK_NOONE, Status.REFUNDED)
             else:
-                return self.Result(WhoToAsk.ASK_DRIVER, Claim.Status.ESCALATED)
+                return self.Result(WhoToAsk.ASK_DRIVER, Status.ESCALATED)
         else:
             if (number_of_transits >= no_of_transits_for_claim_automatic_refund):
                 if claim.get_transit_price().to_int() < automatic_refund_for_vip_threshold:
-                    return self.Result(WhoToAsk.ASK_NOONE, Claim.Status.REFUNDED)
+                    return self.Result(WhoToAsk.ASK_NOONE, Status.REFUNDED)
                 else:
-                    return self.Result(WhoToAsk.ASK_CLIENT, Claim.Status.ESCALATED)
+                    return self.Result(WhoToAsk.ASK_CLIENT, Status.ESCALATED)
             else:
-                return self.Result(WhoToAsk.ASK_DRIVER, Claim.Status.ESCALATED)
+                return self.Result(WhoToAsk.ASK_DRIVER, Status.ESCALATED)
 
     def add_new_claim_for(self, transit_id: int):
         transits_ids = self.get_claimed_transits_ids()

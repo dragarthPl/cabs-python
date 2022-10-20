@@ -1,7 +1,7 @@
 from datetime import datetime
 from typing import Optional, List
 
-from fastapi import Depends
+from injector import inject
 from sqlalchemy import text
 from sqlmodel import Session
 
@@ -12,7 +12,8 @@ from transitdetails.transit_details import TransitDetails
 class TransitDetailsRepository:
     session: Session
 
-    def __init__(self, session: Session = Depends(get_session)):
+    @inject
+    def __init__(self, session: Session):
         self.session = session
 
     def find_by_transit_id(self, transit_id: int) -> Optional[TransitDetails]:

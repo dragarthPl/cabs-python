@@ -1,6 +1,7 @@
+from fastapi_injector import Injected
+
 from dto.address_dto import AddressDTO
 from dto.transit_dto import TransitDTO
-from fastapi import Depends
 from fastapi_utils.cbv import cbv
 from fastapi_utils.inferring_router import InferringRouter
 from service.transit_service import TransitService
@@ -9,7 +10,7 @@ transit_router = InferringRouter(tags=["TransitController"])
 
 @cbv(transit_router)
 class TransitController:
-    transit_service: TransitService = Depends(TransitService)
+    transit_service: TransitService = Injected(TransitService)
 
     @transit_router.get("/transits/{transits_id}")
     def get_transit(self, transits_id: int) -> TransitDTO:

@@ -1,17 +1,18 @@
 from abc import ABCMeta, abstractmethod
 from typing import List, Optional
 
+from injector import inject
 from sqlalchemy import text
 
 from core.database import get_session
 from entity import CarTypeActiveCounter
 from entity.car_type import CarType
-from fastapi import Depends
 from sqlmodel import Session
 
 class CarTypeActiveCounterRepositoryImp:
 
-    def __init__(self, session: Session = Depends(get_session)):
+    @inject
+    def __init__(self, session: Session):
         self.session = session
 
     def find_by_car_class(self, car_class: CarType.CarClass) -> Optional[CarTypeActiveCounter]:
@@ -44,12 +45,11 @@ class CarTypeRepositoryImp:
     session: Session
     car_type_active_counter_repository: CarTypeActiveCounterRepositoryImp
 
+    @inject
     def __init__(
             self,
-            session: Session = Depends(get_session),
-            car_type_active_counter_repository: CarTypeActiveCounterRepositoryImp = Depends(
-                CarTypeActiveCounterRepositoryImp
-            )
+            session: Session,
+            car_type_active_counter_repository: CarTypeActiveCounterRepositoryImp
     ) -> None:
         self.session = session
         self.car_type_active_counter_repository = car_type_active_counter_repository

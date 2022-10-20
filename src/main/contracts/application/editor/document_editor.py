@@ -1,6 +1,6 @@
 from uuid import UUID
 
-from fastapi import Depends
+from injector import inject
 
 from contracts.application.editor.commit_result import CommitResult
 from contracts.application.editor.document_dto import DocumentDTO
@@ -11,9 +11,10 @@ from contracts.model.content.document_content_repository import DocumentContentR
 class DocumentEditor:
     document_content_repository: DocumentContentRepository
 
+    @inject
     def __init__(
             self,
-            document_content_repository: DocumentContentRepository = Depends(DocumentContentRepository)
+            document_content_repository: DocumentContentRepository,
     ):
         self.document_content_repository = document_content_repository
 

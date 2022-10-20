@@ -1,4 +1,5 @@
 from fastapi import Depends
+from injector import inject
 
 from entity import Client
 from repository.client_repository import ClientRepositoryImp
@@ -7,9 +8,10 @@ from repository.client_repository import ClientRepositoryImp
 class ClientFixture:
     client_repository: ClientRepositoryImp
 
+    @inject
     def __init__(
         self,
-        client_repository: ClientRepositoryImp = Depends(ClientRepositoryImp),
+        client_repository: ClientRepositoryImp,
     ):
         self.client_repository = client_repository
 

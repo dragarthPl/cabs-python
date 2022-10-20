@@ -25,17 +25,15 @@ from tests.common.fixtures import DependencyResolver
 from tests.contracts.application.straightforward.acme.test_acme_contract_process_based_on_straightforward_state_model import \
     DefaultFakeApplicationEventPublisher
 
-dependency_resolver = DependencyResolver(abstract_map={
-    "Depends(ApplicationEventPublisher)": fastapi.Depends(DefaultFakeApplicationEventPublisher)
-})
+dependency_resolver = DependencyResolver()
 
 
 class TestAcmeContractManagerBasedOnDynamicStateModel(TestCase):
-    editor: DocumentEditor = dependency_resolver.resolve_dependency(Depends(DocumentEditor))
+    editor: DocumentEditor = dependency_resolver.resolve_dependency(DocumentEditor)
     document_resource_manager: DocumentResourceManager = dependency_resolver.resolve_dependency(
-        Depends(DocumentResourceManager)
+        DocumentResourceManager
     )
-    user_repository: UserRepository = dependency_resolver.resolve_dependency(Depends(UserRepository))
+    user_repository: UserRepository = dependency_resolver.resolve_dependency(UserRepository)
 
     CONTENT_1: str = "content 1"
     CONTENT_2: str = "content 2"

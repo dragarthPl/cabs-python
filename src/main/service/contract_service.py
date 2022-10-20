@@ -1,7 +1,8 @@
+from injector import inject
+
 from dto.contract_attachment_dto import ContractAttachmentDTO
 from dto.contract_dto import ContractDTO
 from entity import Contract, ContractAttachmentData
-from fastapi import Depends
 
 from repository.contract_attachment_data_repository import ContractAttachmentDataRepositoryImp
 from repository.contract_repository import ContractRepositoryImp
@@ -11,12 +12,11 @@ class ContractService:
     contract_repository: ContractRepositoryImp
     contract_attachment_data_repository: ContractAttachmentDataRepositoryImp
 
+    @inject
     def __init__(
             self,
-            contract_repository: ContractRepositoryImp = Depends(ContractRepositoryImp),
-            contract_attachment_data_repository: ContractAttachmentDataRepositoryImp = Depends(
-                ContractAttachmentDataRepositoryImp
-            )
+            contract_repository: ContractRepositoryImp,
+            contract_attachment_data_repository: ContractAttachmentDataRepositoryImp,
     ):
         self.contract_repository = contract_repository
         self.contract_attachment_data_repository = contract_attachment_data_repository
@@ -75,9 +75,11 @@ class ContractService:
             data=contract_attachment_dto.data
         )
         contract = self.contract_repository.save(contract)
+        data = self.contract_attachment_data_repository.save(contract_attachment_data)
+        attachment = contract.find_attachment(contract_attachment_id)
         return ContractAttachmentDTO(
-            attachment=contract.find_attachment(contract_attachment_id),
-            data=self.contract_attachment_data_repository.save(contract_attachment_data)
+            attachment=attachment,
+            data=data
         )
 
     def remove_attachment(self, contract_id: int, attachment_id: int):

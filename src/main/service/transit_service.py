@@ -4,13 +4,13 @@ from datetime import datetime
 from typing import List
 
 from dateutil.relativedelta import relativedelta
+from injector import inject
 
 from distance.distance import Distance
 from dto.address_dto import AddressDTO
 from dto.driver_position_dtov_2 import DriverPositionDTOV2
 from dto.transit_dto import TransitDTO
 from entity import Address, CarType, Driver, Transit
-from fastapi import Depends
 from fastapi_events.dispatcher import dispatch
 
 from entity.events.transit_completed import TransitCompleted
@@ -21,7 +21,7 @@ from repository.driver_position_repository import DriverPositionRepositoryImp
 from repository.driver_repository import DriverRepositoryImp
 from repository.driver_session_repository import DriverSessionRepositoryImp
 from repository.transit_repository import TransitRepositoryImp
-from service.awards_service import AwardsService, AwardsServiceImpl
+from service.awards_service import AwardsService
 from service.car_type_service import CarTypeService
 from service.distance_calculator import DistanceCalculator
 from service.driver_fee_service import DriverFeeService
@@ -48,22 +48,23 @@ class TransitService:
     awards_service: AwardsService
     transit_details_facade: TransitDetailsFacade
 
+    @inject
     def __init__(
             self,
-            driver_repository: DriverRepositoryImp = Depends(DriverRepositoryImp),
-            transit_repository: TransitRepositoryImp = Depends(TransitRepositoryImp),
-            client_repository: ClientRepositoryImp = Depends(ClientRepositoryImp),
-            invoice_generator: InvoiceGenerator = Depends(InvoiceGenerator),
-            notification_service: DriverNotificationService = Depends(DriverNotificationService),
-            distance_calculator: DistanceCalculator = Depends(DistanceCalculator),
-            driver_position_repository: DriverPositionRepositoryImp = Depends(DriverPositionRepositoryImp),
-            driver_session_repository: DriverSessionRepositoryImp = Depends(DriverSessionRepositoryImp),
-            car_type_service: CarTypeService = Depends(CarTypeService),
-            geocoding_service: GeocodingService = Depends(GeocodingService),
-            address_repository: AddressRepositoryImp = Depends(AddressRepositoryImp),
-            driver_fee_service: DriverFeeService = Depends(DriverFeeService),
-            awards_service: AwardsService = Depends(AwardsServiceImpl),
-            transit_details_facade: TransitDetailsFacade = Depends(TransitDetailsFacade),
+            driver_repository: DriverRepositoryImp,
+            transit_repository: TransitRepositoryImp,
+            client_repository: ClientRepositoryImp,
+            invoice_generator: InvoiceGenerator,
+            notification_service: DriverNotificationService,
+            distance_calculator: DistanceCalculator,
+            driver_position_repository: DriverPositionRepositoryImp,
+            driver_session_repository: DriverSessionRepositoryImp,
+            car_type_service: CarTypeService,
+            geocoding_service: GeocodingService,
+            address_repository: AddressRepositoryImp,
+            driver_fee_service: DriverFeeService,
+            awards_service: AwardsService,
+            transit_details_facade: TransitDetailsFacade,
     ):
         self.driver_repository = driver_repository
         self.transit_repository = transit_repository

@@ -2,7 +2,7 @@ import sys
 import random
 from typing import Dict, Optional, List
 
-from fastapi import Depends
+from injector import inject
 
 from common.functional import BiFunction
 from contracts.application.acme.dynamic.document_operation_result import DocumentOperationResult
@@ -23,11 +23,12 @@ class DocumentResourceManager:
     assembler: AcmeContractStateAssembler
     user_repository: UserRepository
 
+    @inject
     def __init__(
             self,
-            document_header_repository: DocumentHeaderRepository = Depends(DocumentHeaderRepository),
-            assembler: AcmeContractStateAssembler = Depends(AcmeContractStateAssembler),
-            user_repository: UserRepository = Depends(UserRepository),
+            document_header_repository: DocumentHeaderRepository,
+            assembler: AcmeContractStateAssembler,
+            user_repository: UserRepository,
      ):
         self.document_header_repository = document_header_repository
         self.assembler = assembler

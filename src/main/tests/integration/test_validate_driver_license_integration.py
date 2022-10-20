@@ -12,7 +12,7 @@ dependency_resolver = DependencyResolver()
 
 
 class TestValidateDriverLicenseIntegration(TestCase):
-    driver_service: DriverService = dependency_resolver.resolve_dependency(Depends(DriverService))
+    driver_service: DriverService = dependency_resolver.resolve_dependency(DriverService)
 
     def setUp(self):
         create_db_and_tables()

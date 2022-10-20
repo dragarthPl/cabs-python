@@ -1,6 +1,6 @@
 from typing import Optional
 
-from fastapi import Depends
+from injector import inject
 from sqlmodel import Session
 
 from contracts.legacy.user import User
@@ -10,7 +10,8 @@ from core.database import get_session
 class UserRepository:
     session: Session
 
-    def __init__(self, session: Session = Depends(get_session)):
+    @inject
+    def __init__(self, session: Session):
         self.session = session
 
     def save(self, user: User) -> Optional[User]:

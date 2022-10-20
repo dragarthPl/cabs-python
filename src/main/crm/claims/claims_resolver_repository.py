@@ -1,9 +1,9 @@
 from typing import Optional
 
+from injector import inject
 from sqlmodel import Session
 
 from core.database import get_session
-from fastapi import Depends
 
 from entity import ClaimsResolver
 
@@ -11,7 +11,8 @@ from entity import ClaimsResolver
 class ClaimsResolverRepositoryImp:
     session: Session
 
-    def __init__(self, session: Session = Depends(get_session)):
+    @inject
+    def __init__(self, session: Session):
         self.session = session
 
     def save(self, claims_resolver: ClaimsResolver) -> Optional[ClaimsResolver]:

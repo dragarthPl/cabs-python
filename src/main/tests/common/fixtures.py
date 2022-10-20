@@ -1,23 +1,25 @@
 import inspect
 from datetime import datetime
-from typing import Any, Dict
+from typing import Any, Dict, Type, TypeVar
 
-import pytz
 import fastapi
-from dateutil.relativedelta import relativedelta
 from fastapi.params import Depends
-from freezegun import freeze_time
+from injector import Injector, inject
+from mypy.types import Instance
+from sqlmodel import Session
 
 from common.application_event_publisher import ApplicationEventPublisher
-from distance.distance import Distance
+from core.database import DatabaseModule
 from dto.address_dto import AddressDTO
-from dto.car_type_dto import CarTypeDTO
-from dto.claim_dto import ClaimDTO
-from dto.client_dto import ClientDTO
 from dto.transit_dto import TransitDTO
 from entity import Driver, Transit, DriverFee, Address, Client, CarType, Claim, DriverAttribute
+from party.infra.party_relationship_repository_impl import PartyRelationshipRepositoryImpl
+from party.infra.party_repository_impl import PartyRepositoryImpl
+from party.model.party.party_relationship_repository import PartyRelationshipRepository
+from party.model.party.party_repository import PartyRepository
+from service.awards_service import AwardsService
+from service.awards_service_impl import AwardsServiceImpl
 from service.geocoding_service import GeocodingService
-from service.transit_service import TransitService
 from tests.common.address_fixture import AddressFixture
 from tests.common.awards_account_fixture import AwardsAccountFixture
 from tests.common.car_type_fixture import CarTypeFixture
@@ -26,7 +28,9 @@ from tests.common.client_fixture import ClientFixture
 from tests.common.driver_fixture import DriverFixture
 from tests.common.ride_fixture import RideFixture
 from tests.common.transit_fixture import TransitFixture
-from transitdetails.transit_details_facade import TransitDetailsFacade
+
+
+T = TypeVar('T')
 
 
 class DefaultFakeApplicationEventPublisher(ApplicationEventPublisher):
@@ -39,40 +43,21 @@ class DefaultFakeApplicationEventPublisher(ApplicationEventPublisher):
 
 
 class DependencyResolver:
+    injector: Injector
     dependency_cache: Dict[str, Any]
     abstract_map: Dict[str, Any]
 
-    def __init__(self, abstract_map: Dict[str, fastapi.Depends] = None):
-        self.dependency_cache = {}
-        self.abstract_map = abstract_map or {}
-        self.abstract_map["Depends(ApplicationEventPublisher)"] = fastapi.Depends(DefaultFakeApplicationEventPublisher)
+    def __init__(self):
+        def configure(binder):
+            binder.bind(AwardsService, to=AwardsServiceImpl)
+            binder.bind(PartyRepository, to=PartyRepositoryImpl)
+            binder.bind(PartyRelationshipRepository, to=PartyRelationshipRepositoryImpl)
+            binder.bind(ApplicationEventPublisher, to=DefaultFakeApplicationEventPublisher)
 
-    def resolve_dependency(self, container: Any):
-        container_key = str(container)
-        if container_key in self.dependency_cache:
-            return self.dependency_cache[container_key]
-        if inspect.isabstract(container.dependency) and container_key in self.abstract_map:
-            container = self.abstract_map[container_key]
-        if isinstance(container, (Depends,)):
-            new_container = container.dependency()
-            if inspect.isgenerator(new_container):
-                new_generator = next(new_container)
-                self.dependency_cache[container_key] = new_generator
-                return new_generator
-            new_container = container.dependency
-            prepare_kwargs = {}
-            for name, parameter in inspect.signature(new_container.__init__).parameters.items():
-                if parameter.default and isinstance(parameter.default, (Depends,)):
-                    prepare_kwargs[name] = self.resolve_dependency(parameter.default)
-            new_container_instance = new_container(**prepare_kwargs)
-            self.dependency_cache[container_key] = new_container_instance
-            return new_container_instance
-        elif inspect.isclass(container) or callable(container):
-            return self.resolve_dependency(container())
-        elif inspect.isgenerator(container):
-            new_generator = next(container)
-            self.dependency_cache[container_key] = new_generator
-            return next(new_generator)
+        self.injector = Injector([configure, DatabaseModule])
+
+    def resolve_dependency(self, interface: Type[T]) -> T:
+        return self.injector.get(interface)
 
 
 class Fixtures:
@@ -85,16 +70,17 @@ class Fixtures:
     car_type_fixture: CarTypeFixture
     ride_fixture: RideFixture
 
+    @inject
     def __init__(
         self,
-        address_fixture: AddressFixture = Depends(AddressFixture),
-        claim_fixture: ClaimFixture = Depends(ClaimFixture),
-        driver_fixture: DriverFixture = Depends(DriverFixture),
-        client_fixture: ClientFixture = Depends(ClientFixture),
-        transit_fixture: TransitFixture = Depends(TransitFixture),
-        awards_account_fixture: AwardsAccountFixture = Depends(AwardsAccountFixture),
-        car_type_fixture: CarTypeFixture = Depends(CarTypeFixture),
-        ride_fixture: RideFixture = Depends(RideFixture),
+        address_fixture: AddressFixture,
+        claim_fixture: ClaimFixture,
+        driver_fixture: DriverFixture,
+        client_fixture: ClientFixture,
+        transit_fixture: TransitFixture,
+        awards_account_fixture: AwardsAccountFixture,
+        car_type_fixture: CarTypeFixture,
+        ride_fixture: RideFixture,
     ):
         self.address_fixture = address_fixture
         self.claim_fixture = claim_fixture

@@ -19,7 +19,7 @@ class TestJobDoer(TestCase):
     ANY_USER: int = 1
 
     job_doer: JobDoer = dependency_resolver.resolve_dependency(
-        Depends(JobDoer)
+        JobDoer
     )
 
     def setUp(self):

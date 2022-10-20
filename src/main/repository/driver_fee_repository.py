@@ -1,15 +1,16 @@
 from typing import List, Optional
 
-from core.database import get_session
+from injector import inject
+
 from entity import Driver, DriverFee
-from fastapi import Depends
 from sqlmodel import Session, select
 
 
 class DriverFeeRepositoryImp:
     session: Session
 
-    def __init__(self, session: Session = Depends(get_session)):
+    @inject
+    def __init__(self, session: Session):
         self.session = session
 
     def find_by_driver_id(self, driver_id: int) -> Optional[DriverFee]:

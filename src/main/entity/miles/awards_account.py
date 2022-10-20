@@ -15,9 +15,7 @@ from common.base_entity import BaseEntity
 class AwardsAccount(BaseEntity, table=True):
     __table_args__ = {'extend_existing': True}
 
-    # @OneToOne
-    client_id: Optional[int] = Field(default=None, foreign_key="client.id")
-    client: Optional[Client] = Relationship(sa_relationship=relationship("Client", backref=backref("awards_account", uselist=False)))
+    client_id: Optional[int] = Field(default=0, sa_column=Column(Integer, nullable=True))
     #@Column(nullable = false)
     date: datetime = Field(default=datetime.now(), sa_column=Column(DateTime, nullable=False))
     # @Column(nullable = false)
@@ -32,15 +30,15 @@ class AwardsAccount(BaseEntity, table=True):
             "entity.miles.awarded_miles.AwardedMiles", back_populates="account")
     )
 
-    def __init__(self, client: Client, is_active: bool, when: datetime, **data: Any):
+    def __init__(self, client_id: int, is_active: bool, when: datetime, **data: Any):
         super().__init__(**data)
-        self.client = client
+        self.client_id = client_id
         self.is_active = is_active
         self.date = when
 
     @staticmethod
-    def not_active_account(client: Client, when: datetime):
-        return AwardsAccount(client, False, when)
+    def not_active_account(client_id: int, when: datetime):
+        return AwardsAccount(client_id, False, when)
 
     def add_expiring_miles(
         self,
@@ -52,7 +50,7 @@ class AwardsAccount(BaseEntity, table=True):
         expiring_miles = AwardedMiles(
             awards_account=self,
             transit_id=transit_id,
-            client=self.client,
+            client_id=self.client_id,
             when=when,
             constant_until=ConstantUntil.constant_until(amount, expire_at)
         )
@@ -64,7 +62,7 @@ class AwardsAccount(BaseEntity, table=True):
         non_expiring_miles = AwardedMiles(
             awards_account=self,
             transit_id=None,
-            client=self.client,
+            client_id=self.client_id,
             when=when,
             constant_until=ConstantUntil.constant_until_forever(amount)
         )

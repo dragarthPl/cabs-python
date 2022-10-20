@@ -1,8 +1,9 @@
 from typing import Optional
 
+from fastapi_injector import Injected
+
 from dto.driver_dto import DriverDTO
 from entity import Driver
-from fastapi import Depends
 from fastapi_utils.cbv import cbv
 from fastapi_utils.inferring_router import InferringRouter
 from repository.driver_repository import DriverRepositoryImp
@@ -12,8 +13,8 @@ driver_router = InferringRouter(tags=["DriverController"])
 
 @cbv(driver_router)
 class DriverController:
-    driver_service: DriverService = Depends(DriverService)
-    driver_repository: DriverRepositoryImp = Depends(DriverRepositoryImp)
+    driver_service: DriverService = Injected(DriverService)
+    driver_repository: DriverRepositoryImp = Injected(DriverRepositoryImp)
 
     @driver_router.post("/drivers")
     def create_driver(self, license: str, first_name: str, last_name: str, photo: Optional[str] = None) -> DriverDTO:

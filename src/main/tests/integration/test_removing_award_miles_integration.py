@@ -14,7 +14,8 @@ from core.database import create_db_and_tables, drop_db_and_tables
 from entity import Transit, Client, AwardedMiles
 from money import Money
 from repository.awards_account_repository import AwardsAccountRepositoryImp
-from service.awards_service import AwardsService, AwardsServiceImpl
+from service.awards_service import AwardsService
+from service.awards_service_impl import AwardsServiceImpl
 from service.geocoding_service import GeocodingService
 
 from tests.common.fixtures import DependencyResolver, Fixtures
@@ -30,12 +31,12 @@ class TestRemovingAwardMilesIntegration(TestCase):
     TODAY = YESTERDAY + relativedelta(days=1)
     SUNDAY = datetime(1989, 12, 17, 12, 12).astimezone(pytz.utc)
 
-    awards_service: AwardsService = dependency_resolver.resolve_dependency(Depends(AwardsServiceImpl))
+    awards_service: AwardsService = dependency_resolver.resolve_dependency(AwardsServiceImpl)
     awards_account_repository: AwardsAccountRepositoryImp = dependency_resolver.resolve_dependency(
-        Depends(AwardsAccountRepositoryImp))
-    fixtures: Fixtures = dependency_resolver.resolve_dependency(Depends(Fixtures))
-    app_properties: AppProperties = dependency_resolver.resolve_dependency(Depends(AppProperties))
-    geocoding_service: GeocodingService = dependency_resolver.resolve_dependency(Depends(GeocodingService))
+        AwardsAccountRepositoryImp)
+    fixtures: Fixtures = dependency_resolver.resolve_dependency(Fixtures)
+    app_properties: AppProperties = dependency_resolver.resolve_dependency(AppProperties)
+    geocoding_service: GeocodingService = dependency_resolver.resolve_dependency(GeocodingService)
 
     async def setUp(self):
         create_db_and_tables()

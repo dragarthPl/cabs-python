@@ -10,7 +10,8 @@ from mockito import when
 from config.app_properties import AppProperties
 from core.database import create_db_and_tables, drop_db_and_tables
 from entity import Transit, Client
-from service.awards_service import AwardsService, AwardsServiceImpl
+from service.awards_service import AwardsService
+from service.awards_service_impl import AwardsServiceImpl
 
 from tests.common.fixtures import DependencyResolver, Fixtures
 
@@ -22,9 +23,9 @@ class TestExpiringMilesIntegration(TestCase):
     _1989_12_13 = datetime(1989, 12, 13, 12, 12).astimezone(pytz.utc)
     _1989_12_14 = datetime(1989, 12, 14, 12, 12).astimezone(pytz.utc)
 
-    awards_service: AwardsService = dependency_resolver.resolve_dependency(Depends(AwardsServiceImpl))
-    fixtures: Fixtures = dependency_resolver.resolve_dependency(Depends(Fixtures))
-    app_properties: AppProperties = dependency_resolver.resolve_dependency(Depends(AppProperties))
+    awards_service: AwardsService = dependency_resolver.resolve_dependency(AwardsServiceImpl)
+    fixtures: Fixtures = dependency_resolver.resolve_dependency(Fixtures)
+    app_properties: AppProperties = dependency_resolver.resolve_dependency(AppProperties)
 
     def setUp(self):
         create_db_and_tables()

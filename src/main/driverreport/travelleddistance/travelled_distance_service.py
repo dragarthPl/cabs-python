@@ -1,6 +1,6 @@
 from datetime import datetime
 
-from fastapi import Depends
+from injector import inject
 
 from distance.distance import Distance
 from driverreport.travelleddistance.travelled_distance import TimeSlot, TravelledDistance
@@ -13,10 +13,11 @@ class TravelledDistanceService:
     travelled_distance_repository: TravelledDistanceRepository
     distance_calculator: DistanceCalculator
 
+    @inject
     def __init__(
         self,
-        travelled_distance_repository: TravelledDistanceRepository = Depends(TravelledDistanceRepository),
-        distance_calculator: DistanceCalculator = Depends(DistanceCalculator),
+        travelled_distance_repository: TravelledDistanceRepository,
+        distance_calculator: DistanceCalculator,
     ):
         self.travelled_distance_repository = travelled_distance_repository
         self.distance_calculator = distance_calculator

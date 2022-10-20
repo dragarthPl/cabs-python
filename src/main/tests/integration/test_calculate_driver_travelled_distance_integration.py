@@ -23,10 +23,10 @@ class TestCalculateDriverTravelledDistanceIntegration(TestCase):
     NOON_TEN = NOON_FIVE + relativedelta(minutes=5)
 
     travelled_distance_service: TravelledDistanceService = dependency_resolver.resolve_dependency(
-        Depends(TravelledDistanceService)
+        TravelledDistanceService
     )
 
-    fixtures: Fixtures = dependency_resolver.resolve_dependency(Depends(Fixtures))
+    fixtures: Fixtures = dependency_resolver.resolve_dependency(Fixtures)
 
     def setUp(self):
         create_db_and_tables()

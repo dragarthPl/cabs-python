@@ -17,12 +17,7 @@ from entity import MilesJsonMapper
 class AwardedMiles(BaseEntity, table=True):
     __table_args__ = {'extend_existing': True}
 
-    # @ManyToOne
-    client_id: Optional[int] = Field(default=None, foreign_key="client.id")
-    client: Optional[Client] = Relationship(
-        sa_relationship=relationship(
-            "entity.client.Client")
-    )
+    client_id: Optional[int] = Field(default=0, sa_column=Column(Integer, nullable=True))
 
     # @Column(nullable = false)
     date: datetime = Field(default=datetime.now(), sa_column=Column(DateTime, nullable=False))
@@ -42,7 +37,7 @@ class AwardedMiles(BaseEntity, table=True):
             *,
             awards_account: AwardsAccount,
             transit_id: int,
-            client: Client,
+            client_id: int,
             when: datetime,
             constant_until: Miles,
             **data: Any
@@ -50,13 +45,12 @@ class AwardedMiles(BaseEntity, table=True):
         super().__init__(**data)
         self.account = awards_account
         self.transit_id = transit_id
-        self.client = client
+        self.client_id = client_id
         self.date = when
         self.__set_miles(constant_until)
 
     def transfer_to(self, account: AwardsAccount):
-        self.client = account.client
-        self.client_id = account.client.id
+        self.client_id = account.client_id
         self.account = account
 
     def get_miles(self) -> Miles:

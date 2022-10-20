@@ -2,6 +2,7 @@ from datetime import datetime
 
 import pytz
 from fastapi import Depends
+from injector import inject
 
 from distance.distance import Distance
 from dto.address_dto import AddressDTO
@@ -21,12 +22,13 @@ class TransitFixture:
     transit_details_facade: TransitDetailsFacade
     stubbed_transit_price: StubbedTransitPrice
 
+    @inject
     def __init__(
         self,
-        transit_service: TransitService = Depends(TransitService),
-        transit_repository: TransitRepositoryImp = Depends(TransitRepositoryImp),
-        transit_details_facade: TransitDetailsFacade = Depends(TransitDetailsFacade),
-        stubbed_transit_price: StubbedTransitPrice = Depends(StubbedTransitPrice),
+        transit_service: TransitService,
+        transit_repository: TransitRepositoryImp,
+        transit_details_facade: TransitDetailsFacade,
+        stubbed_transit_price: StubbedTransitPrice,
     ):
         self.transit_service = transit_service
         self.transit_repository = transit_repository

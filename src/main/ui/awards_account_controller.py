@@ -1,14 +1,15 @@
+from fastapi_injector import Injected
+
 from dto.awards_account_dto import AwardsAccountDTO
-from fastapi import Depends
 from fastapi_utils.cbv import cbv
 from fastapi_utils.inferring_router import InferringRouter
-from service.awards_service import AwardsServiceImpl
+from service.awards_service import AwardsService
 
 awards_account_router = InferringRouter(tags=["AwardsAccountController"])
 
 @cbv(awards_account_router)
 class AwardsAccountController:
-    awards_service: AwardsServiceImpl = Depends(AwardsServiceImpl)
+    awards_service: AwardsService = Injected(AwardsService)
 
     @awards_account_router.post("/clients/{client_id}/awards", )
     def create(self, client_id: int) -> AwardsAccountDTO:

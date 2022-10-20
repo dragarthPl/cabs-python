@@ -1,17 +1,17 @@
-from typing import List, Optional
+from typing import Optional
 
-from core.database import get_session
-from entity import Client, Transit
-from entity.claim import Claim
-from fastapi import Depends
+from injector import inject
+
+from crm.claims.claim import Claim
 from sqlalchemy import func
-from sqlmodel import Session, select
+from sqlmodel import Session
 
 
 class ClaimRepositoryImp:
     session: Session
 
-    def __init__(self, session: Session = Depends(get_session)):
+    @inject
+    def __init__(self, session: Session):
         self.session = session
 
     def count(self):
@@ -26,3 +26,6 @@ class ClaimRepositoryImp:
 
     def get_one(self, claim_id: int) -> Optional[Claim]:
         return self.session.query(Claim).filter(Claim.id == claim_id).first()
+
+    def find_all_by_owner_id(self, owner_id: int):
+        return self.session.query(Claim).filter(Claim.owner_id == owner_id).all()

@@ -3,15 +3,15 @@ from typing import Optional
 
 import pytz
 from dateutil.relativedelta import relativedelta
+from injector import inject
 
 from core.database import get_session
-from fastapi import Depends
 from sqlmodel import Session
 from sqlalchemy import text
 
 from distance.distance import Distance
 from dto.address_dto import AddressDTO
-from dto.claim_dto import ClaimDTO
+from crm.claims.claim_dto import ClaimDTO
 from dto.driver_dto import DriverDTO
 from dto.driver_report import DriverReport
 from dto.driver_session_dto import DriverSessionDTO
@@ -51,7 +51,8 @@ class SqlBasedDriverReportCreator:
 
     session: Session
 
-    def __init__(self, session: Session = Depends(get_session)):
+    @inject
+    def __init__(self, session: Session):
         self.session = session
 
     def create_report(self, driver_id: int, last_days: int = None) -> DriverReport:

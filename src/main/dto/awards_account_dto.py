@@ -13,10 +13,9 @@ class AwardsAccountDTO(BaseModel):
     is_active: Optional[bool]
     transactions: Optional[int]
 
-    def __init__(self, *, awards_account: AwardsAccount = None, **data: Any):
+    def __init__(self, *, awards_account: AwardsAccount = None, client_dto: ClientDTO = None, **data: Any):
         if awards_account is not None:
             data.update(**awards_account.dict())
         super().__init__(**data)
-        if awards_account is not None:
-            if awards_account.client:
-                self.client = ClientDTO(**awards_account.client.dict())
+        if client_dto:
+            self.client = client_dto

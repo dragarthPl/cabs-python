@@ -1,4 +1,4 @@
-from fastapi import Depends
+from injector import inject
 
 from repair.legacy.dao.user_dao import UserDAO
 from repair.legacy.job.common_base_abstract_job import CommonBaseAbstractJob
@@ -9,7 +9,8 @@ class JobDoer:
 
     user_dao: UserDAO
 
-    def __init__(self, user_dao: UserDAO = Depends(UserDAO)):
+    @inject
+    def __init__(self, user_dao: UserDAO):
         self.user_dao = user_dao  # I'll inject test double some day because it makes total sense to me
 
     def repair(self, user_id: int, job: CommonBaseAbstractJob):

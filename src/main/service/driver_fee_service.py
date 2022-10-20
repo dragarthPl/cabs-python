@@ -1,7 +1,8 @@
 from typing import Optional
 
+from injector import inject
+
 from entity import DriverFee
-from fastapi import Depends
 
 from money import Money
 from repository.driver_fee_repository import DriverFeeRepositoryImp
@@ -10,9 +11,10 @@ from repository.driver_fee_repository import DriverFeeRepositoryImp
 class DriverFeeService:
     driver_fee_repository: DriverFeeRepositoryImp
 
+    @inject
     def __init__(
             self,
-            driver_fee_repository: DriverFeeRepositoryImp = Depends(DriverFeeRepositoryImp),
+            driver_fee_repository: DriverFeeRepositoryImp,
     ):
         self.driver_fee_repository = driver_fee_repository
 

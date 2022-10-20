@@ -17,9 +17,9 @@ from ui.transit_controller import TransitController
 dependency_resolver = DependencyResolver()
 
 class TestTariffRecognizingIntegration(TestCase):
-    fixtures: Fixtures = dependency_resolver.resolve_dependency(Depends(Fixtures))
+    fixtures: Fixtures = dependency_resolver.resolve_dependency(Fixtures)
     transit_controller: TransitController = TransitController(
-        transit_service=dependency_resolver.resolve_dependency(Depends(TransitService))
+        transit_service=dependency_resolver.resolve_dependency(TransitService)
     )
 
     def setUp(self):

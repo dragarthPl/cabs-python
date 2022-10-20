@@ -1,7 +1,8 @@
+from fastapi_injector import Injected
+
 from dto.contract_attachment_dto import ContractAttachmentDTO
 from dto.contract_dto import ContractDTO
 from entity.contract import Contract
-from fastapi import Depends
 from fastapi_utils.cbv import cbv
 from fastapi_utils.inferring_router import InferringRouter
 from service.contract_service import ContractService
@@ -10,7 +11,7 @@ contract_router = InferringRouter(tags=["ContractController"])
 
 @cbv(contract_router)
 class ContractController:
-    contract_service: ContractService = Depends(ContractService)
+    contract_service: ContractService = Injected(ContractService)
 
     @contract_router.post("/contracts/")
     def create(self, contract_dto: ContractDTO) -> ContractDTO:

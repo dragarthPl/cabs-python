@@ -1,8 +1,10 @@
 from datetime import datetime
 from typing import Any, Optional
 
-from entity.claim import Claim
+from crm.claims.claim import Claim
 from pydantic import BaseModel
+
+from crm.claims.status import Status
 
 
 class ClaimDTO(BaseModel):
@@ -17,12 +19,12 @@ class ClaimDTO(BaseModel):
     completion_date: Optional[datetime]
     change_date: Optional[datetime]
     completion_mode: Optional[Claim.CompletionMode]
-    status: Optional[Claim.Status]
+    status: Optional[Status]
     claim_no: Optional[str]
 
     def __init__(self, **data: Any):
         super().__init__(**data)
-        if data.get("status") == Claim.Status.DRAFT:
+        if data.get("status") == Status.DRAFT:
             self.is_draft = True
         else:
             self.is_draft = False

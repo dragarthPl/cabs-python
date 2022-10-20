@@ -1,15 +1,17 @@
 from typing import Optional
 
+from injector import inject
+
 from core.database import get_session
 from entity import Address
-from fastapi import Depends
 from sqlmodel import Session
 
 
 class AddressRepositoryImp:
     session: Session
 
-    def __init__(self, session: Session = Depends(get_session)):
+    @inject
+    def __init__(self, session: Session):
         self.session = session
 
     # FIX ME: To replace with getOrCreate method instead of that?

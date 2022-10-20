@@ -1,16 +1,16 @@
-from datetime import datetime
 from unittest import TestCase
 
 from fastapi.params import Depends
 from fastapi_events import middleware_identifier
-from mockito import when, verify, mock, ANY, verifyZeroInteractions
+from mockito import verify, mock, verifyZeroInteractions
 
 from cabs_application import CabsApplication
 from config.app_properties import AppProperties
 from core.database import create_db_and_tables, drop_db_and_tables
+from crm.claims.status import Status
 from entity import Client, Driver, Transit, Claim, Address
-from service.awards_service import AwardsService, AwardsServiceImpl
-from service.claim_service import ClaimService
+from service.awards_service_impl import AwardsServiceImpl
+from crm.claims.claim_service import ClaimService
 from service.client_notification_service import ClientNotificationService
 from service.driver_notification_service import DriverNotificationService
 from service.geocoding_service import GeocodingService
@@ -19,21 +19,21 @@ from tests.common.fixtures import DependencyResolver, Fixtures
 dependency_resolver = DependencyResolver()
 
 class TestClaimAutomaticResolvingIntegration(TestCase):
-    claim_service: ClaimService = dependency_resolver.resolve_dependency(Depends(ClaimService))
+    claim_service: ClaimService = dependency_resolver.resolve_dependency(ClaimService)
 
     client_notification_service: ClientNotificationService = dependency_resolver.resolve_dependency(
-        Depends(ClientNotificationService))
+        ClientNotificationService)
 
     driver_notification_service: DriverNotificationService = dependency_resolver.resolve_dependency(
-        Depends(DriverNotificationService))
+        DriverNotificationService)
 
-    awards_service: AwardsServiceImpl = dependency_resolver.resolve_dependency(Depends(AwardsServiceImpl))
+    awards_service: AwardsServiceImpl = dependency_resolver.resolve_dependency(AwardsServiceImpl)
 
-    app_properties: AppProperties = dependency_resolver.resolve_dependency(Depends(AppProperties))
+    app_properties: AppProperties = dependency_resolver.resolve_dependency(AppProperties)
 
-    fixtures: Fixtures = dependency_resolver.resolve_dependency(Depends(Fixtures))
+    fixtures: Fixtures = dependency_resolver.resolve_dependency(Fixtures)
 
-    geocoding_service: GeocodingService = dependency_resolver.resolve_dependency(Depends(GeocodingService))
+    geocoding_service: GeocodingService = dependency_resolver.resolve_dependency(GeocodingService)
 
     async def setUp(self):
         create_db_and_tables()
@@ -63,9 +63,9 @@ class TestClaimAutomaticResolvingIntegration(TestCase):
         claim2 = self.claim_service.try_to_automatically_resolve(claim2.id)
 
         # then
-        self.assertEquals(Claim.Status.REFUNDED, claim.status)
+        self.assertEquals(Status.REFUNDED, claim.status)
         self.assertEquals(Claim.CompletionMode.AUTOMATIC, claim.completion_mode)
-        self.assertEquals(Claim.Status.ESCALATED, claim2.status)
+        self.assertEquals(Status.ESCALATED, claim2.status)
         self.assertEquals(Claim.CompletionMode.MANUAL, claim2.completion_mode)
 
     async def test_low_cost_transits_are_refunded_if_client_is_vip(self):
@@ -91,8 +91,8 @@ class TestClaimAutomaticResolvingIntegration(TestCase):
         self.assertEquals(Claim.Status.REFUNDED, claim.status)
         self.assertEquals(Claim.CompletionMode.AUTOMATIC, claim.completion_mode)
         verify(self.claim_service.client_notification_service).notify_client_about_refund(claim.claim_no,
-                                                                                          claim.owner.id)
-        verify(self.claim_service.awards_service).register_non_expiring_miles(claim.owner.id, 10)
+                                                                                          claim.owner_id)
+        verify(self.claim_service.awards_service).register_non_expiring_miles(claim.owner_id, 10)
 
     async def test_high_cost_transits_are_escalated_even_when_client_is_vip(self):
         # given
@@ -114,7 +114,7 @@ class TestClaimAutomaticResolvingIntegration(TestCase):
         claim = self.claim_service.try_to_automatically_resolve(claim.id)
 
         # then
-        self.assertEquals(Claim.Status.ESCALATED, claim.status)
+        self.assertEquals(Status.ESCALATED, claim.status)
         self.assertEquals(Claim.CompletionMode.MANUAL, claim.completion_mode)
         verify(
             self.claim_service.driver_notification_service
@@ -149,10 +149,10 @@ class TestClaimAutomaticResolvingIntegration(TestCase):
             self.fixtures.create_claim(client, self.a_transit(pickup, client, driver, 50)).id)
 
         # then
-        self.assertEqual(Claim.Status.REFUNDED, claim1.status)
-        self.assertEqual(Claim.Status.REFUNDED, claim2.status)
-        self.assertEqual(Claim.Status.REFUNDED, claim3.status)
-        self.assertEqual(Claim.Status.ESCALATED, claim4.status)
+        self.assertEqual(Status.REFUNDED, claim1.status)
+        self.assertEqual(Status.REFUNDED, claim2.status)
+        self.assertEqual(Status.REFUNDED, claim3.status)
+        self.assertEqual(Status.ESCALATED, claim4.status)
         self.assertEqual(Claim.CompletionMode.AUTOMATIC, claim1.completion_mode)
         self.assertEqual(Claim.CompletionMode.AUTOMATIC, claim2.completion_mode)
         self.assertEqual(Claim.CompletionMode.AUTOMATIC, claim3.completion_mode)
@@ -195,7 +195,7 @@ class TestClaimAutomaticResolvingIntegration(TestCase):
         self.claim_service.client_notification_service = mock()
         claim = self.claim_service.try_to_automatically_resolve(claim.id)
 
-        self.assertEqual(Claim.Status.REFUNDED, claim.status)
+        self.assertEqual(Status.REFUNDED, claim.status)
         self.assertEqual(Claim.CompletionMode.AUTOMATIC, claim.completion_mode)
         verify(
             self.claim_service.client_notification_service,
@@ -225,7 +225,7 @@ class TestClaimAutomaticResolvingIntegration(TestCase):
         self.claim_service.client_notification_service = mock()
         claim = self.claim_service.try_to_automatically_resolve(claim.id)
 
-        self.assertEqual(Claim.Status.ESCALATED, claim.status)
+        self.assertEqual(Status.ESCALATED, claim.status)
         self.assertEqual(Claim.CompletionMode.MANUAL, claim.completion_mode)
         verify(
             self.claim_service.client_notification_service,
@@ -254,7 +254,7 @@ class TestClaimAutomaticResolvingIntegration(TestCase):
         claim = self.claim_service.try_to_automatically_resolve(claim.id)
 
         # then
-        self.assertEqual(Claim.Status.ESCALATED, claim.status)
+        self.assertEqual(Status.ESCALATED, claim.status)
         self.assertEqual(Claim.CompletionMode.MANUAL, claim.completion_mode)
         verify(
             self.claim_service.driver_notification_service,

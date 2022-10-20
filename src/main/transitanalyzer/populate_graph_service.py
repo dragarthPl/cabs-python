@@ -1,4 +1,4 @@
-from fastapi import Depends
+from injector import inject
 
 from entity import Transit
 from repository.transit_repository import TransitRepositoryImp
@@ -12,11 +12,12 @@ class PopulateGraphService:
     graph_transit_analyzer: GraphTransitAnalyzer
     transit_details_facade: TransitDetailsFacade
 
+    @inject
     def __init__(
         self,
-        transit_repository: TransitRepositoryImp = Depends(TransitRepositoryImp),
-        graph_transit_analyzer: GraphTransitAnalyzer = Depends(GraphTransitAnalyzer),
-        transit_details_facade: TransitDetailsFacade = Depends(TransitDetailsFacade),
+        transit_repository: TransitRepositoryImp,
+        graph_transit_analyzer: GraphTransitAnalyzer,
+        transit_details_facade: TransitDetailsFacade,
     ):
         self.transit_repository = transit_repository
         self.graph_transit_analyzer = graph_transit_analyzer

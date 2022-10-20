@@ -1,6 +1,6 @@
 from typing import Optional
 
-from fastapi import Depends
+from injector import inject
 
 from party.api.party_id import PartyId
 from party.infra.party_relationship_repository_impl import PartyRelationshipRepositoryImpl
@@ -11,9 +11,10 @@ from party.model.party.party_relationship_repository import PartyRelationshipRep
 class PartyMapper:
     party_relationship_repository: PartyRelationshipRepository
 
+    @inject
     def __init__(
         self,
-        party_relationship_repository: PartyRelationshipRepository = Depends(PartyRelationshipRepositoryImpl),
+        party_relationship_repository: PartyRelationshipRepository,
     ):
         self.party_relationship_repository = party_relationship_repository
 

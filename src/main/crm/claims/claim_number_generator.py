@@ -1,14 +1,16 @@
-from entity.claim import Claim
-from fastapi import Depends
-from repository.claim_repository import ClaimRepositoryImp
+from injector import inject
+
+from crm.claims.claim import Claim
+from crm.claims.claim_repository import ClaimRepositoryImp
 
 
 class ClaimNumberGenerator:
     claim_repository: ClaimRepositoryImp
 
+    @inject
     def __init__(
             self,
-            claim_repository: ClaimRepositoryImp = Depends(ClaimRepositoryImp),
+            claim_repository: ClaimRepositoryImp,
      ):
         self.claim_repository = claim_repository
 

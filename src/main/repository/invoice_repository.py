@@ -1,15 +1,16 @@
 from typing import Optional
 
-from core.database import get_session
+from injector import inject
+
 from entity.invoice import Invoice
-from fastapi import Depends
 from sqlmodel import Session
 
 
 class InvoiceRepositoryImp:
     session: Session
 
-    def __init__(self, session: Session = Depends(get_session)):
+    @inject
+    def __init__(self, session: Session):
         self.session = session
 
     def save(self, invoice: Invoice) -> Optional[Invoice]:

@@ -1,6 +1,6 @@
 from typing import Optional
 
-from fastapi import Depends
+from injector import inject
 
 from party.api.party_mapper import PartyMapper
 from party.api.role_object_factory import RoleObjectFactory
@@ -15,7 +15,8 @@ from repair.model.roles.repair.role_for_repairer import RoleForRepairer
 class RepairProcess:
     party_mapper: PartyMapper
 
-    def __init__(self, party_mapper: PartyMapper = Depends(PartyMapper)):
+    @inject
+    def __init__(self, party_mapper: PartyMapper):
         self.party_mapper = party_mapper
 
     def resolve(self, repair_request: RepairRequest) -> ResolveResult:

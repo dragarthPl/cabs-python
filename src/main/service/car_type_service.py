@@ -1,9 +1,10 @@
 from typing import List
 
+from injector import inject
+
 from config.app_properties import AppProperties, get_app_properties
 from dto.car_type_dto import CarTypeDTO
 from entity.car_type import CarType
-from fastapi import Depends
 from repository.car_type_repository import CarTypeRepositoryImp
 
 
@@ -11,10 +12,11 @@ class CarTypeService:
     car_type_repository: CarTypeRepositoryImp
     app_properties: AppProperties
 
+    @inject
     def __init__(
             self,
-            car_type_repository: CarTypeRepositoryImp = Depends(CarTypeRepositoryImp),
-            app_properties: AppProperties = Depends(get_app_properties)
+            car_type_repository: CarTypeRepositoryImp,
+            app_properties: AppProperties
      ):
         self.car_type_repository = car_type_repository
         self.app_properties = app_properties

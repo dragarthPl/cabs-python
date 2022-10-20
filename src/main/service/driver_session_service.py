@@ -1,7 +1,8 @@
 from datetime import datetime
 
+from injector import inject
+
 from entity.driver_session import DriverSession
-from fastapi import Depends
 from repository.driver_repository import DriverRepositoryImp
 from repository.driver_session_repository import DriverSessionRepositoryImp
 from service.car_type_service import CarTypeService
@@ -12,11 +13,12 @@ class DriverSessionService:
     driver_session_repository: DriverSessionRepositoryImp
     car_type_service: CarTypeService
 
+    @inject
     def __init__(
             self,
-            driver_repository: DriverRepositoryImp = Depends(DriverRepositoryImp),
-            driver_session_repository: DriverSessionRepositoryImp = Depends(DriverSessionRepositoryImp),
-            car_type_service: CarTypeService = Depends(CarTypeService)
+            driver_repository: DriverRepositoryImp,
+            driver_session_repository: DriverSessionRepositoryImp,
+            car_type_service: CarTypeService
     ):
         self.driver_repository = driver_repository
         self.driver_session_repository = driver_session_repository

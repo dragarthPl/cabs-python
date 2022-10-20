@@ -5,7 +5,7 @@ from typing import List, Optional
 
 from sqlalchemy.orm import relationship
 
-from entity.claim import Claim
+from crm.claims.claim import Claim
 from sqlalchemy import Column, Enum
 from sqlmodel import Field, Relationship
 
@@ -34,11 +34,6 @@ class Client(BaseEntity, table=True):
 
     default_payment_type: Optional[PaymentType] = Field(sa_column=Column(Enum(PaymentType)))
     client_type: Optional[ClientType] = Field(sa_column=Column(Enum(ClientType)))
-    # @OneToMany(mappedBy = "owner")
-    claims: List[Claim] = Relationship(
-        sa_relationship=relationship(
-            "entity.claim.Claim", back_populates="owner")
-    )
 
     def __eq__(self, o):
         if not isinstance(o, Client):

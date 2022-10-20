@@ -1,7 +1,7 @@
 import sys
 import random
 
-from fastapi import Depends
+from injector import inject
 
 from contracts.application.acme.straigthforward.acme_state_factory import AcmeStateFactory
 from contracts.application.acme.straigthforward.contract_result import ContractResult
@@ -22,11 +22,12 @@ class AcmeContractProcessBasedOnStraightforwardDocumentModel:
 
     state_factory: AcmeStateFactory
 
+    @inject
     def __init__(
             self,
-            user_repository: UserRepository = Depends(UserRepository),
-            document_header_repository: DocumentHeaderRepository = Depends(DocumentHeaderRepository),
-            state_factory: AcmeStateFactory = Depends(AcmeStateFactory),
+            user_repository: UserRepository,
+            document_header_repository: DocumentHeaderRepository,
+            state_factory: AcmeStateFactory,
     ):
         self.user_repository = user_repository
         self.document_header_repository = document_header_repository

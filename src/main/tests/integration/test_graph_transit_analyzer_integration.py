@@ -12,7 +12,7 @@ dependency_resolver = DependencyResolver()
 
 class TestGraphTransitAnalyzerIntegration(TestCase):
 
-    analyzer: GraphTransitAnalyzer = dependency_resolver.resolve_dependency(Depends(GraphTransitAnalyzer))
+    analyzer: GraphTransitAnalyzer = dependency_resolver.resolve_dependency(GraphTransitAnalyzer)
 
     def test_can_recognize_new_address(self):
         # given

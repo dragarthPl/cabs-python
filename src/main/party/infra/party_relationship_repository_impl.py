@@ -1,7 +1,7 @@
 from typing import Optional, List
 
+from injector import inject
 from sqlalchemy import text
-from fastapi import Depends
 from sqlmodel import Session
 
 from core.database import get_session
@@ -14,7 +14,8 @@ from party.model.party.party_relationship_repository import PartyRelationshipRep
 
 class PartyRelationshipRepositoryImpl(PartyRelationshipRepository):
 
-    def __init__(self, session: Session = Depends(get_session)):
+    @inject
+    def __init__(self, session: Session):
         self.session = session
 
     def put(

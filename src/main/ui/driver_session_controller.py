@@ -1,7 +1,8 @@
 from typing import List
 
+from fastapi_injector import Injected
+
 from dto.driver_session_dto import DriverSessionDTO
-from fastapi import Depends
 from fastapi_utils.cbv import cbv
 from fastapi_utils.inferring_router import InferringRouter
 from service.driver_session_service import DriverSessionService
@@ -10,7 +11,7 @@ driver_session_router = InferringRouter(tags=["DriverSessionController"])
 
 @cbv(driver_session_router)
 class DriverSessionController:
-    driver_session_service: DriverSessionService = Depends(DriverSessionService)
+    driver_session_service: DriverSessionService = Injected(DriverSessionService)
 
     @driver_session_router.post("/drivers/{driver_id}/driver_sessions/login")
     def log_in(self, driver_id: int, dto: DriverSessionDTO):

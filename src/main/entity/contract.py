@@ -56,6 +56,8 @@ class Contract(BaseEntity, table=True):
     def propose_attachment(self):
         contract_attachment = ContractAttachment()
         contract_attachment.contract = self
+        if contract_attachment not in self.attachments:
+            self.attachments.append(contract_attachment)
         return contract_attachment
 
     def accept(self):

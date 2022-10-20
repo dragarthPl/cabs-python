@@ -1,15 +1,17 @@
+from injector import inject
+
 from dto.client_dto import ClientDTO
 from entity import Client
-from fastapi import Depends
 from repository.client_repository import ClientRepositoryImp
 
 
 class ClientService:
     client_repository: ClientRepositoryImp
 
+    @inject
     def __init__(
             self,
-            client_repository: ClientRepositoryImp = Depends(ClientRepositoryImp),
+            client_repository: ClientRepositoryImp,
     ):
         self.client_repository = client_repository
 

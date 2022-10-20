@@ -11,7 +11,7 @@ from tests.common.fixtures import DependencyResolver
 dependency_resolver = DependencyResolver()
 
 class TestCarTypeUpdateIntegration(TestCase):
-    car_type_service: CarTypeService = dependency_resolver.resolve_dependency(Depends(CarTypeService))
+    car_type_service: CarTypeService = dependency_resolver.resolve_dependency(CarTypeService)
 
     def setUp(self):
         create_db_and_tables()

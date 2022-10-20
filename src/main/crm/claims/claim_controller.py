@@ -1,16 +1,20 @@
-from dto.claim_dto import ClaimDTO
-from entity.claim import Claim
-from fastapi import Depends
+from typing import Optional
+
+from fastapi_injector import Injected
+
+from crm.claims.claim_dto import ClaimDTO
+from crm.claims.claim import Claim
 from fastapi_utils.cbv import cbv
 from fastapi_utils.inferring_router import InferringRouter
-from service.claim_service import ClaimService
+from crm.claims.claim_service import ClaimService
+from crm.claims.status import Status
 
 claim_router = InferringRouter(tags=["ClaimController"])
 
 @cbv(claim_router)
 class ClaimController:
 
-    claim_service: ClaimService = Depends(ClaimService)
+    claim_service: ClaimService = Injected(ClaimService)
 
     @claim_router.post("/claims/createDraft")
     def create(self, claim_dto: ClaimDTO) -> ClaimDTO:
@@ -25,7 +29,7 @@ class ClaimController:
 
     @claim_router.post("/claims/{claim_id}/markInProcess")
     def mark_as_in_process(self, claim_id: int) -> ClaimDTO:
-        claim = self.claim_service.set_status(Claim.Status.IN_PROCESS, claim_id)
+        claim = self.claim_service.set_status(Status.IN_PROCESS, claim_id)
         return self.__to_do(claim)
 
     @claim_router.get("/claims/{claim_id}}")

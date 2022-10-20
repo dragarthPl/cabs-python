@@ -5,14 +5,14 @@ from datetime import datetime
 from functools import reduce
 from typing import Dict, List
 
+from injector import inject
+
 from dto.driver_dto import DriverDTO
 from entity import Driver, DriverAttribute, DriverLicense
-from fastapi import Depends
 
 from money import Money
 from repository.driver_attribute_repository import DriverAttributeRepositoryImp
 from repository.driver_repository import DriverRepositoryImp
-from repository.transit_repository import TransitRepositoryImp
 from service.driver_fee_service import DriverFeeService
 from transitdetails.transit_details_dto import TransitDetailsDTO
 from transitdetails.transit_details_facade import TransitDetailsFacade
@@ -32,12 +32,13 @@ class DriverService:
     transit_details_facade: TransitDetailsFacade
     driver_fee_service: DriverFeeService
 
+    @inject
     def __init__(
             self,
-            driver_repository: DriverRepositoryImp = Depends(DriverRepositoryImp),
-            driver_attribute_repository: DriverAttributeRepositoryImp = Depends(DriverAttributeRepositoryImp),
-            transit_details_facade: TransitDetailsFacade = Depends(TransitDetailsFacade),
-            driver_fee_service: DriverFeeService = Depends(DriverFeeService),
+            driver_repository: DriverRepositoryImp,
+            driver_attribute_repository: DriverAttributeRepositoryImp,
+            transit_details_facade: TransitDetailsFacade,
+            driver_fee_service: DriverFeeService,
     ):
         self.driver_repository = driver_repository
         self.driver_attribute_repository = driver_attribute_repository

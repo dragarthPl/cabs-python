@@ -18,7 +18,7 @@ from dto.transit_dto import TransitDTO
 from entity import CarType, Driver, DriverFee, DriverAttribute, Client, Transit, Address
 from repository.address_repository import AddressRepositoryImp
 from service.car_type_service import CarTypeService
-from service.claim_service import ClaimService
+from crm.claims.claim_service import ClaimService
 from service.driver_session_service import DriverSessionService
 from service.driver_tracking_service import DriverTrackingService
 from service.geocoding_service import GeocodingService
@@ -37,18 +37,18 @@ class TestCreateDriverReportIntegration(IsolatedAsyncioTestCase):
     YESTERDAY = DAY_BEFORE_YESTERDAY + relativedelta(days=1)
     TODAY = YESTERDAY + relativedelta(days=1)
 
-    transit_service: TransitService = dependency_resolver.resolve_dependency(Depends(TransitService))
+    transit_service: TransitService = dependency_resolver.resolve_dependency(TransitService)
     driver_tracking_service: DriverTrackingService = dependency_resolver.resolve_dependency(
-        Depends(DriverTrackingService))
-    driver_session_service: DriverSessionService = dependency_resolver.resolve_dependency(Depends(DriverSessionService))
-    car_type_service: CarTypeService = dependency_resolver.resolve_dependency(Depends(CarTypeService))
-    fixtures: Fixtures = dependency_resolver.resolve_dependency(Depends(Fixtures))
+        DriverTrackingService)
+    driver_session_service: DriverSessionService = dependency_resolver.resolve_dependency(DriverSessionService)
+    car_type_service: CarTypeService = dependency_resolver.resolve_dependency(CarTypeService)
+    fixtures: Fixtures = dependency_resolver.resolve_dependency(Fixtures)
     driver_report_controller: DriverReportController = DriverReportController(
-        driver_report_creator=dependency_resolver.resolve_dependency(Depends(SqlBasedDriverReportCreator)),
+        driver_report_creator=dependency_resolver.resolve_dependency(SqlBasedDriverReportCreator)
     )
-    address_repository: AddressRepositoryImp = dependency_resolver.resolve_dependency(Depends(AddressRepositoryImp))
-    geocoding_service: GeocodingService = dependency_resolver.resolve_dependency(Depends(GeocodingService))
-    claim_service: ClaimService = dependency_resolver.resolve_dependency(Depends(ClaimService))
+    address_repository: AddressRepositoryImp = dependency_resolver.resolve_dependency(AddressRepositoryImp)
+    geocoding_service: GeocodingService = dependency_resolver.resolve_dependency(GeocodingService)
+    claim_service: ClaimService = dependency_resolver.resolve_dependency(ClaimService)
 
     async def asyncSetUp(self):
         create_db_and_tables()
@@ -189,6 +189,7 @@ class TestCreateDriverReportIntegration(IsolatedAsyncioTestCase):
         address.building_number = building_number
         address = self.address_repository.save(address)
         when(self.geocoding_service).geocode_address(address).thenReturn([latitude, longitude])
+        when(self.transit_service.geocoding_service).geocode_address(address).thenReturn([latitude, longitude])
         return address
 
     def an_active_car_category(self, car_class: CarType.CarClass) -> CarType:

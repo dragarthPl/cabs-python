@@ -1,8 +1,9 @@
 from datetime import datetime
 
+from fastapi_injector import Injected
+
 from dto.driver_position_dto import DriverPositionDTO
 from entity.driver_position import DriverPosition
-from fastapi import Depends
 from fastapi_utils.cbv import cbv
 from fastapi_utils.inferring_router import InferringRouter
 from service.driver_tracking_service import DriverTrackingService
@@ -11,7 +12,7 @@ driver_tracking_router = InferringRouter(tags=["DriverTrackingController"])
 
 @cbv(driver_tracking_router)
 class DriverTrackingController:
-    tracking_service: DriverTrackingService = Depends(DriverTrackingService)
+    tracking_service: DriverTrackingService = Injected(DriverTrackingService)
 
     @driver_tracking_router.post("/driverPositions/")
     def create(self, driver_position_dto: DriverPositionDTO) -> DriverPositionDTO:

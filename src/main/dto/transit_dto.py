@@ -1,18 +1,16 @@
-import math
 from datetime import datetime
 from decimal import Decimal
 from typing import Any, List, Optional
 
 from distance.distance import Distance
 from dto.address_dto import AddressDTO
-from dto.claim_dto import ClaimDTO
+from crm.claims.claim_dto import ClaimDTO
 from dto.client_dto import ClientDTO
 from dto.driver_dto import DriverDTO
 from entity import CarType, Transit
 from pydantic import BaseModel
 
 from money import Money
-from transitdetails.transit_details import TransitDetails
 from transitdetails.transit_details_dto import TransitDetailsDTO
 
 

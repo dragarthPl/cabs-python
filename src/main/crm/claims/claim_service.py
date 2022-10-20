@@ -2,21 +2,20 @@ from datetime import datetime
 from typing import List
 
 from config.app_properties import AppProperties, get_app_properties
-from core.database import get_engine
-from dto.claim_dto import ClaimDTO
+from crm.claims.claim_dto import ClaimDTO
+from crm.claims.status import Status
 from entity import Client, ClaimsResolver
-from entity.claim import Claim
-from fastapi import Depends
-from repository.claim_repository import ClaimRepositoryImp
-from repository.claims_resolver_repository import ClaimsResolverRepositoryImp
+from crm.claims.claim import Claim
+from crm.claims.claim_repository import ClaimRepositoryImp
+from crm.claims.claims_resolver_repository import ClaimsResolverRepositoryImp
 from repository.client_repository import ClientRepositoryImp
-from repository.transit_repository import TransitRepositoryImp
-from service.awards_service import AwardsService, AwardsServiceImpl
-from service.claim_number_generator import ClaimNumberGenerator
+from service.awards_service import AwardsService
+from crm.claims.claim_number_generator import ClaimNumberGenerator
 from service.client_notification_service import ClientNotificationService
 from service.driver_notification_service import DriverNotificationService
 from transitdetails.transit_details_dto import TransitDetailsDTO
 from transitdetails.transit_details_facade import TransitDetailsFacade
+from injector import inject
 
 
 class ClaimService:
@@ -31,17 +30,18 @@ class ClaimService:
     driver_notification_service: DriverNotificationService
     claims_resolver_repository: ClaimsResolverRepositoryImp
 
+    @inject
     def __init__(
             self,
-            client_repository: ClientRepositoryImp = Depends(ClientRepositoryImp),
-            transit_details_facade: TransitDetailsFacade = Depends(TransitDetailsFacade),
-            claim_repository: ClaimRepositoryImp = Depends(ClaimRepositoryImp),
-            claim_number_generator: ClaimNumberGenerator = Depends(ClaimNumberGenerator),
-            app_properties: AppProperties = Depends(get_app_properties),
-            awards_service: AwardsServiceImpl = Depends(AwardsServiceImpl),
-            client_notification_service: ClientNotificationService = Depends(ClientNotificationService),
-            driver_notification_service: DriverNotificationService = Depends(DriverNotificationService),
-            claims_resolver_repository: ClaimsResolverRepositoryImp = Depends(ClaimsResolverRepositoryImp)
+            awards_service: AwardsService,
+            client_repository: ClientRepositoryImp,
+            transit_details_facade: TransitDetailsFacade,
+            claim_repository: ClaimRepositoryImp,
+            claim_number_generator: ClaimNumberGenerator,
+            app_properties: AppProperties,
+            client_notification_service: ClientNotificationService,
+            driver_notification_service: DriverNotificationService,
+            claims_resolver_repository: ClaimsResolverRepositoryImp,
     ):
         self.client_repository = client_repository
         self.transit_details_facade = transit_details_facade
@@ -74,10 +74,9 @@ class ClaimService:
         if transit is None:
             raise AttributeError("Transit does not exists")
         if claim_dto.is_draft:
-            claim.status = Claim.Status.DRAFT
+            claim.status = Status.DRAFT
         else:
-            claim.status = Claim.Status.NEW
-        claim.owner = client
+            claim.status = Status.NEW
         claim.owner_id = client.id
         claim.set_transit(transit.transit_id)
         claim.set_transit_price(transit.price)
@@ -86,7 +85,7 @@ class ClaimService:
         claim.incident_description = claim_dto.incident_description
         return self.claim_repository.save(claim)
 
-    def set_status(self, new_status: Claim.Status, claim_id: int) -> Claim:
+    def set_status(self, new_status: Status, claim_id: int) -> Claim:
         claim = self.find(claim_id)
         claim.status = new_status
         self.claim_repository.save(claim)
@@ -103,12 +102,12 @@ class ClaimService:
             len(transits_done_by_client),
             self.app_properties.no_of_transits_for_claim_automatic_refund
         )
-        if result.decision == Claim.Status.REFUNDED:
+        if result.decision == Status.REFUNDED:
             claim.refund()
             self.client_notification_service.notify_client_about_refund(claim.claim_no, claim.owner.id)
             if claim.owner.type == Client.Type.VIP:
                 self.awards_service.register_non_expiring_miles(claim.owner.id, 10)
-        if result.decision == Claim.Status.ESCALATED:
+        if result.decision == Status.ESCALATED:
             claim.escalate()
         if result.who_to_ask == ClaimsResolver.WhoToAsk.ASK_DRIVER:
             transit_details_dto: TransitDetailsDTO = self.transit_details_facade.find(claim.transit_id)
@@ -123,3 +122,6 @@ class ClaimService:
         if resolver is None:
             resolver = self.claims_resolver_repository.save(ClaimsResolver(client_id=client.id))
         return resolver
+
+    def get_number_of_claims(self, client_id: int) -> int:
+        return len(self.claim_repository.find_all_by_owner_id(client_id))

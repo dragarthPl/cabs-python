@@ -1,7 +1,7 @@
 from datetime import datetime
 from typing import Optional
 
-from fastapi import Depends
+from injector import inject
 from sqlalchemy import text
 from sqlmodel import Session
 from core.database import get_session
@@ -11,7 +11,8 @@ from driverreport.travelleddistance.travelled_distance import TravelledDistance,
 class TravelledDistanceRepository:
     session: Session
 
-    def __init__(self, session: Session = Depends(get_session)):
+    @inject
+    def __init__(self, session: Session):
         self.session = session
 
     def find_travelled_distance_time_slot_by_time(self, when: datetime, driver_id: int) -> Optional[TravelledDistance]:

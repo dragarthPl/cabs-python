@@ -2,37 +2,24 @@ from __future__ import annotations
 
 import enum
 from datetime import datetime
-from typing import Any, Optional
+from typing import Optional
 
 from common.base_entity import BaseEntity
-from sqlalchemy import Column, DateTime, Enum, ForeignKey, Integer, String
-from sqlalchemy.orm import backref, relationship
-from sqlmodel import Field, Relationship
+from sqlalchemy import Column, DateTime, Enum, Integer, String
+from sqlmodel import Field
 
+from crm.claims.status import Status
 from money import Money
 
 
 class Claim(BaseEntity, table=True):
     __table_args__ = {'extend_existing': True}
 
-    class Status(enum.Enum):
-        DRAFT = 1
-        NEW = 2
-        IN_PROCESS = 3
-        REFUNDED = 4
-        ESCALATED = 5
-        REJECTED = 6
-
     class CompletionMode(enum.Enum):
         MANUAL = 1
         AUTOMATIC = 2
 
-    # @ManyToOne
-    owner_id: Optional[int] = Field(default=None, foreign_key="client.id")
-    owner: Optional[Client] = Relationship(
-        sa_relationship=relationship(
-            "entity.client.Client", back_populates="claims")
-    )
+    owner_id: Optional[int] = Field(default=0, sa_column=Column(Integer, nullable=True))
 
     transit_id: Optional[int] = Field(default=0, sa_column=Column(Integer, nullable=True))
 

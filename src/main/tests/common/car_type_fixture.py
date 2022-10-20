@@ -1,4 +1,5 @@
 from fastapi import Depends
+from injector import inject
 
 from dto.car_type_dto import CarTypeDTO
 from entity import CarType
@@ -9,7 +10,8 @@ class CarTypeFixture:
 
     car_type_service: CarTypeService
 
-    def __init__(self, car_type_service: CarTypeService = Depends(CarTypeService)):
+    @inject
+    def __init__(self, car_type_service: CarTypeService):
         self.car_type_service = car_type_service
 
     def an_active_car_category(self, car_class: CarType.CarClass) -> CarType:

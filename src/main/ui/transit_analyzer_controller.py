@@ -1,8 +1,9 @@
 from typing import List
 
+from fastapi_injector import Injected
+
 from dto.address_dto import AddressDTO
 from dto.analyzed_addresses_dto import AnalyzedAddressesDTO
-from fastapi import Depends
 from fastapi_utils.cbv import cbv
 from fastapi_utils.inferring_router import InferringRouter
 
@@ -13,8 +14,8 @@ transit_analyzer_router = InferringRouter(tags=["TransitAnalyzerController"])
 
 @cbv(transit_analyzer_router)
 class TransitAnalyzerController:
-    graph_transit_analyzer: GraphTransitAnalyzer = Depends(GraphTransitAnalyzer)
-    address_repository: AddressRepositoryImp = Depends(AddressRepositoryImp)
+    graph_transit_analyzer: GraphTransitAnalyzer = Injected(GraphTransitAnalyzer)
+    address_repository: AddressRepositoryImp = Injected(AddressRepositoryImp)
 
     @transit_analyzer_router.get("/transitAnalyze/{client_id}/{address_id}")
     def analyze(self, client_id: int, address_id: int) -> AnalyzedAddressesDTO:

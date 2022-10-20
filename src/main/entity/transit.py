@@ -10,9 +10,9 @@ from dateutil.tz import tzlocal
 
 from common.base_entity import BaseEntity
 from distance.distance import Distance
-from entity import Address, CarType, Tariff
+from entity import Address, Tariff
 from sqlalchemy import Column, Enum, Float, ForeignKey, Table, DateTime
-from sqlalchemy.orm import backref, relationship
+from sqlalchemy.orm import relationship
 from sqlmodel import Field, Relationship, SQLModel
 
 from money import Money

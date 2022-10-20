@@ -15,8 +15,8 @@ dependency_resolver = DependencyResolver()
 
 
 class TestCalculateDriverFeeIntegration(TestCase):
-    fixtures: Fixtures = dependency_resolver.resolve_dependency(Depends(Fixtures))
-    driver_fee_service: DriverFeeService = dependency_resolver.resolve_dependency(Depends(DriverFeeService))
+    fixtures: Fixtures = dependency_resolver.resolve_dependency(Fixtures)
+    driver_fee_service: DriverFeeService = dependency_resolver.resolve_dependency(DriverFeeService)
 
     def setUp(self):
         create_db_and_tables()

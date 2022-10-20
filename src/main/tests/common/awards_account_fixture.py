@@ -1,13 +1,15 @@
 from fastapi import Depends
+from injector import inject
 
 from entity import Client
-from service.awards_service import AwardsService, AwardsServiceImpl
+from service.awards_service import AwardsService
 
 
 class AwardsAccountFixture:
     awards_service: AwardsService
 
-    def __init__(self, awards_service: AwardsService = Depends(AwardsServiceImpl)):
+    @inject
+    def __init__(self, awards_service: AwardsService):
         self.awards_service = awards_service
 
     def awards_account(self, client: Client):

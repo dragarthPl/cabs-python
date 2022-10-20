@@ -28,14 +28,14 @@ dependency_resolver = DependencyResolver()
 
 
 class TestAnalyzeNearbyTransitsIntegration(IsolatedAsyncioTestCase):
-    fixtures: Fixtures = dependency_resolver.resolve_dependency(Depends(Fixtures))
+    fixtures: Fixtures = dependency_resolver.resolve_dependency(Fixtures)
 
     transit_analyzer_controller: TransitAnalyzerController = TransitAnalyzerController(
-        graph_transit_analyzer=dependency_resolver.resolve_dependency(Depends(GraphTransitAnalyzer)),
-        address_repository=dependency_resolver.resolve_dependency(Depends(AddressRepositoryImp))
+        graph_transit_analyzer=dependency_resolver.resolve_dependency(GraphTransitAnalyzer),
+        address_repository=dependency_resolver.resolve_dependency(AddressRepositoryImp)
     )
 
-    geocoding_service: GeocodingService = dependency_resolver.resolve_dependency(Depends(GeocodingService))
+    geocoding_service: GeocodingService = dependency_resolver.resolve_dependency(GeocodingService)
 
     async def asyncSetUp(self):
         create_db_and_tables()

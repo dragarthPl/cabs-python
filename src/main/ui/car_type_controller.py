@@ -1,6 +1,7 @@
+from fastapi_injector import Injected
+
 from dto.car_type_dto import CarTypeDTO
 from entity.car_type import CarType
-from fastapi import Depends
 from fastapi_utils.cbv import cbv
 from fastapi_utils.inferring_router import InferringRouter
 from service.car_type_service import CarTypeService
@@ -10,7 +11,7 @@ car_type_router = InferringRouter(tags=["CarTypeController"])
 @cbv(car_type_router)
 class CarTypeController:
 
-    car_type_service: CarTypeService = Depends(CarTypeService)
+    car_type_service: CarTypeService = Injected(CarTypeService)
 
     @car_type_router.post("/cartypes")
     def create(self, car_type_dto: CarTypeDTO) -> CarTypeDTO:

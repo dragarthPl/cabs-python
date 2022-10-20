@@ -1,18 +1,18 @@
 import uuid as uuid_pkg
 from typing import List, Optional
 
+from injector import inject
 from sqlalchemy import text
 
-from core.database import get_session
 from entity import Contract
-from fastapi import Depends
 from sqlmodel import Session
 
 
 class ContractRepositoryImp:
     session: Session
 
-    def __init__(self, session: Session = Depends(get_session)):
+    @inject
+    def __init__(self, session: Session):
         self.session = session
 
     def save(self, contract: Contract) -> Optional[Contract]:

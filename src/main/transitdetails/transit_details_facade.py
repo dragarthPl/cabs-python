@@ -1,7 +1,7 @@
 from datetime import datetime
 from typing import Optional, List
 
-from fastapi import Depends
+from injector import inject
 
 from distance.distance import Distance
 from entity import Address, Client, CarType, Tariff
@@ -14,9 +14,10 @@ from transitdetails.transit_details_repository import TransitDetailsRepository
 class TransitDetailsFacade:
     transit_details_repository: TransitDetailsRepository
 
+    @inject
     def __init__(
         self,
-        transit_details_repository: TransitDetailsRepository = Depends(TransitDetailsRepository),
+        transit_details_repository: TransitDetailsRepository,
     ):
         self.transit_details_repository = transit_details_repository
 

@@ -2,6 +2,7 @@ from datetime import datetime
 
 from fastapi import Depends
 from freezegun import freeze_time
+from injector import inject
 
 from entity import Client, Driver, Address, Transit, CarType
 from money import Money
@@ -26,16 +27,17 @@ class RideFixture:
     stubbed_price: StubbedTransitPrice
     driver_session_service: DriverSessionService
 
+    @inject
     def __init__(
             self,
-            transit_service: TransitService = Depends(TransitService),
-            transit_details_facade: TransitDetailsFacade = Depends(TransitDetailsFacade),
-            transit_repository: TransitRepositoryImp = Depends(TransitRepositoryImp),
-            address_repository: AddressRepositoryImp = Depends(AddressRepositoryImp),
-            driver_fixture: DriverFixture = Depends(DriverFixture),
-            car_type_fixture: CarTypeFixture = Depends(CarTypeFixture),
-            stubbed_price: StubbedTransitPrice = Depends(StubbedTransitPrice),
-            driver_session_service: DriverSessionService = Depends(DriverSessionService),
+            transit_service: TransitService,
+            transit_details_facade: TransitDetailsFacade,
+            transit_repository: TransitRepositoryImp,
+            address_repository: AddressRepositoryImp,
+            driver_fixture: DriverFixture,
+            car_type_fixture: CarTypeFixture,
+            stubbed_price: StubbedTransitPrice,
+            driver_session_service: DriverSessionService,
     ):
         self.transit_service = transit_service
         self.transit_details_facade = transit_details_facade

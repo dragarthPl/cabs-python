@@ -23,11 +23,11 @@ dependency_resolver = DependencyResolver()
 
 
 class TestTransitLifeCycleIntegration(IsolatedAsyncioTestCase):
-    fixtures: Fixtures = dependency_resolver.resolve_dependency(Depends(Fixtures))
-    transit_service: TransitService = dependency_resolver.resolve_dependency(Depends(TransitService))
-    geocoding_service: GeocodingService = dependency_resolver.resolve_dependency(Depends(GeocodingService))
-    driver_session_service: DriverSessionService = dependency_resolver.resolve_dependency(Depends(DriverSessionService))
-    driver_tracking_service: DriverTrackingService = dependency_resolver.resolve_dependency(Depends(DriverTrackingService))
+    fixtures: Fixtures = dependency_resolver.resolve_dependency(Fixtures)
+    transit_service: TransitService = dependency_resolver.resolve_dependency(TransitService)
+    geocoding_service: GeocodingService = dependency_resolver.resolve_dependency(GeocodingService)
+    driver_session_service: DriverSessionService = dependency_resolver.resolve_dependency(DriverSessionService)
+    driver_tracking_service: DriverTrackingService = dependency_resolver.resolve_dependency(DriverTrackingService)
 
     async def asyncSetUp(self):
         create_db_and_tables()

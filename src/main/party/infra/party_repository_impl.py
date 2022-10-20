@@ -1,6 +1,6 @@
 import uuid as uuid_pkg
 
-from fastapi import Depends
+from injector import inject
 from sqlmodel import Session
 
 from core.database import get_session
@@ -10,7 +10,8 @@ from party.model.party.party_repository import PartyRepository
 
 class PartyRepositoryImpl(PartyRepository):
 
-    def __init__(self, session: Session = Depends(get_session)):
+    @inject
+    def __init__(self, session: Session):
         self.session = session
 
     def put(self, party_id: uuid_pkg.UUID) -> Party:

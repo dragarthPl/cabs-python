@@ -1,8 +1,9 @@
 from fastapi import Depends
+from injector import inject
 
-from dto.claim_dto import ClaimDTO
+from crm.claims.claim_dto import ClaimDTO
 from entity import Client, Transit, Claim
-from service.claim_service import ClaimService
+from crm.claims.claim_service import ClaimService
 from tests.common.client_fixture import ClientFixture
 
 
@@ -10,10 +11,11 @@ class ClaimFixture:
     claim_service: ClaimService
     client_fixture: ClientFixture
 
+    @inject
     def __init__(
         self,
-        claim_service: ClaimService = Depends(ClaimService),
-        client_fixture: ClientFixture = Depends(ClientFixture),
+        claim_service: ClaimService,
+        client_fixture: ClientFixture,
     ):
         self.claim_service = claim_service
         self.client_fixture = client_fixture

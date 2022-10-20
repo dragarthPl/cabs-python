@@ -20,10 +20,10 @@ class TestDriverTrackingServiceIntegration(TestCase):
     NOON_FIVE = NOON + relativedelta(minutes=5)
 
     driver_tracking_service: DriverTrackingService = dependency_resolver.resolve_dependency(
-        Depends(DriverTrackingService)
+        DriverTrackingService
     )
 
-    fixtures: Fixtures = dependency_resolver.resolve_dependency(Depends(Fixtures))
+    fixtures: Fixtures = dependency_resolver.resolve_dependency(Fixtures)
 
     def setUp(self):
         create_db_and_tables()

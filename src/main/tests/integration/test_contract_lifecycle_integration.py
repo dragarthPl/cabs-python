@@ -13,7 +13,7 @@ dependency_resolver = DependencyResolver()
 
 
 class TestContractLifecycleIntegration(TestCase):
-    contract_service: ContractService = dependency_resolver.resolve_dependency(Depends(ContractService))
+    contract_service: ContractService = dependency_resolver.resolve_dependency(ContractService)
 
     def setUp(self):
         create_db_and_tables()

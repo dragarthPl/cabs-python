@@ -11,7 +11,7 @@ from core.database import create_db_and_tables, drop_db_and_tables
 from entity import Transit
 from money import Money
 from repository.awards_account_repository import AwardsAccountRepositoryImp
-from service.awards_service import AwardsService, AwardsServiceImpl
+from service.awards_service import AwardsService
 
 from tests.common.fixtures import DependencyResolver, Fixtures
 
@@ -21,10 +21,10 @@ class TestAwardMilesManagementIntegration(TestCase):
     TRANSIT_ID: int = 1
     NOW = datetime(1989, 12, 12, 12, 12).astimezone(pytz.utc)
 
-    awards_service: AwardsService = dependency_resolver.resolve_dependency(Depends(AwardsServiceImpl))
+    awards_service: AwardsService = dependency_resolver.resolve_dependency(AwardsService)
     awards_account_repository: AwardsAccountRepositoryImp = dependency_resolver.resolve_dependency(
-        Depends(AwardsAccountRepositoryImp))
-    fixtures: Fixtures = dependency_resolver.resolve_dependency(Depends(Fixtures))
+        AwardsAccountRepositoryImp)
+    fixtures: Fixtures = dependency_resolver.resolve_dependency(Fixtures)
 
     def setUp(self):
         create_db_and_tables()

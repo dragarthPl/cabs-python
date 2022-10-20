@@ -1,4 +1,4 @@
-from fastapi import Depends
+from injector import inject
 
 from common.application_event_publisher import ApplicationEventPublisher
 from contracts.model.state.dynamic.config.actions.change_verifier import ChangeVerifier
@@ -20,9 +20,10 @@ class AcmeContractStateAssembler:
 
     __publisher: ApplicationEventPublisher
 
+    @inject
     def __init__(
             self,
-            publisher: ApplicationEventPublisher = Depends(ApplicationEventPublisher),
+            publisher: ApplicationEventPublisher,
     ):
         self.__publisher = publisher
 

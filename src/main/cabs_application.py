@@ -1,9 +1,21 @@
 import uvicorn
-from core.database import create_db_and_tables
+from fastapi_injector import attach_injector
+from injector import Injector, ClassProvider
 from fastapi import FastAPI
+from sqlmodel import Session
+
+from core.database import create_db_and_tables, get_session, DatabaseModule
+from party.infra.party_relationship_repository_impl import PartyRelationshipRepositoryImpl
+from party.infra.party_repository_impl import PartyRepositoryImpl
+from party.model.party.party_relationship_repository import PartyRelationshipRepository
+from party.model.party.party_repository import PartyRepository
+from repository.awards_account_repository import AwardsAccountRepositoryImp
+from repository.car_type_repository import CarTypeRepositoryImp
+from service.awards_service import AwardsService
+from service.awards_service_impl import AwardsServiceImpl
 from ui.awards_account_controller import awards_account_router
 from ui.car_type_controller import car_type_router
-from ui.claim_controller import claim_router
+from crm.claims.claim_controller import claim_router
 from ui.client_controller import client_router
 from ui.contract_controller import contract_router
 from ui.driver_controller import driver_router
@@ -15,13 +27,19 @@ from ui.transit_controller import transit_router
 
 from fastapi_events.middleware import EventHandlerASGIMiddleware
 from fastapi_events.handlers.local import local_handler
-from starlette.testclient import TestClient
+
+
+def configure(binder):
+    binder.bind(AwardsService, to=AwardsServiceImpl)
+    binder.bind(PartyRepository, to=PartyRepositoryImpl)
+    binder.bind(PartyRelationshipRepository, to=PartyRelationshipRepositoryImpl)
 
 
 class CabsApplication:
     app: FastAPI
 
     def __init__(self):
+        a_injector = Injector([configure, DatabaseModule])
         self.app = FastAPI()
         self.app.add_middleware(EventHandlerASGIMiddleware, handlers=[local_handler])
         self.app.include_router(awards_account_router)
@@ -35,6 +53,8 @@ class CabsApplication:
         self.app.include_router(driver_tracking_router)
         self.app.include_router(transit_analyzer_router)
         self.app.include_router(transit_router)
+        self.app.state.injector = a_injector
+        attach_injector(self.app, a_injector)
 
         @self.app.on_event("startup")
         def on_startup():
@@ -45,5 +65,8 @@ class CabsApplication:
         return cls().app
 
 
+app = CabsApplication().create_app()
+
+
 if __name__ == '__main__':
-    uvicorn.run("cabs_application:CabsApplication.create_app", host="127.0.0.1", port=5000, log_level="trace", reload=True)
+    uvicorn.run("cabs_application:app", host="127.0.0.1", port=5000, log_level="trace", reload=True)

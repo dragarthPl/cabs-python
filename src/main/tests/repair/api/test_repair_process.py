@@ -14,17 +14,15 @@ from repair.legacy.parts.parts import Parts
 from tests.repair.api.vehicle_repair_assert import VehicleRepairAssert
 from tests.common.fixtures import DependencyResolver, DefaultFakeApplicationEventPublisher
 
-dependency_resolver = DependencyResolver(abstract_map={
-    "Depends(ApplicationEventPublisher)": fastapi.Depends(DefaultFakeApplicationEventPublisher)
-})
+dependency_resolver = DependencyResolver()
 
 
 class TestRepairProcess(TestCase):
     vehicle_repair_process: RepairProcess = dependency_resolver.resolve_dependency(
-        Depends(RepairProcess)
+        RepairProcess
     )
     contract_manager: ContractManager = dependency_resolver.resolve_dependency(
-        Depends(ContractManager)
+        ContractManager
     )
 
     vehicle: PartyId = PartyId()

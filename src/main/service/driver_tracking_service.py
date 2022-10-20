@@ -1,10 +1,11 @@
 from datetime import datetime
 
+from injector import inject
+
 from distance.distance import Distance
 from driverreport.travelleddistance.travelled_distance_service import TravelledDistanceService
 from entity import Driver
 from entity.driver_position import DriverPosition
-from fastapi import Depends
 from repository.driver_position_repository import DriverPositionRepositoryImp
 from repository.driver_repository import DriverRepositoryImp
 
@@ -14,11 +15,12 @@ class DriverTrackingService:
     driver_repository: DriverRepositoryImp
     travelled_distance_service: TravelledDistanceService
 
+    @inject
     def __init__(
             self,
-            position_repository: DriverPositionRepositoryImp = Depends(DriverPositionRepositoryImp),
-            driver_repository: DriverRepositoryImp = Depends(DriverRepositoryImp),
-            travelled_distance_service: TravelledDistanceService = Depends(TravelledDistanceService)
+            position_repository: DriverPositionRepositoryImp,
+            driver_repository: DriverRepositoryImp,
+            travelled_distance_service: TravelledDistanceService
     ):
         self.position_repository = position_repository
         self.driver_repository = driver_repository

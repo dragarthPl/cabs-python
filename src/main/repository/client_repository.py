@@ -1,6 +1,7 @@
 from typing import Optional
 
-from core.database import get_session
+from injector import inject
+
 from entity import Client
 from fastapi import Depends
 from sqlmodel import Session, select
@@ -9,7 +10,8 @@ from sqlmodel import Session, select
 class ClientRepositoryImp:
     session: Session
 
-    def __init__(self, session: Session = Depends(get_session)):
+    @inject
+    def __init__(self, session: Session):
         self.session = session
 
     def get_one(self, client_id: int) -> Optional[Client]:

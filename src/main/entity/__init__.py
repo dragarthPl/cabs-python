@@ -5,7 +5,7 @@ from .address import Address
 from .car_type import CarType
 from .transit import Transit
 from .client import Client
-from .claim import Claim
+from crm.claims.claim import Claim
 from .miles.miles import Miles
 from .constant_until import ConstantUntil
 from .miles.miles_json_mapper import MilesJsonMapper
@@ -18,7 +18,7 @@ from .contract_attachment import ContractAttachment
 from .contract_attachment_data import ContractAttachmentData
 from .contract import Contract
 from .car_type_active_counter import CarTypeActiveCounter
-from .claims_resolver import ClaimsResolver
+from crm.claims.claims_resolver import ClaimsResolver
 
 
 __all__ = [

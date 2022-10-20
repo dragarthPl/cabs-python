@@ -1,6 +1,7 @@
+from fastapi_injector import Injected
+
 from dto.client_dto import ClientDTO
 from entity.client import Client
-from fastapi import Depends, Body
 from fastapi_utils.cbv import cbv
 from fastapi_utils.inferring_router import InferringRouter
 from service.client_service import ClientService
@@ -10,7 +11,7 @@ client_router = InferringRouter(tags=["ClientController"])
 @cbv(client_router)
 class ClientController:
 
-    client_service: ClientService = Depends(ClientService)
+    client_service: ClientService = Injected(ClientService)
 
     @client_router.post("/clients")
     def register(self, dto: ClientDTO) -> ClientDTO:

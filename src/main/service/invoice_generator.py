@@ -1,6 +1,6 @@
 from decimal import Decimal
 
-from fastapi import Depends
+from injector import inject
 
 from entity.invoice import Invoice
 from repository.invoice_repository import InvoiceRepositoryImp
@@ -9,7 +9,8 @@ from repository.invoice_repository import InvoiceRepositoryImp
 class InvoiceGenerator:
     invoice_repository: InvoiceRepositoryImp
 
-    def __init__(self, invoice_repository: InvoiceRepositoryImp = Depends(InvoiceRepositoryImp)):
+    @inject
+    def __init__(self, invoice_repository: InvoiceRepositoryImp):
         self.invoice_repository = invoice_repository
 
     def generate(self, amount: int, subject_name: str):

@@ -1,18 +1,18 @@
 from datetime import datetime
 from typing import List, Optional
 
+from injector import inject
 from sqlalchemy import desc, text
 
-from core.database import get_session
 from entity import Address, Client, Driver, Transit
-from fastapi import Depends
 from sqlmodel import Session
 
 
 class TransitRepositoryImp:
     session: Session
 
-    def __init__(self, session: Session = Depends(get_session)):
+    @inject
+    def __init__(self, session: Session):
         self.session = session
 
     def get_one(self, transit_id: int) -> Optional[Transit]:
@@ -21,13 +21,13 @@ class TransitRepositoryImp:
     def find_all_by_status(self, status: Transit.Status) -> List[Transit]:
         return self.session.query(Transit).where(Transit.status == status).all()
 
-    def find_by_client(self, owner: Client) -> List[Transit]:
+    def find_by_client_id(self, client_id: int) -> List[Transit]:
         stmt = text(
             "select T.* from transit AS T join transitdetails AS TD "
             "ON T.id = TD.transit_id where TD.client_id = :client"
         )
         return self.session.query(Transit).from_statement(stmt).params(
-            client=owner.id
+            client=client_id
         ).all()
 
     def find_all_by_driver_and_date_time_between(self, driver: Driver, from_date, to_date) -> List[Transit]:

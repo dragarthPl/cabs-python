@@ -15,8 +15,8 @@ dependency_resolver = DependencyResolver()
 
 
 class TestCalculateDriverPeriodicPaymentsIntegration(TestCase):
-    fixtures: Fixtures = dependency_resolver.resolve_dependency(Depends(Fixtures))
-    driver_service: DriverService = dependency_resolver.resolve_dependency(Depends(DriverService))
+    fixtures: Fixtures = dependency_resolver.resolve_dependency(Fixtures)
+    driver_service: DriverService = dependency_resolver.resolve_dependency(DriverService)
 
     def setUp(self):
         create_db_and_tables()
