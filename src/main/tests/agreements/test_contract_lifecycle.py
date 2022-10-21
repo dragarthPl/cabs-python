@@ -1,5 +1,6 @@
 from unittest import TestCase
 
+from agreements.contract_attachment_status import ContractAttachmentStatus
 from agreements.contract_status import ContractStatus
 from entity import ContractAttachment
 from agreements.contract import Contract
@@ -30,7 +31,7 @@ class TestContractLifecycle(TestCase):
         # then
         self.assertEqual(1, len(contract.get_attachment_ids()))
         self.assertEqual(
-            ContractAttachment.Status.PROPOSED,
+            ContractAttachmentStatus.PROPOSED,
             contract.find_attachment(contract_attachment.contract_attachment_no).status
         )
 
@@ -57,7 +58,7 @@ class TestContractLifecycle(TestCase):
         # then
         self.assertEqual(1, len(contract.get_attachment_ids()))
         self.assertEqual(
-            ContractAttachment.Status.ACCEPTED_BY_ONE_SIDE,
+            ContractAttachmentStatus.ACCEPTED_BY_ONE_SIDE,
             contract.find_attachment(attachment.contract_attachment_no).status
         )
 
@@ -74,7 +75,7 @@ class TestContractLifecycle(TestCase):
         # then
         self.assertEqual(1, len(contract.get_attachment_ids()))
         self.assertEqual(
-            ContractAttachment.Status.ACCEPTED_BY_BOTH_SIDES,
+            ContractAttachmentStatus.ACCEPTED_BY_BOTH_SIDES,
             contract.find_attachment(attachment.contract_attachment_no).status
         )
 
@@ -90,7 +91,7 @@ class TestContractLifecycle(TestCase):
         # then
         self.assertEqual(1, len(contract.get_attachment_ids()))
         self.assertEqual(
-            ContractAttachment.Status.REJECTED,
+            ContractAttachmentStatus.REJECTED,
             contract.find_attachment(attachment.contract_attachment_no).status
         )
 

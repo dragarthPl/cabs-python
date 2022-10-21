@@ -2,7 +2,8 @@ from datetime import datetime
 from typing import List, Optional, Any, Set
 
 from agreements.contract_attachment_dto import ContractAttachmentDTO
-from entity import ContractAttachmentData
+from agreements.contract_status import ContractStatus
+from agreements.contract_attachment_data import ContractAttachmentData
 from agreements.contract import Contract
 from pydantic import BaseModel
 
@@ -15,7 +16,7 @@ class ContractDTO(BaseModel):
     accepted_at: Optional[datetime]
     rejected_at: Optional[datetime]
     change_date: Optional[datetime]
-    status: Optional[Contract.Status]
+    status: Optional[ContractStatus]
     contract_no: Optional[str]
     attachments: List[ContractAttachmentDTO]
 

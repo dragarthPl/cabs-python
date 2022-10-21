@@ -1,12 +1,11 @@
 from unittest import TestCase
-from fastapi.params import Depends
 
-
+from agreements.contract_attachment_status import ContractAttachmentStatus
+from agreements.contract_status import ContractStatus
 from core.database import create_db_and_tables, drop_db_and_tables
-from dto.contract_attachment_dto import ContractAttachmentDTO
-from dto.contract_dto import ContractDTO
-from entity import Contract, ContractAttachment
-from service.contract_service import ContractService
+from agreements.contract_attachment_dto import ContractAttachmentDTO
+from agreements.contract_dto import ContractDTO
+from agreements.contract_service import ContractService
 from tests.common.fixtures import DependencyResolver
 
 dependency_resolver = DependencyResolver()
@@ -29,7 +28,7 @@ class TestContractLifecycleIntegration(TestCase):
         self.assertEqual("partnerNameVeryUnique", loaded.partner_name)
         self.assertEqual("umowa o cenę", loaded.subject)
         self.assertEqual("C/1/partnerNameVeryUnique", loaded.contract_no)
-        self.assertEqual(Contract.Status.NEGOTIATIONS_IN_PROGRESS, loaded.status)
+        self.assertEqual(ContractStatus.NEGOTIATIONS_IN_PROGRESS, loaded.status)
         self.assertIsNotNone(loaded.id)
         self.assertIsNotNone(loaded.creation_date)
         self.assertIsNotNone(loaded.creation_date)
@@ -63,7 +62,7 @@ class TestContractLifecycleIntegration(TestCase):
         loaded = self.load_contract(created.id)
         self.assertEqual(1, len(loaded.attachments))
         self.assertEqual(b"content", loaded.attachments[0].data)
-        self.assertEqual(ContractAttachment.Status.PROPOSED, loaded.attachments[0].status)
+        self.assertEqual(ContractAttachmentStatus.PROPOSED, loaded.attachments[0].status)
 
     def test_can_remove_attachment_from_contract(self):
         # given
@@ -90,7 +89,7 @@ class TestContractLifecycleIntegration(TestCase):
         # then
         loaded: ContractDTO = self.load_contract(created.id)
         self.assertEqual(1, len(loaded.attachments))
-        self.assertEqual(ContractAttachment.Status.ACCEPTED_BY_ONE_SIDE, loaded.attachments[0].status)
+        self.assertEqual(ContractAttachmentStatus.ACCEPTED_BY_ONE_SIDE, loaded.attachments[0].status)
 
     def test_can_accept_attachment_by_two_sides(self):
         # given
@@ -106,7 +105,7 @@ class TestContractLifecycleIntegration(TestCase):
         # then
         loaded: ContractDTO = self.load_contract(created.id)
         self.assertEqual(1, len(loaded.attachments))
-        self.assertEqual(ContractAttachment.Status.ACCEPTED_BY_BOTH_SIDES, loaded.attachments[0].status)
+        self.assertEqual(ContractAttachmentStatus.ACCEPTED_BY_BOTH_SIDES, loaded.attachments[0].status)
 
     def test_can_reject_attachment(self):
         # given
@@ -120,7 +119,7 @@ class TestContractLifecycleIntegration(TestCase):
         # then
         loaded: ContractDTO = self.load_contract(created.id)
         self.assertEqual(1, len(loaded.attachments))
-        self.assertEqual(ContractAttachment.Status.REJECTED, loaded.attachments[0].status)
+        self.assertEqual(ContractAttachmentStatus.REJECTED, loaded.attachments[0].status)
 
     def test_can_accept_contract_when_all_attachments_accepted(self):
         # given
@@ -136,7 +135,7 @@ class TestContractLifecycleIntegration(TestCase):
 
         # then
         loaded: ContractDTO = self.load_contract(created.id)
-        self.assertEqual(Contract.Status.ACCEPTED, loaded.status)
+        self.assertEqual(ContractStatus.ACCEPTED, loaded.status)
 
     def test_can_reject_contract(self):
         # given
@@ -152,7 +151,7 @@ class TestContractLifecycleIntegration(TestCase):
 
         # then
         loaded: ContractDTO = self.load_contract(created.id)
-        self.assertEqual(Contract.Status.REJECTED, loaded.status)
+        self.assertEqual(ContractStatus.REJECTED, loaded.status)
 
     def test_cannot_accept_contract_when_not_all_attachments_accepted(self):
         # given
@@ -168,7 +167,7 @@ class TestContractLifecycleIntegration(TestCase):
 
         # then
         loaded: ContractDTO = self.load_contract(created.id)
-        self.assertNotEqual(Contract.Status.ACCEPTED, loaded.status)
+        self.assertNotEqual(ContractStatus.ACCEPTED, loaded.status)
 
     def load_contract(self, contract_id: int) -> ContractDTO:
         return self.contract_service.find_dto(contract_id)
@@ -177,8 +176,7 @@ class TestContractLifecycleIntegration(TestCase):
         dto = ContractDTO()
         dto.partner_name = partner_name
         dto.subject = subject
-        contract: Contract = self.contract_service.create_contract(dto)
-        return self.load_contract(contract.id)
+        return self.contract_service.create_contract(dto)
 
     def add_attachment_to_contract(self, created: ContractDTO, content: bytes) -> ContractAttachmentDTO:
         contract_attachment_dto = ContractAttachmentDTO()

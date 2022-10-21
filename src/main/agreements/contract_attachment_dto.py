@@ -1,7 +1,9 @@
 from datetime import datetime
 from typing import Optional, Any
 
-from entity import ContractAttachment, ContractAttachmentData
+from agreements.contract_attachment_status import ContractAttachmentStatus
+from agreements.contract_attachment import ContractAttachment
+from agreements.contract_attachment_data import ContractAttachmentData
 from pydantic import BaseModel
 
 
@@ -13,7 +15,7 @@ class ContractAttachmentDTO(BaseModel):
     accepted_at: Optional[datetime]
     rejected_at: Optional[datetime]
     change_date: Optional[datetime]
-    status: Optional[ContractAttachment.Status]
+    status: Optional[ContractAttachmentStatus]
 
     def __init__(self, *, attachment: ContractAttachment = None, data: ContractAttachmentData = None, **kwargs: Any):
         super().__init__(**kwargs)

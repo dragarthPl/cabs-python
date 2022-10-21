@@ -1,27 +1,21 @@
 from __future__ import annotations
 
-import enum
 import hashlib
 import uuid as uuid_pkg
 
 from datetime import datetime
 from typing import Optional
 
-from sqlalchemy import Column, DateTime, Enum, LargeBinary
+from sqlalchemy import Column, Enum
 from sqlalchemy.orm import relationship
 from sqlmodel import Field, Relationship
 
+from agreements.contract_attachment_status import ContractAttachmentStatus
 from common.base_entity import BaseEntity, new_uuid
 
 
 class ContractAttachment(BaseEntity, table=True):
     __table_args__ = {'extend_existing': True}
-
-    class Status(enum.Enum):
-        PROPOSED = 1
-        ACCEPTED_BY_ONE_SIDE = 2
-        ACCEPTED_BY_BOTH_SIDES = 3
-        REJECTED = 4
 
     contract_attachment_no: uuid_pkg.UUID = Field(
         default_factory=new_uuid,
@@ -31,13 +25,13 @@ class ContractAttachment(BaseEntity, table=True):
     accepted_at: Optional[datetime]
     rejected_at: Optional[datetime]
     change_date: Optional[datetime]
-    status: Optional[Status] = Field(default=Status.PROPOSED, sa_column=Column(Enum(Status)))
+    status: Optional[ContractAttachmentStatus] = Field(default=ContractAttachmentStatus.PROPOSED, sa_column=Column(Enum(ContractAttachmentStatus)))
 
     # @ManyToOne
     contract_id: Optional[int] = Field(default=None, foreign_key="contract.id")
     contract: Optional[Contract] = Relationship(
         sa_relationship=relationship(
-            "entity.contract.Contract", back_populates="attachments"),
+            "agreements.contract.Contract", back_populates="attachments"),
     )
 
     def __eq__(self, o):

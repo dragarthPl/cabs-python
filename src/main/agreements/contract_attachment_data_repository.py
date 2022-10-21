@@ -6,7 +6,7 @@ from sqlalchemy import text
 
 from sqlmodel import Session
 
-from entity import ContractAttachmentData
+from agreements.contract_attachment_data import ContractAttachmentData
 
 
 class ContractAttachmentDataRepositoryImp:

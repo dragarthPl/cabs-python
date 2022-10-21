@@ -14,9 +14,8 @@ from .miles.awards_account import AwardsAccount
 from .driver_fee import DriverFee
 from .driver import Driver
 from .driver_attribute import DriverAttribute
-from .contract_attachment import ContractAttachment
-from .contract_attachment_data import ContractAttachmentData
-from .contract import Contract
+from agreements.contract_attachment import ContractAttachment
+from agreements.contract import Contract
 from .car_type_active_counter import CarTypeActiveCounter
 from crm.claims.claims_resolver import ClaimsResolver
 

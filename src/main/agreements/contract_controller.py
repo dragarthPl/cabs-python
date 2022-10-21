@@ -1,11 +1,11 @@
 from fastapi_injector import Injected
 
 from agreements.contract_attachment_dto import ContractAttachmentDTO
-from dto.contract_dto import ContractDTO
+from agreements.contract_dto import ContractDTO
 from agreements.contract import Contract
 from fastapi_utils.cbv import cbv
 from fastapi_utils.inferring_router import InferringRouter
-from service.contract_service import ContractService
+from agreements.contract_service import ContractService
 
 contract_router = InferringRouter(tags=["ContractController"])
 
@@ -15,7 +15,7 @@ class ContractController:
 
     @contract_router.post("/contracts/")
     def create(self, contract_dto: ContractDTO) -> ContractDTO:
-        created: Contract = self.contract_service.create_contract(contract_dto)
+        created: ContractDTO = self.contract_service.create_contract(contract_dto)
         return ContractDTO(contract=created)
 
     @contract_router.get("/contracts/{contract_id}")

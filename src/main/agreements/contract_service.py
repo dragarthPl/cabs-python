@@ -1,11 +1,12 @@
 from injector import inject
 
 from agreements.contract_attachment_dto import ContractAttachmentDTO
-from dto.contract_dto import ContractDTO
-from entity import Contract, ContractAttachmentData
+from agreements.contract_dto import ContractDTO
+from agreements.contract import Contract
+from agreements.contract_attachment_data import ContractAttachmentData
 
 from agreements.contract_attachment_data_repository import ContractAttachmentDataRepositoryImp
-from repository.contract_repository import ContractRepositoryImp
+from agreements.contract_repository import ContractRepositoryImp
 
 
 class ContractService:
@@ -21,14 +22,14 @@ class ContractService:
         self.contract_repository = contract_repository
         self.contract_attachment_data_repository = contract_attachment_data_repository
 
-    def create_contract(self, contract_dto: ContractDTO) -> Contract:
+    def create_contract(self, contract_dto: ContractDTO) -> ContractDTO:
         partner_contracts_count = len(self.contract_repository.find_by_partner_name(contract_dto.partner_name)) + 1
         contract = Contract(
             partner_name=contract_dto.partner_name,
             subject=contract_dto.subject,
             contract_no="C/" + str(partner_contracts_count) + "/" + contract_dto.partner_name
         )
-        return self.contract_repository.save(contract)
+        return self.find_dto(self.contract_repository.save(contract).id)
 
     def accept_contract(self, contract_id: int):
         contract = self.find(contract_id)

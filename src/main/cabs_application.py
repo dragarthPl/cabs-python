@@ -1,23 +1,20 @@
 import uvicorn
 from fastapi_injector import attach_injector
-from injector import Injector, ClassProvider
+from injector import Injector
 from fastapi import FastAPI
-from sqlmodel import Session
 
-from core.database import create_db_and_tables, get_session, DatabaseModule
+from core.database import create_db_and_tables, DatabaseModule
 from party.infra.party_relationship_repository_impl import PartyRelationshipRepositoryImpl
 from party.infra.party_repository_impl import PartyRepositoryImpl
 from party.model.party.party_relationship_repository import PartyRelationshipRepository
 from party.model.party.party_repository import PartyRepository
-from repository.awards_account_repository import AwardsAccountRepositoryImp
-from repository.car_type_repository import CarTypeRepositoryImp
 from service.awards_service import AwardsService
 from service.awards_service_impl import AwardsServiceImpl
 from ui.awards_account_controller import awards_account_router
 from ui.car_type_controller import car_type_router
 from crm.claims.claim_controller import claim_router
 from ui.client_controller import client_router
-from ui.contract_controller import contract_router
+from agreements.contract_controller import contract_router
 from ui.driver_controller import driver_router
 from driverreport.driver_report_controller import driver_report_router
 from ui.driver_session_controller import driver_session_router
