@@ -1,9 +1,9 @@
 from datetime import datetime
 from typing import List, Optional, Any, Set
 
-from dto.contract_attachment_dto import ContractAttachmentDTO
-from entity import ContractAttachment, ContractAttachmentData
-from entity.contract import Contract
+from agreements.contract_attachment_dto import ContractAttachmentDTO
+from entity import ContractAttachmentData
+from agreements.contract import Contract
 from pydantic import BaseModel
 
 

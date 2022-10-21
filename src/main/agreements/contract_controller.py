@@ -1,8 +1,8 @@
 from fastapi_injector import Injected
 
-from dto.contract_attachment_dto import ContractAttachmentDTO
+from agreements.contract_attachment_dto import ContractAttachmentDTO
 from dto.contract_dto import ContractDTO
-from entity.contract import Contract
+from agreements.contract import Contract
 from fastapi_utils.cbv import cbv
 from fastapi_utils.inferring_router import InferringRouter
 from service.contract_service import ContractService

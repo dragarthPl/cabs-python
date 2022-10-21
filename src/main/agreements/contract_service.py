@@ -1,10 +1,10 @@
 from injector import inject
 
-from dto.contract_attachment_dto import ContractAttachmentDTO
+from agreements.contract_attachment_dto import ContractAttachmentDTO
 from dto.contract_dto import ContractDTO
 from entity import Contract, ContractAttachmentData
 
-from repository.contract_attachment_data_repository import ContractAttachmentDataRepositoryImp
+from agreements.contract_attachment_data_repository import ContractAttachmentDataRepositoryImp
 from repository.contract_repository import ContractRepositoryImp
 
 

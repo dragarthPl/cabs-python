@@ -15,3 +15,5 @@ neo4j
 py2neo
 fastapi-events
 httpx
+injector
+fastapi-injector

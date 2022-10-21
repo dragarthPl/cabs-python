@@ -1,7 +1,8 @@
 from unittest import TestCase
 
+from agreements.contract_status import ContractStatus
 from entity import ContractAttachment
-from entity.contract import Contract
+from agreements.contract import Contract
 
 
 class TestContractLifecycle(TestCase):
@@ -13,7 +14,7 @@ class TestContractLifecycle(TestCase):
         # then
         self.assertEqual("partnerNameVeryUnique", contract.partner_name)
         self.assertEqual("umowa o cenę", contract.subject)
-        self.assertEqual(Contract.Status.NEGOTIATIONS_IN_PROGRESS, contract.status)
+        self.assertEqual(ContractStatus.NEGOTIATIONS_IN_PROGRESS, contract.status)
         self.assertIsNotNone(contract.creation_date)
         self.assertIsNone(contract.change_date)
         self.assertIsNone(contract.accepted_at)
@@ -108,7 +109,7 @@ class TestContractLifecycle(TestCase):
 
         # then
         self.assertEqual(
-            Contract.Status.ACCEPTED,
+            ContractStatus.ACCEPTED,
             contract.status
         )
 
@@ -125,7 +126,7 @@ class TestContractLifecycle(TestCase):
 
         # then
         self.assertEqual(
-            Contract.Status.REJECTED,
+            ContractStatus.REJECTED,
             contract.status
         )
 
@@ -140,7 +141,7 @@ class TestContractLifecycle(TestCase):
         # then
         with self.assertRaises(AttributeError):
             contract.accept()
-        self.assertNotEqual(Contract.Status.ACCEPTED, contract.status)
+        self.assertNotEqual(ContractStatus.ACCEPTED, contract.status)
 
     def create_contract(self, partner_name: str, subject: str) -> Contract:
         return Contract(partner_name=partner_name, subject=subject, contract_no="no")
