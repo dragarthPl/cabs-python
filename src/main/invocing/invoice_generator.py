@@ -2,8 +2,8 @@ from decimal import Decimal
 
 from injector import inject
 
-from entity.invoice import Invoice
-from repository.invoice_repository import InvoiceRepositoryImp
+from invocing.invoice import Invoice
+from invocing.invoice_repository import InvoiceRepositoryImp
 
 
 class InvoiceGenerator:

@@ -2,7 +2,7 @@ from typing import Optional
 
 from injector import inject
 
-from entity.invoice import Invoice
+from invocing.invoice import Invoice
 from sqlmodel import Session
 
 

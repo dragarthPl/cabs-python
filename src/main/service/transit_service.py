@@ -11,7 +11,7 @@ from distance.distance import Distance
 from dto.address_dto import AddressDTO
 from dto.driver_position_dtov_2 import DriverPositionDTOV2
 from dto.transit_dto import TransitDTO
-from entity import Address, CarType, Driver, Transit
+from entity import Address, Driver, Transit
 from fastapi_events.dispatcher import dispatch
 
 from entity.events.transit_completed import TransitCompleted
@@ -28,7 +28,7 @@ from service.distance_calculator import DistanceCalculator
 from service.driver_fee_service import DriverFeeService
 from service.driver_notification_service import DriverNotificationService
 from service.geocoding_service import GeocodingService
-from service.invoice_generator import InvoiceGenerator
+from invocing.invoice_generator import InvoiceGenerator
 from transitdetails.transit_details_dto import TransitDetailsDTO
 from transitdetails.transit_details_facade import TransitDetailsFacade
 
