@@ -5,7 +5,7 @@ import pytz
 from dateutil.relativedelta import relativedelta
 from injector import inject
 
-from core.database import get_session
+from carfleet.car_class import CarClass
 from sqlmodel import Session
 from sqlalchemy import text
 
@@ -16,7 +16,7 @@ from dto.driver_dto import DriverDTO
 from dto.driver_report import DriverReport
 from dto.driver_session_dto import DriverSessionDTO
 from dto.transit_dto import TransitDTO
-from entity import DriverAttribute, Transit, Driver, CarType, Claim
+from entity import DriverAttribute, Transit, Driver, Claim
 
 
 class SqlBasedDriverReportCreator:
@@ -110,7 +110,7 @@ class SqlBasedDriverReportCreator:
             proposed_drivers=None,
             address_to=self.retrieve_to_address(cells),
             address_from=self.retrieve_from_address(cells),
-            car_class=CarType.CarClass[row.get("car_class")],
+            car_class=CarClass[row.get("car_class")],
             client_dto=None,
         )
 
@@ -120,7 +120,7 @@ class SqlBasedDriverReportCreator:
             logged_at=row.get("logged_at"),
             logged_out_at=row.get("logged_out_at"),
             plates_number=row.get("plates_number"),
-            car_class=CarType.CarClass[row.get("car_class")],
+            car_class=CarClass[row.get("car_class")],
             car_brand=row.get("car_brand"),
         )
 

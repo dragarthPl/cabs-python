@@ -5,6 +5,7 @@ from typing import Any, Optional
 
 from sqlalchemy import Column, Enum, Float, ForeignKey, Table, DateTime
 
+from carfleet.car_class import CarClass
 from distance.distance import Distance
 from entity import Client, CarType, Address, Transit, Tariff
 from money import Money
@@ -29,7 +30,7 @@ class TransitDetails(BaseEntity, table=True):
     client: Optional[Client] = Relationship(
         sa_relationship=relationship("Client", backref=backref("transit_details")))
 
-    car_type: Optional[CarType.CarClass] = Field(sa_column=Column(Enum(CarType.CarClass)))
+    car_type: Optional[CarClass] = Field(sa_column=Column(Enum(CarClass)))
     # @OneToOne
     address_from_id: Optional[int] = Field(default=None, foreign_key="address.id")
     address_from: Optional[Address] = Relationship(

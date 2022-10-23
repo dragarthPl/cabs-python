@@ -2,10 +2,11 @@ from datetime import datetime
 
 from injector import inject
 
+from carfleet.car_class import CarClass
 from entity.driver_session import DriverSession
 from repository.driver_repository import DriverRepositoryImp
 from repository.driver_session_repository import DriverSessionRepositoryImp
-from service.car_type_service import CarTypeService
+from carfleet.car_type_service import CarTypeService
 
 
 class DriverSessionService:
@@ -24,7 +25,7 @@ class DriverSessionService:
         self.driver_session_repository = driver_session_repository
         self.car_type_service = car_type_service
 
-    def log_in(self, driver_id, plates_number, car_class, car_brand) -> DriverSession:
+    def log_in(self, driver_id: int, plates_number: str, car_class: CarClass, car_brand: str) -> DriverSession:
         session = DriverSession()
         session.driver = self.driver_repository.get_one(driver_id)
         session.logged_at = datetime.now()

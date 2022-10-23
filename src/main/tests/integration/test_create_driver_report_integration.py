@@ -6,18 +6,18 @@ import pytz
 from fastapi_events import middleware_identifier
 from freezegun import freeze_time
 from dateutil.relativedelta import relativedelta
-from fastapi.params import Depends
 from httpx import AsyncClient
 from mockito import when
 
+from carfleet.car_class import CarClass
 from core.database import create_db_and_tables, drop_db_and_tables
-from dto.car_type_dto import CarTypeDTO
+from carfleet.car_type_dto import CarTypeDTO
 from dto.driver_attribute_dto import DriverAttributeDTO
 from dto.driver_report import DriverReport
 from dto.transit_dto import TransitDTO
 from entity import CarType, Driver, DriverFee, DriverAttribute, Client, Transit, Address
 from repository.address_repository import AddressRepositoryImp
-from service.car_type_service import CarTypeService
+from carfleet.car_type_service import CarTypeService
 from crm.claims.claim_service import ClaimService
 from service.driver_session_service import DriverSessionService
 from service.driver_tracking_service import DriverTrackingService
@@ -56,8 +56,8 @@ class TestCreateDriverReportIntegration(IsolatedAsyncioTestCase):
         middleware_identifier.set(app.middleware_stack.app._id)
 
         self.client = AsyncClient(app=app)
-        self.an_active_car_category(CarType.CarClass.VAN)
-        self.an_active_car_category(CarType.CarClass.PREMIUM)
+        self.an_active_car_category(CarClass.VAN)
+        self.an_active_car_category(CarClass.PREMIUM)
 
     async def test_should_create_drivers_report(self):
         # given
@@ -73,11 +73,11 @@ class TestCreateDriverReportIntegration(IsolatedAsyncioTestCase):
             driver, DriverAttribute.DriverAttributeName.MEDICAL_EXAMINATION_REMARKS, "private info")
         # and
         self.driver_has_done_session_and_picks_someone_up_in_car(
-            driver, client, CarType.CarClass.VAN, "WU1213", "SCODA FABIA", self.TODAY)
+            driver, client, CarClass.VAN, "WU1213", "SCODA FABIA", self.TODAY)
         self.driver_has_done_session_and_picks_someone_up_in_car(
-            driver, client, CarType.CarClass.VAN, "WU1213", "SCODA OCTAVIA", self.YESTERDAY)
+            driver, client, CarClass.VAN, "WU1213", "SCODA OCTAVIA", self.YESTERDAY)
         in_bmw = self.driver_has_done_session_and_picks_someone_up_in_car(
-            driver, client, CarType.CarClass.VAN, "WU1213", "BMW M2", self.DAY_BEFORE_YESTERDAY)
+            driver, client, CarClass.VAN, "WU1213", "BMW M2", self.DAY_BEFORE_YESTERDAY)
         # and
         self.fixtures.create_claim_reason(client, in_bmw, "za szybko")
 
@@ -139,7 +139,7 @@ class TestCreateDriverReportIntegration(IsolatedAsyncioTestCase):
         self,
         driver: Driver,
         client: Client,
-        car_class: CarType.CarClass,
+        car_class: CarClass,
         plate_number: str,
         car_brand: str,
         when: datetime,
@@ -192,7 +192,7 @@ class TestCreateDriverReportIntegration(IsolatedAsyncioTestCase):
         when(self.transit_service.geocoding_service).geocode_address(address).thenReturn([latitude, longitude])
         return address
 
-    def an_active_car_category(self, car_class: CarType.CarClass) -> CarType:
+    def an_active_car_category(self, car_class: CarClass) -> CarTypeDTO:
         car_type_dto = CarTypeDTO()
         car_type_dto.car_class = car_class
         car_type_dto.description = "opis"

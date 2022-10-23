@@ -2,12 +2,13 @@ from datetime import datetime
 from decimal import Decimal
 from typing import Any, List, Optional
 
+from carfleet.car_class import CarClass
 from distance.distance import Distance
 from dto.address_dto import AddressDTO
 from crm.claims.claim_dto import ClaimDTO
 from dto.client_dto import ClientDTO
 from dto.driver_dto import DriverDTO
-from entity import CarType, Transit
+from entity import Transit
 from pydantic import BaseModel
 
 from money import Money
@@ -39,7 +40,7 @@ class TransitDTO(BaseModel):
     proposed_drivers: List[DriverDTO] = []
     address_to: Optional[AddressDTO]
     address_from: Optional[AddressDTO]
-    car_class: Optional[CarType.CarClass]
+    car_class: Optional[CarClass]
     client_dto: Optional[ClientDTO]
 
     class Config:

@@ -6,6 +6,7 @@ from typing import List
 from dateutil.relativedelta import relativedelta
 from injector import inject
 
+from carfleet.car_class import CarClass
 from distance.distance import Distance
 from dto.address_dto import AddressDTO
 from dto.driver_position_dtov_2 import DriverPositionDTOV2
@@ -22,7 +23,7 @@ from repository.driver_repository import DriverRepositoryImp
 from repository.driver_session_repository import DriverSessionRepositoryImp
 from repository.transit_repository import TransitRepositoryImp
 from service.awards_service import AwardsService
-from service.car_type_service import CarTypeService
+from carfleet.car_type_service import CarTypeService
 from service.distance_calculator import DistanceCalculator
 from service.driver_fee_service import DriverFeeService
 from service.driver_notification_service import DriverNotificationService
@@ -92,7 +93,7 @@ class TransitService:
         return self.address_repository.save(address)
 
     def create_transit_transaction(
-            self, client_id: int, address_from: Address, address_to: Address, car_class: CarType.CarClass) -> Transit:
+            self, client_id: int, address_from: Address, address_to: Address, car_class: CarClass) -> Transit:
         client = self.client_repository.get_one(client_id)
         if client is None:
             raise AttributeError("Client does not exist, id = " + str(client_id))

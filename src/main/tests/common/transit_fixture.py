@@ -4,6 +4,7 @@ import pytz
 from fastapi import Depends
 from injector import inject
 
+from carfleet.car_class import CarClass
 from distance.distance import Distance
 from dto.address_dto import AddressDTO
 from dto.client_dto import ClientDTO
@@ -54,7 +55,7 @@ class TransitFixture:
             address_to,
             Distance.ZERO,
             client,
-            CarType.CarClass.VAN,
+            CarClass.VAN,
             Money(price),
             Tariff.of_time(when)
         )

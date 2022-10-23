@@ -1,10 +1,11 @@
 from datetime import datetime
 from typing import Any
 
+from carfleet.car_class import CarClass
 from distance.distance import Distance
 from dto.address_dto import AddressDTO
 from dto.client_dto import ClientDTO
-from entity import CarType, Transit
+from entity import Transit
 from money import Money
 from transitdetails.transit_details import TransitDetails
 
@@ -19,7 +20,7 @@ class TransitDetailsDTO:
 
     client: ClientDTO
 
-    car_type: CarType.CarClass
+    car_type: CarClass
 
     address_from: AddressDTO
 

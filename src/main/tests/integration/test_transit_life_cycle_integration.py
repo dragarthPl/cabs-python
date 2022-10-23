@@ -7,6 +7,7 @@ from fastapi.params import Depends
 from fastapi_events import middleware_identifier
 from httpx import AsyncClient
 
+from carfleet.car_class import CarClass
 from core.database import create_db_and_tables, drop_db_and_tables
 from dto.address_dto import AddressDTO
 from entity import CarType, Transit, DriverFee
@@ -35,7 +36,7 @@ class TestTransitLifeCycleIntegration(IsolatedAsyncioTestCase):
         middleware_identifier.set(app.middleware_stack.app._id)
 
         self.client = AsyncClient(app=app)
-        self.fixtures.an_active_car_category(CarType.CarClass.VAN)
+        self.fixtures.an_active_car_category(CarClass.VAN)
         when(self.geocoding_service).geocode_address(ANY).thenReturn([1.0, 1.0])
 
     async def test_can_create_transit(self):
@@ -432,7 +433,7 @@ class TestTransitLifeCycleIntegration(IsolatedAsyncioTestCase):
         return address_dto
 
     def a_nearby_driver(self, plate_number: str) -> int:
-        return self.fixtures.a_nearby_driver(plate_number, 1, 1, CarType.CarClass.VAN, datetime.now(), "BRAND").id
+        return self.fixtures.a_nearby_driver(plate_number, 1, 1, CarClass.VAN, datetime.now(), "BRAND").id
 
     def request_transit_from_to(self, pickup: AddressDTO, destination: AddressDTO) -> Transit:
         return self.transit_service.create_transit(
@@ -440,7 +441,7 @@ class TestTransitLifeCycleIntegration(IsolatedAsyncioTestCase):
         )
 
     def a_far_away_driver(self, plate_number: str) -> int:
-        return self.fixtures.a_nearby_driver(plate_number, 1000, 1000, CarType.CarClass.VAN, datetime.now(), "BRAND").id
+        return self.fixtures.a_nearby_driver(plate_number, 1000, 1000, CarClass.VAN, datetime.now(), "BRAND").id
 
     async def asyncTearDown(self) -> None:
         drop_db_and_tables()

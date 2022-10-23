@@ -1,8 +1,8 @@
 from datetime import datetime
 from typing import Optional
 
+from carfleet.car_class import CarClass
 from common.base_entity import BaseEntity
-from entity.car_type import CarType
 from entity.driver import Driver
 from sqlalchemy import Column, DateTime, Enum, String
 from sqlalchemy.orm import relationship
@@ -22,7 +22,7 @@ class DriverSession(BaseEntity, table=True):
     # @Column(nullable = false)
     plates_number: str = Field(sa_column=Column(String, nullable=False))
     # @Enumerated(EnumType.STRING)
-    car_class: Optional[CarType.CarClass] = Field(sa_column=Column(Enum(CarType.CarClass)))
+    car_class: Optional[CarClass] = Field(sa_column=Column(Enum(CarClass)))
     car_brand: Optional[str]
 
     def __eq__(self, o):

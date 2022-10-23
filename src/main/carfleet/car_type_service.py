@@ -2,10 +2,11 @@ from typing import List
 
 from injector import inject
 
-from config.app_properties import AppProperties, get_app_properties
-from dto.car_type_dto import CarTypeDTO
-from entity.car_type import CarType
-from repository.car_type_repository import CarTypeRepositoryImp
+from carfleet.car_class import CarClass
+from config.app_properties import AppProperties
+from carfleet.car_type_dto import CarTypeDTO
+from carfleet.car_type import CarType
+from carfleet.car_type_repository import CarTypeRepositoryImp
 
 
 class CarTypeService:
@@ -37,7 +38,7 @@ class CarTypeService:
         return CarTypeDTO(**loaded)
 
     # @Transactional
-    def create(self, car_type_dto: CarTypeDTO) -> CarType:
+    def create(self, car_type_dto: CarTypeDTO) -> CarTypeDTO:
         by_car_class: CarType = self.car_type_repository.find_by_car_class(car_type_dto.car_class)
         if by_car_class is None:
             car_type: CarType = CarType(
@@ -45,10 +46,10 @@ class CarTypeService:
                 description=car_type_dto.description,
                 min_no_of_cars_to_activate_class=self.__get_min_number_of_cars(car_type_dto.car_class)
             )
-            return self.car_type_repository.save(car_type)
+            return self.load_dto(self.car_type_repository.save(car_type).id)
         else:
             by_car_class.description = car_type_dto.description
-            return self.car_type_repository.find_by_car_class(car_type_dto.car_class)
+            return self.load_dto(self.car_type_repository.find_by_car_class(car_type_dto.car_class).id)
 
     # @Transactional
     def activate(self, _id: int) -> None:
@@ -61,43 +62,43 @@ class CarTypeService:
         car_type.deactivate()
 
     # @Transactional
-    def register_car(self, car_class: CarType.CarClass) -> None:
+    def register_car(self, car_class: CarClass) -> None:
         car_type = self.__find_by_car_class(car_class)
         car_type.register_car()
 
     # @Transactional
-    def unregister_car(self, car_class: CarType.CarClass) -> None:
+    def unregister_car(self, car_class: CarClass) -> None:
         car_type = self.__find_by_car_class(car_class)
         car_type.unregister_car()
 
     # @Transactional
-    def unregister_active_car(self, car_class: CarType.CarClass) -> None:
+    def unregister_active_car(self, car_class: CarClass) -> None:
         self.car_type_repository.decrement_counter(car_class)
 
     # @Transactional
-    def register_active_car(self, car_class: CarType.CarClass) -> None:
+    def register_active_car(self, car_class: CarClass) -> None:
         self.car_type_repository.increment_counter(car_class)
 
     # @Transactional
-    def find_active_car_classes(self) -> List[CarType.CarClass]:
+    def find_active_car_classes(self) -> List[CarClass]:
         return list(map(
             lambda car_type: car_type.car_class,
             self.car_type_repository.find_by_status(CarType.Status.ACTIVE),
         ))
 
-    def __get_min_number_of_cars(self, car_class: CarType.CarClass) -> int:
-        if car_class == CarType.CarClass.ECO:
+    def __get_min_number_of_cars(self, car_class: CarClass) -> int:
+        if car_class == CarClass.ECO:
             return self.app_properties.min_no_of_cars_for_eco_class
         else:
             return 10
 
     # @Transactional
-    def remove_car_type(self, car_class: CarType.CarClass):
+    def remove_car_type(self, car_class: CarClass):
         car_type = self.car_type_repository.find_by_car_class(car_class)
         if car_type is not None:
             self.car_type_repository.delete(car_type)
 
-    def __find_by_car_class(self, car_class: CarType.CarClass) -> CarType:
+    def __find_by_car_class(self, car_class: CarClass) -> CarType:
         by_car_class = self.car_type_repository.find_by_car_class(car_class)
         if by_car_class is None:
             raise AttributeError("Car class does not exist: " + str(car_class))

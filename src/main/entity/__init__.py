@@ -2,7 +2,7 @@ from .driver_license import DriverLicense
 from .tariff import Tariff
 
 from .address import Address
-from .car_type import CarType
+from carfleet.car_type import CarType
 from .transit import Transit
 from .client import Client
 from crm.claims.claim import Claim
@@ -16,7 +16,7 @@ from .driver import Driver
 from .driver_attribute import DriverAttribute
 from agreements.contract_attachment import ContractAttachment
 from agreements.contract import Contract
-from .car_type_active_counter import CarTypeActiveCounter
+from carfleet.car_type_active_counter import CarTypeActiveCounter
 from crm.claims.claims_resolver import ClaimsResolver
 
 

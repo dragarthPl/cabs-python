@@ -1,12 +1,13 @@
 from typing import Optional, Any
 
-from entity.car_type import CarType
+from carfleet.car_class import CarClass
+from carfleet.car_type import CarType
 from pydantic import BaseModel
 
 
 class CarTypeDTO(BaseModel):
     id: Optional[int]
-    car_class: Optional[CarType.CarClass]
+    car_class: Optional[CarClass]
     status: Optional[CarType.Status]
     cars_counter: Optional[int] = 0
     description: Optional[str]

@@ -3,6 +3,7 @@ from typing import Any
 from sqlalchemy import Column, Enum, Integer
 from sqlmodel import SQLModel, Field
 
+from carfleet.car_class import CarClass
 from common.base_entity import EnumAsInteger
 from entity import CarType
 
@@ -10,16 +11,16 @@ from entity import CarType
 class CarTypeActiveCounter(SQLModel, table=True):
     __table_args__ = {'extend_existing': True}
 
-    car_class: CarType.CarClass = Field(
+    car_class: CarClass = Field(
         primary_key=True,
         sa_column=Column(EnumAsInteger(
-            CarType.CarClass,
+            CarClass,
         ), nullable=False, primary_key=True)
     )
 
     active_cars_counter: int = Field(default=0, sa_column=Column(Integer, nullable=False))
 
-    def __init__(self, car_class: CarType.CarClass, **data: Any):
+    def __init__(self, car_class: CarClass, **data: Any):
         super().__init__(**data)
         self.car_class = car_class
 

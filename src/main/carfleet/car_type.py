@@ -1,9 +1,10 @@
 import enum
-from typing import Any, Optional
+from typing import Optional
 
+from carfleet.car_class import CarClass
 from common.base_entity import BaseEntity
 from sqlalchemy import Column, Enum, Integer
-from sqlmodel import Field, SQLModel
+from sqlmodel import Field
 
 
 class CarType(BaseEntity, table=True):
@@ -12,12 +13,6 @@ class CarType(BaseEntity, table=True):
     class Status(enum.IntEnum):
         INACTIVE = 1
         ACTIVE = 2
-
-    class CarClass(enum.IntEnum):
-        ECO = 1
-        REGULAR = 2
-        VAN = 3
-        PREMIUM = 4
 
     #@Enumerated(EnumType.STRING)
     #@Column(nullable = false)

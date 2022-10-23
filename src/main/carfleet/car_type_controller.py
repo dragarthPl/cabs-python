@@ -1,10 +1,11 @@
 from fastapi_injector import Injected
 
-from dto.car_type_dto import CarTypeDTO
-from entity.car_type import CarType
+from carfleet.car_class import CarClass
+from carfleet.car_type_dto import CarTypeDTO
+from carfleet.car_type import CarType
 from fastapi_utils.cbv import cbv
 from fastapi_utils.inferring_router import InferringRouter
-from service.car_type_service import CarTypeService
+from carfleet.car_type_service import CarTypeService
 
 car_type_router = InferringRouter(tags=["CarTypeController"])
 
@@ -15,16 +16,16 @@ class CarTypeController:
 
     @car_type_router.post("/cartypes")
     def create(self, car_type_dto: CarTypeDTO) -> CarTypeDTO:
-        created: CarType = self.car_type_service.create(car_type_dto)
-        return self.car_type_service.load_dto(created.id)
+        created: CarTypeDTO = self.car_type_service.create(car_type_dto)
+        return created
 
     @car_type_router.post("/cartypes/{car_class}/registerCar")
-    def register_car(self, car_class: CarType.CarClass) -> dict:
+    def register_car(self, car_class: CarClass) -> dict:
         self.car_type_service.register_car(car_class)
         return {}
 
     @car_type_router.post("/cartypes/{car_class}/unregisterCar")
-    def unregister_car(self, car_class: CarType.CarClass) -> dict:
+    def unregister_car(self, car_class: CarClass) -> dict:
         self.car_type_service.unregister_car(car_class)
         return {}
 

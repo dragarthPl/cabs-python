@@ -8,6 +8,8 @@ from injector import Injector, inject
 from mypy.types import Instance
 from sqlmodel import Session
 
+from carfleet.car_class import CarClass
+from carfleet.car_type_dto import CarTypeDTO
 from common.application_event_publisher import ApplicationEventPublisher
 from core.database import DatabaseModule
 from dto.address_dto import AddressDTO
@@ -138,7 +140,7 @@ class Fixtures:
         plate_number: str,
         latitude: float,
         longitude: float,
-        car_class: CarType.CarClass,
+        car_class: CarClass,
         when: datetime
     ) -> Driver:
         return self.driver_fixture.a_nearby_driver_default(plate_number, latitude, longitude, car_class, when)
@@ -148,7 +150,7 @@ class Fixtures:
             plate_number: str,
             latitude: float,
             longitude: float,
-            car_class: CarType.CarClass,
+            car_class: CarClass,
             when: datetime,
             car_brand: str
     ) -> Driver:
@@ -173,7 +175,7 @@ class Fixtures:
     ) -> Transit:
         return self.ride_fixture.a_ride_with_fixed_clock(price, published_at, completed_at, client, driver, address_from, destination)
 
-    def an_active_car_category(self, car_class: CarType.CarClass) -> CarType:
+    def an_active_car_category(self, car_class: CarClass) -> CarTypeDTO:
         return self.car_type_fixture.an_active_car_category(car_class)
 
     def client_has_done_transits(self, client: Client, no_of_transits: int, geocoding_service: GeocodingService):

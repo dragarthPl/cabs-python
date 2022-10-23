@@ -4,7 +4,8 @@ from typing import List, Optional
 from injector import inject
 from sqlalchemy import desc
 
-from entity import Driver, CarType
+from carfleet.car_class import CarClass
+from entity import Driver
 from entity.driver_session import DriverSession
 from sqlmodel import Session
 
@@ -19,7 +20,7 @@ class DriverSessionRepositoryImp:
     def find_all_by_logged_out_at_null_and_driver_in_and_car_class_in(
             self,
             drivers: List[Driver],
-            car_classes: List[CarType.CarClass]
+            car_classes: List[CarClass]
     ) -> List[DriverSession]:
         return self.session.query(
             DriverSession

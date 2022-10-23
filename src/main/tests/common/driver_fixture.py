@@ -5,6 +5,7 @@ from fastapi import Depends
 from injector import inject
 from mockito import when, ANY
 
+from carfleet.car_class import CarClass
 from entity import Driver, DriverFee, Address, CarType, DriverAttribute
 from money import Money
 from repository.driver_attribute_repository import DriverAttributeRepositoryImp
@@ -76,14 +77,14 @@ class DriverFixture:
         latitude: float = random()
         longitude: float = random()
         when(stubbed_geocoding_service).geocode_address(pickup).thenReturn([latitude, longitude])
-        return self.a_nearby_driver("WU DAMIAN", latitude, longitude, CarType.CarClass.VAN, datetime.now(), "brand")
+        return self.a_nearby_driver("WU DAMIAN", latitude, longitude, CarClass.VAN, datetime.now(), "brand")
 
     def a_nearby_driver_default(
         self,
         plate_number: str,
         latitude: float,
         longitude: float,
-        car_class: CarType.CarClass,
+        car_class: CarClass,
         when: datetime
     ) -> Driver:
         return self.a_nearby_driver(plate_number, latitude, longitude, car_class, when, "brand")
@@ -93,7 +94,7 @@ class DriverFixture:
         plate_number: str,
         latitude: float,
         longitude: float,
-        car_class: CarType.CarClass,
+        car_class: CarClass,
         when: datetime,
         car_brand: str
     ) -> Driver:
@@ -107,7 +108,7 @@ class DriverFixture:
         plate_number: str,
         latitude: float,
         longitude: float,
-        car_class: CarType.CarClass,
+        car_class: CarClass,
         driver: Driver,
         when: datetime,
         car_brand: str
@@ -115,7 +116,7 @@ class DriverFixture:
         self.driver_tracking_service.register_position(driver.id, latitude, longitude, when)
         return driver
 
-    def driver_logs_in(self, plate_number: str, car_class: CarType.CarClass, driver: Driver, car_brand: str) -> None:
+    def driver_logs_in(self, plate_number: str, car_class: CarClass, driver: Driver, car_brand: str) -> None:
         self.driver_session_service.log_in(driver.id, plate_number, car_class, car_brand)
 
     def driver_logs_out(self, driver: Driver) -> None:

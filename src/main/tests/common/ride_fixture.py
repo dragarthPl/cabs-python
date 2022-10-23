@@ -4,6 +4,7 @@ from fastapi import Depends
 from freezegun import freeze_time
 from injector import inject
 
+from carfleet.car_class import CarClass
 from entity import Client, Driver, Address, Transit, CarType
 from money import Money
 from repository.address_repository import AddressRepositoryImp
@@ -58,9 +59,9 @@ class RideFixture:
     ) -> Transit:
         address_from = self.address_repository.save(address_from)
         destination = self.address_repository.save(destination)
-        self.car_type_fixture.an_active_car_category(CarType.CarClass.VAN)
+        self.car_type_fixture.an_active_car_category(CarClass.VAN)
         transit: Transit = self.transit_service.create_transit_transaction(
-            client.id, address_from, destination, CarType.CarClass.VAN)
+            client.id, address_from, destination, CarClass.VAN)
         self.transit_service.publish_transit(transit.id)
         self.transit_service.find_drivers_for_transit(transit.id)
         self.transit_service.accept_transit(driver.id, transit.id)
@@ -87,9 +88,9 @@ class RideFixture:
         address_from = self.address_repository.save(address_from)
         destination = self.address_repository.save(destination)
         with freeze_time(published_at):
-            self.car_type_fixture.an_active_car_category(CarType.CarClass.VAN)
+            self.car_type_fixture.an_active_car_category(CarClass.VAN)
             transit: Transit = self.transit_service.create_transit_transaction(
-                client.id, address_from, destination, CarType.CarClass.VAN)
+                client.id, address_from, destination, CarClass.VAN)
             self.transit_service.publish_transit(transit.id)
             self.transit_service.find_drivers_for_transit(transit.id)
             self.transit_service.accept_transit(driver.id, transit.id)

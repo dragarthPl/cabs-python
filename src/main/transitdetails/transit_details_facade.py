@@ -3,6 +3,7 @@ from typing import Optional, List
 
 from injector import inject
 
+from carfleet.car_class import CarClass
 from distance.distance import Distance
 from entity import Address, Client, CarType, Tariff
 from money import Money
@@ -32,7 +33,7 @@ class TransitDetailsFacade:
         address_to: Optional[Address],
         distance: Distance,
         client: Client,
-        car_class: Optional[CarType.CarClass],
+        car_class: Optional[CarClass],
         estimated_price: Money,
         tariff: Tariff,
     ):
