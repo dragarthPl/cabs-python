@@ -19,7 +19,7 @@ from ui.driver_controller import driver_router
 from driverreport.driver_report_controller import driver_report_router
 from ui.driver_session_controller import driver_session_router
 from ui.driver_tracking_controller import driver_tracking_router
-from ui.transit_analyzer_controller import transit_analyzer_router
+from crm.transitanalyzer.transit_analyzer_controller import transit_analyzer_router
 from ui.transit_controller import transit_router
 
 from fastapi_events.middleware import EventHandlerASGIMiddleware

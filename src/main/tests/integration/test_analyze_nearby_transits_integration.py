@@ -1,12 +1,9 @@
 from datetime import datetime
-from typing import List, Tuple, Iterable, Any
+from typing import Tuple, Iterable
 from unittest import IsolatedAsyncioTestCase
 
-import fastapi
 import pytest
 import pytz
-import time
-from fastapi.params import Depends
 from fastapi_events import middleware_identifier
 from freezegun import freeze_time
 from mockito import when, ANY
@@ -15,11 +12,11 @@ from httpx import AsyncClient
 from carfleet.car_class import CarClass
 from core.database import create_db_and_tables, drop_db_and_tables
 from dto.analyzed_addresses_dto import AnalyzedAddressesDTO
-from entity import CarType, Client, Driver, Address
+from entity import Client, Driver, Address
 from repository.address_repository import AddressRepositoryImp
 from service.geocoding_service import GeocodingService
-from transitanalyzer.graph_transit_analyzer import GraphTransitAnalyzer
-from ui.transit_analyzer_controller import TransitAnalyzerController
+from crm.transitanalyzer.graph_transit_analyzer import GraphTransitAnalyzer
+from crm.transitanalyzer.transit_analyzer_controller import TransitAnalyzerController
 
 from tests.common.fixtures import DependencyResolver, Fixtures
 

@@ -1,18 +1,15 @@
-from datetime import datetime
 from typing import List
 from unittest import TestCase
 
-from fastapi.params import Depends
 from fastapi_events import middleware_identifier
 from mockito import when
 
 from cabs_application import CabsApplication
 from core.database import create_db_and_tables, drop_db_and_tables
 from entity import Client, Driver, Address
-from repository.transit_repository import TransitRepositoryImp
 from service.geocoding_service import GeocodingService
-from transitanalyzer.graph_transit_analyzer import GraphTransitAnalyzer
-from transitanalyzer.populate_graph_service import PopulateGraphService
+from crm.transitanalyzer.graph_transit_analyzer import GraphTransitAnalyzer
+from crm.transitanalyzer.populate_graph_service import PopulateGraphService
 
 from tests.common.fixtures import DependencyResolver, Fixtures
 

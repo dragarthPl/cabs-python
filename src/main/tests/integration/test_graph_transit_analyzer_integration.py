@@ -2,9 +2,7 @@ from datetime import datetime
 from typing import List
 from unittest import TestCase
 
-from fastapi.params import Depends
-
-from transitanalyzer.graph_transit_analyzer import GraphTransitAnalyzer
+from crm.transitanalyzer.graph_transit_analyzer import GraphTransitAnalyzer
 from tests.common.fixtures import DependencyResolver
 
 dependency_resolver = DependencyResolver()

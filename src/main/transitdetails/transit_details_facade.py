@@ -5,7 +5,7 @@ from injector import inject
 
 from carfleet.car_class import CarClass
 from distance.distance import Distance
-from entity import Address, Client, CarType, Tariff
+from entity import Address, Client, CarType, Tariff, Transit
 from money import Money
 from transitdetails.transit_details import TransitDetails
 from transitdetails.transit_details_dto import TransitDetailsDTO
@@ -78,6 +78,12 @@ class TransitDetailsFacade:
         details: TransitDetails = self.load(transit_id)
         details.set_completed_at(when, price, driver_fee)
         self.transit_details_repository.save(details)
+
+    def find_completed(self):
+        return list(map(
+            lambda x: TransitDetailsDTO(**x),
+            self.transit_details_repository.find_by_status(Transit.Status.COMPLETED)
+        ))
 
     def find_by_client(self, client_id: int) -> List[TransitDetailsDTO]:
         return list(map(
