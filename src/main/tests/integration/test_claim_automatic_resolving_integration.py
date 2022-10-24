@@ -1,6 +1,5 @@
 from unittest import TestCase
 
-from fastapi.params import Depends
 from fastapi_events import middleware_identifier
 from mockito import verify, mock, verifyZeroInteractions
 
@@ -11,8 +10,8 @@ from crm.claims.status import Status
 from entity import Client, Driver, Transit, Claim, Address
 from service.awards_service_impl import AwardsServiceImpl
 from crm.claims.claim_service import ClaimService
-from service.client_notification_service import ClientNotificationService
-from service.driver_notification_service import DriverNotificationService
+from crm.notification.client_notification_service import ClientNotificationService
+from crm.notification.driver_notification_service import DriverNotificationService
 from service.geocoding_service import GeocodingService
 from tests.common.fixtures import DependencyResolver, Fixtures
 

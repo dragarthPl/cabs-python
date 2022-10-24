@@ -1,7 +1,7 @@
 from datetime import datetime
 from typing import List
 
-from config.app_properties import AppProperties, get_app_properties
+from config.app_properties import AppProperties
 from crm.claims.claim_dto import ClaimDTO
 from crm.claims.status import Status
 from entity import Client, ClaimsResolver
@@ -11,8 +11,8 @@ from crm.claims.claims_resolver_repository import ClaimsResolverRepositoryImp
 from repository.client_repository import ClientRepositoryImp
 from service.awards_service import AwardsService
 from crm.claims.claim_number_generator import ClaimNumberGenerator
-from service.client_notification_service import ClientNotificationService
-from service.driver_notification_service import DriverNotificationService
+from crm.notification.client_notification_service import ClientNotificationService
+from crm.notification.driver_notification_service import DriverNotificationService
 from transitdetails.transit_details_dto import TransitDetailsDTO
 from transitdetails.transit_details_facade import TransitDetailsFacade
 from injector import inject

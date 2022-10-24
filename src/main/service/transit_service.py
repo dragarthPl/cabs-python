@@ -26,7 +26,7 @@ from service.awards_service import AwardsService
 from carfleet.car_type_service import CarTypeService
 from service.distance_calculator import DistanceCalculator
 from service.driver_fee_service import DriverFeeService
-from service.driver_notification_service import DriverNotificationService
+from crm.notification.driver_notification_service import DriverNotificationService
 from service.geocoding_service import GeocodingService
 from invocing.invoice_generator import InvoiceGenerator
 from transitdetails.transit_details_dto import TransitDetailsDTO
