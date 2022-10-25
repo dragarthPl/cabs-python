@@ -23,7 +23,7 @@ from repository.driver_position_repository import DriverPositionRepositoryImp
 from driverfleet.driver_repository import DriverRepositoryImp
 from repository.driver_session_repository import DriverSessionRepositoryImp
 from repository.transit_repository import TransitRepositoryImp
-from service.awards_service import AwardsService
+from loyalty.awards_service import AwardsService
 from carfleet.car_type_service import CarTypeService
 from service.distance_calculator import DistanceCalculator
 from driverfleet.driver_fee_service import DriverFeeService

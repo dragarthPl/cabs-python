@@ -2,9 +2,9 @@ from typing import Optional, List
 
 from injector import inject
 
-from core.database import get_session
-from entity import Client, AwardedMiles
-from entity.miles.awards_account import AwardsAccount
+from entity import Client
+from loyalty.awarded_miles import AwardedMiles
+from loyalty.awards_account import AwardsAccount
 from sqlmodel import Session
 
 

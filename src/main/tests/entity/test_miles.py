@@ -4,8 +4,9 @@ from unittest import TestCase
 import pytz
 from dateutil.relativedelta import relativedelta
 
-from entity import Miles, ConstantUntil
-from entity.miles.two_step_expiring_miles import TwoStepExpiringMiles
+from loyalty.constant_until import ConstantUntil
+from loyalty.miles import Miles
+from loyalty.two_step_expiring_miles import TwoStepExpiringMiles
 
 
 class MilesTest(TestCase):

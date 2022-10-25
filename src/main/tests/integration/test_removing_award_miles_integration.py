@@ -6,16 +6,15 @@ import pytz
 from dateutil.relativedelta import relativedelta
 from fastapi_events import middleware_identifier
 from freezegun import freeze_time
-from fastapi.params import Depends
 
 from cabs_application import CabsApplication
 from config.app_properties import AppProperties
 from core.database import create_db_and_tables, drop_db_and_tables
-from entity import Transit, Client, AwardedMiles
-from money import Money
-from repository.awards_account_repository import AwardsAccountRepositoryImp
-from service.awards_service import AwardsService
-from service.awards_service_impl import AwardsServiceImpl
+from entity import Client
+from loyalty.awarded_miles import AwardedMiles
+from loyalty.awards_account_repository import AwardsAccountRepositoryImp
+from loyalty.awards_service import AwardsService
+from loyalty.awards_service_impl import AwardsServiceImpl
 from service.geocoding_service import GeocodingService
 
 from tests.common.fixtures import DependencyResolver, Fixtures

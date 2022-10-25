@@ -9,6 +9,7 @@ from carfleet.car_class import CarClass
 from sqlmodel import Session
 from sqlalchemy import text
 
+from crm.claims.claim import Claim
 from distance.distance import Distance
 from driverfleet.driver import Driver
 from driverfleet.driver_attribute_name import DriverAttributeName
@@ -18,7 +19,7 @@ from driverfleet.driver_dto import DriverDTO
 from driverfleet.driverreport.driver_report import DriverReport
 from dto.driver_session_dto import DriverSessionDTO
 from dto.transit_dto import TransitDTO
-from entity import Transit, Claim
+from entity import Transit
 
 
 class SqlBasedDriverReportCreator:

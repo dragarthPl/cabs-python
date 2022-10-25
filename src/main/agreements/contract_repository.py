@@ -4,8 +4,9 @@ from typing import List, Optional
 from injector import inject
 from sqlalchemy import text
 
-from entity import Contract
 from sqlmodel import Session
+
+from agreements.contract import Contract
 
 
 class ContractRepositoryImp:

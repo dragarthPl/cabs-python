@@ -1,17 +1,13 @@
 from datetime import datetime
-from typing import Any
 from unittest import TestCase
 
-import fastapi
 import pytz
-from fastapi.params import Depends
 from mockito import when
 
 from core.database import create_db_and_tables, drop_db_and_tables
 from entity import Transit
-from money import Money
-from repository.awards_account_repository import AwardsAccountRepositoryImp
-from service.awards_service import AwardsService
+from loyalty.awards_account_repository import AwardsAccountRepositoryImp
+from loyalty.awards_service import AwardsService
 
 from tests.common.fixtures import DependencyResolver, Fixtures
 

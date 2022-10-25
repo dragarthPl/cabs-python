@@ -1,8 +1,8 @@
 from unittest import TestCase
 
+from agreements.contract_attachment import ContractAttachment
 from agreements.contract_attachment_status import ContractAttachmentStatus
 from agreements.contract_status import ContractStatus
-from entity import ContractAttachment
 from agreements.contract import Contract
 
 

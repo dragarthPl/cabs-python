@@ -1,8 +1,9 @@
 from fastapi import Depends
 from injector import inject
 
+from crm.claims.claim import Claim
 from crm.claims.claim_dto import ClaimDTO
-from entity import Client, Transit, Claim
+from entity import Client, Transit
 from crm.claims.claim_service import ClaimService
 from tests.common.client_fixture import ClientFixture
 

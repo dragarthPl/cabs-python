@@ -1,7 +1,8 @@
 import json
 from datetime import datetime
 
-from entity import Miles, ConstantUntil
+from loyalty.constant_until import ConstantUntil
+from loyalty.miles import Miles
 
 
 class MilesJsonEncoder(json.JSONEncoder):

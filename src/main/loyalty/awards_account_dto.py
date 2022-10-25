@@ -4,7 +4,7 @@ from typing import Optional, Any
 from pydantic import BaseModel
 
 from dto.client_dto import ClientDTO
-from entity.miles.awards_account import AwardsAccount
+from loyalty.awards_account import AwardsAccount
 
 
 class AwardsAccountDTO(BaseModel):

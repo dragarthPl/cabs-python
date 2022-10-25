@@ -1,9 +1,9 @@
 from fastapi_injector import Injected
 
-from dto.awards_account_dto import AwardsAccountDTO
+from loyalty.awards_account_dto import AwardsAccountDTO
 from fastapi_utils.cbv import cbv
 from fastapi_utils.inferring_router import InferringRouter
-from service.awards_service import AwardsService
+from loyalty.awards_service import AwardsService
 
 awards_account_router = InferringRouter(tags=["AwardsAccountController"])
 

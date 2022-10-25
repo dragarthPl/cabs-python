@@ -6,10 +6,11 @@ from mockito import verify, mock, verifyZeroInteractions
 from cabs_application import CabsApplication
 from config.app_properties import AppProperties
 from core.database import create_db_and_tables, drop_db_and_tables
+from crm.claims.claim import Claim
 from crm.claims.status import Status
 from driverfleet.driver import Driver
-from entity import Client, Transit, Claim, Address
-from service.awards_service_impl import AwardsServiceImpl
+from entity import Client, Transit, Address
+from loyalty.awards_service_impl import AwardsServiceImpl
 from crm.claims.claim_service import ClaimService
 from crm.notification.client_notification_service import ClientNotificationService
 from crm.notification.driver_notification_service import DriverNotificationService

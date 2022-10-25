@@ -8,9 +8,9 @@ from party.infra.party_relationship_repository_impl import PartyRelationshipRepo
 from party.infra.party_repository_impl import PartyRepositoryImpl
 from party.model.party.party_relationship_repository import PartyRelationshipRepository
 from party.model.party.party_repository import PartyRepository
-from service.awards_service import AwardsService
-from service.awards_service_impl import AwardsServiceImpl
-from ui.awards_account_controller import awards_account_router
+from loyalty.awards_service import AwardsService
+from loyalty.awards_service_impl import AwardsServiceImpl
+from loyalty.awards_account_controller import awards_account_router
 from carfleet.car_type_controller import car_type_router
 from crm.claims.claim_controller import claim_router
 from ui.client_controller import client_router

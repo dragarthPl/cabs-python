@@ -1,8 +1,7 @@
-from fastapi import Depends
 from injector import inject
 
 from entity import Client
-from service.awards_service import AwardsService
+from loyalty.awards_service import AwardsService
 
 
 class AwardsAccountFixture:

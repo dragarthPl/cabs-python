@@ -4,12 +4,13 @@ from datetime import datetime
 from functools import reduce
 from typing import Optional, Set, Any, List, Callable
 
-from entity import Client, ConstantUntil, AwardedMiles
 from sqlalchemy import Boolean, Column, DateTime, Integer
-from sqlalchemy.orm import relationship, backref
+from sqlalchemy.orm import relationship
 from sqlmodel import Field, Relationship
 
 from common.base_entity import BaseEntity
+from loyalty.awarded_miles import AwardedMiles
+from loyalty.constant_until import ConstantUntil
 
 
 class AwardsAccount(BaseEntity, table=True):
@@ -27,7 +28,7 @@ class AwardsAccount(BaseEntity, table=True):
     #@Fetch(value=FetchMode.JOIN)
     miles: Set[AwardedMiles] = Relationship(
         sa_relationship=relationship(
-            "entity.miles.awarded_miles.AwardedMiles", back_populates="account")
+            "loyalty.awarded_miles.AwardedMiles", back_populates="account")
     )
 
     def __init__(self, client_id: int, is_active: bool, when: datetime, **data: Any):

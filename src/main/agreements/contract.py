@@ -9,10 +9,10 @@ from sqlalchemy import Column, DateTime, Enum, String
 from sqlalchemy.orm import relationship
 from sqlmodel import Field, Relationship
 
+from agreements.contract_attachment import ContractAttachment
 from agreements.contract_attachment_status import ContractAttachmentStatus
 from agreements.contract_status import ContractStatus
 from common.base_entity import BaseEntity
-from entity import ContractAttachment
 
 
 class Contract(BaseEntity, table=True):

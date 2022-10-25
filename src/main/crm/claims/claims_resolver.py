@@ -3,8 +3,9 @@ import json
 from typing import Optional, Set
 
 from common.base_entity import BaseEntity
+from crm.claims.claim import Claim
 from crm.claims.status import Status
-from entity import Claim, Client, Transit
+from entity import Client
 
 
 class WhoToAsk(enum.Enum):

@@ -4,9 +4,11 @@ from injector import inject
 from sqlalchemy import text
 
 from carfleet.car_class import CarClass
-from entity import CarTypeActiveCounter
 from carfleet.car_type import CarType
 from sqlmodel import Session
+
+from carfleet.car_type_active_counter import CarTypeActiveCounter
+
 
 class CarTypeActiveCounterRepositoryImp:
 

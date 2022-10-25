@@ -7,18 +7,19 @@ from carfleet.car_class import CarClass
 from carfleet.car_type_dto import CarTypeDTO
 from common.application_event_publisher import ApplicationEventPublisher
 from core.database import DatabaseModule
+from crm.claims.claim import Claim
 from driverfleet.driver import Driver
 from driverfleet.driver_attribute_name import DriverAttributeName
 from driverfleet.driver_fee import DriverFee
 from dto.address_dto import AddressDTO
 from dto.transit_dto import TransitDTO
-from entity import Transit, Address, Client, Claim
+from entity import Transit, Address, Client
 from party.infra.party_relationship_repository_impl import PartyRelationshipRepositoryImpl
 from party.infra.party_repository_impl import PartyRepositoryImpl
 from party.model.party.party_relationship_repository import PartyRelationshipRepository
 from party.model.party.party_repository import PartyRepository
-from service.awards_service import AwardsService
-from service.awards_service_impl import AwardsServiceImpl
+from loyalty.awards_service import AwardsService
+from loyalty.awards_service_impl import AwardsServiceImpl
 from service.geocoding_service import GeocodingService
 from tests.common.address_fixture import AddressFixture
 from tests.common.awards_account_fixture import AwardsAccountFixture

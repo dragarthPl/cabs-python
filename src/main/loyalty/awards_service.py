@@ -1,6 +1,6 @@
 import abc
-from dto.awards_account_dto import AwardsAccountDTO
-from entity.miles.awarded_miles import AwardedMiles
+from loyalty.awards_account_dto import AwardsAccountDTO
+from loyalty.awarded_miles import AwardedMiles
 
 
 class AwardsService(metaclass=abc.ABCMeta):

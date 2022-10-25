@@ -1,6 +1,6 @@
 from datetime import datetime
 
-from entity import Miles
+from loyalty.miles import Miles
 
 
 class TwoStepExpiringMiles(Miles):

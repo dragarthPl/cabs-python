@@ -3,9 +3,7 @@ from typing import Optional
 from injector import inject
 from sqlmodel import Session
 
-from core.database import get_session
-
-from entity import ClaimsResolver
+from crm.claims.claims_resolver import ClaimsResolver
 
 
 class ClaimsResolverRepositoryImp:

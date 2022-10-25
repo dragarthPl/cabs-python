@@ -4,14 +4,12 @@ from __future__ import annotations
 from datetime import datetime
 from typing import Optional, Any
 
-from sqlalchemy.orm import relationship
 from sqlmodel import Field, Relationship
 from sqlalchemy import Column, Integer, DateTime
 
 from common.base_entity import BaseEntity
-from entity import Client, Miles
-from entity import Transit
-from entity import MilesJsonMapper
+from loyalty.miles import Miles
+from loyalty.miles_json_mapper import MilesJsonMapper
 
 
 class AwardedMiles(BaseEntity, table=True):

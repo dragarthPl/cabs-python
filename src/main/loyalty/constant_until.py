@@ -1,8 +1,6 @@
 from datetime import datetime
 
-from dateutil.parser import parse
-
-from entity import Miles
+from loyalty.miles import Miles
 
 
 class ConstantUntil(Miles):

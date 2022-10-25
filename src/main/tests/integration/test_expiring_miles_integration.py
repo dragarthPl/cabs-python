@@ -4,14 +4,13 @@ from unittest import TestCase
 import pytz
 from dateutil.relativedelta import relativedelta
 from freezegun import freeze_time
-from fastapi.params import Depends
 from mockito import when
 
 from config.app_properties import AppProperties
 from core.database import create_db_and_tables, drop_db_and_tables
 from entity import Transit, Client
-from service.awards_service import AwardsService
-from service.awards_service_impl import AwardsServiceImpl
+from loyalty.awards_service import AwardsService
+from loyalty.awards_service_impl import AwardsServiceImpl
 
 from tests.common.fixtures import DependencyResolver, Fixtures
 

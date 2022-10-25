@@ -1,7 +1,9 @@
 from unittest import TestCase
 
+from crm.claims.claim import Claim
+from crm.claims.claims_resolver import ClaimsResolver
 from crm.claims.status import Status
-from entity import Claim, ClaimsResolver, Transit, Client
+from entity import Transit, Client
 from money import Money
 
 
