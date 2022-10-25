@@ -7,7 +7,8 @@ from cabs_application import CabsApplication
 from config.app_properties import AppProperties
 from core.database import create_db_and_tables, drop_db_and_tables
 from crm.claims.status import Status
-from entity import Client, Driver, Transit, Claim, Address
+from driverfleet.driver import Driver
+from entity import Client, Transit, Claim, Address
 from service.awards_service_impl import AwardsServiceImpl
 from crm.claims.claim_service import ClaimService
 from crm.notification.client_notification_service import ClientNotificationService

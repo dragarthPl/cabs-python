@@ -3,11 +3,11 @@ from datetime import datetime
 from injector import inject
 
 from distance.distance import Distance
-from driverreport.travelleddistance.travelled_distance_service import TravelledDistanceService
-from entity import Driver
+from driverfleet.driver import Driver
+from driverfleet.driverreport.travelleddistance.travelled_distance_service import TravelledDistanceService
 from entity.driver_position import DriverPosition
 from repository.driver_position_repository import DriverPositionRepositoryImp
-from repository.driver_repository import DriverRepositoryImp
+from driverfleet.driver_repository import DriverRepositoryImp
 
 
 class DriverTrackingService:

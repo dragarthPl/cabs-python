@@ -15,8 +15,8 @@ from carfleet.car_type_controller import car_type_router
 from crm.claims.claim_controller import claim_router
 from ui.client_controller import client_router
 from agreements.contract_controller import contract_router
-from ui.driver_controller import driver_router
-from driverreport.driver_report_controller import driver_report_router
+from driverfleet.driver_controller import driver_router
+from driverfleet.driverreport.driver_report_controller import driver_report_router
 from ui.driver_session_controller import driver_session_router
 from ui.driver_tracking_controller import driver_tracking_router
 from crm.transitanalyzer.transit_analyzer_controller import transit_analyzer_router

@@ -3,9 +3,8 @@ from datetime import datetime
 from injector import inject
 
 from distance.distance import Distance
-from driverreport.travelleddistance.travelled_distance import TimeSlot, TravelledDistance
-from driverreport.travelleddistance.travelled_distance_repository import TravelledDistanceRepository
-from entity.driver_position import DriverPosition
+from driverfleet.driverreport.travelleddistance.travelled_distance import TimeSlot, TravelledDistance
+from driverfleet.driverreport.travelleddistance.travelled_distance_repository import TravelledDistanceRepository
 from service.distance_calculator import DistanceCalculator
 
 

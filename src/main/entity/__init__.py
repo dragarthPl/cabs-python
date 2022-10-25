@@ -1,4 +1,4 @@
-from .driver_license import DriverLicense
+from driverfleet.driver_license import DriverLicense
 from .tariff import Tariff
 
 from .address import Address
@@ -11,9 +11,6 @@ from .constant_until import ConstantUntil
 from .miles.miles_json_mapper import MilesJsonMapper
 from .miles.awarded_miles import AwardedMiles
 from .miles.awards_account import AwardsAccount
-from .driver_fee import DriverFee
-from .driver import Driver
-from .driver_attribute import DriverAttribute
 from agreements.contract_attachment import ContractAttachment
 from agreements.contract import Contract
 from carfleet.car_type_active_counter import CarTypeActiveCounter

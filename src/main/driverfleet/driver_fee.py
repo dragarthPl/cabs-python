@@ -23,7 +23,7 @@ class DriverFee(BaseEntity, table=True):
     driver_id: Optional[int] = Field(default=None, foreign_key="driver.id")
     driver: Optional[Driver] = Relationship(
         sa_relationship=relationship(
-            "entity.driver.Driver", back_populates="fee")
+            "driverfleet.driver.Driver", back_populates="fee")
     )
     amount: Optional[int]
     min: Optional[int]

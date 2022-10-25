@@ -1,20 +1,18 @@
-import inspect
 from datetime import datetime
 from typing import Any, Dict, Type, TypeVar
 
-import fastapi
-from fastapi.params import Depends
 from injector import Injector, inject
-from mypy.types import Instance
-from sqlmodel import Session
 
 from carfleet.car_class import CarClass
 from carfleet.car_type_dto import CarTypeDTO
 from common.application_event_publisher import ApplicationEventPublisher
 from core.database import DatabaseModule
+from driverfleet.driver import Driver
+from driverfleet.driver_attribute_name import DriverAttributeName
+from driverfleet.driver_fee import DriverFee
 from dto.address_dto import AddressDTO
 from dto.transit_dto import TransitDTO
-from entity import Driver, Transit, DriverFee, Address, Client, CarType, Claim, DriverAttribute
+from entity import Transit, Address, Client, Claim
 from party.infra.party_relationship_repository_impl import PartyRelationshipRepositoryImpl
 from party.infra.party_repository_impl import PartyRepositoryImpl
 from party.model.party.party_relationship_repository import PartyRelationshipRepository
@@ -156,7 +154,7 @@ class Fixtures:
     ) -> Driver:
         return self.driver_fixture.a_nearby_driver(plate_number, latitude, longitude, car_class, when, car_brand)
 
-    def driver_has_attribute(self, driver: Driver, name: DriverAttribute.DriverAttributeName, value: str):
+    def driver_has_attribute(self, driver: Driver, name: DriverAttributeName, value: str):
         self.driver_fixture.driver_has_attribute(driver, name, value)
 
     def a_journey(

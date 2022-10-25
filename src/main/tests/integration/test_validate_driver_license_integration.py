@@ -1,11 +1,10 @@
 from unittest import TestCase
 
-from fastapi.params import Depends
 from core.database import create_db_and_tables, drop_db_and_tables
+from driverfleet.driver import Driver
 
-from dto.driver_dto import DriverDTO
-from entity import Driver
-from service.driver_service import DriverService
+from driverfleet.driver_dto import DriverDTO
+from driverfleet.driver_service import DriverService
 from tests.common.fixtures import DependencyResolver
 
 dependency_resolver = DependencyResolver()

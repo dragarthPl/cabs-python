@@ -4,7 +4,7 @@ from unittest import TestCase
 import pytz
 from dateutil.relativedelta import relativedelta
 
-from driverreport.travelleddistance.travelled_distance import TimeSlot
+from driverfleet.driverreport.travelleddistance.travelled_distance import TimeSlot
 
 
 class TestSlot(TestCase):

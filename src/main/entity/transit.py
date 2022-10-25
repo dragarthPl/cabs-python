@@ -67,18 +67,18 @@ class Transit(BaseEntity, table=True):
     driver_id: Optional[int] = Field(default=None, foreign_key="driver.id")
     driver: Optional[Driver] = Relationship(
         sa_relationship=relationship(
-            "entity.driver.Driver")
+            "driverfleet.driver.Driver")
     )
 
     # @ManyToMany
     drivers_rejections: Set[Driver] = Relationship(
         sa_relationship=relationship(
-            "entity.driver.Driver", secondary=drivers_rejections_link)
+            "driverfleet.driver.Driver", secondary=drivers_rejections_link)
     )
     # @ManyToMany
     proposed_drivers: Set[Driver] = Relationship(
         sa_relationship=relationship(
-            "entity.driver.Driver", secondary=proposed_drivers_link)
+            "driverfleet.driver.Driver", secondary=proposed_drivers_link)
     )
     awaiting_drivers_responses: Optional[int] = 0
     tariff_km_rate: Optional[float] = 0

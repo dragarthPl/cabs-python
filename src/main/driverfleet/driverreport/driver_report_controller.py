@@ -2,10 +2,10 @@ from typing import Optional
 
 from fastapi_injector import Injected
 
-from dto.driver_report import DriverReport
+from driverfleet.driverreport.driver_report import DriverReport
 from fastapi_utils.cbv import cbv
 from fastapi_utils.inferring_router import InferringRouter
-from driverreport.sql_based_driver_report_creator import SqlBasedDriverReportCreator
+from driverfleet.driverreport.sql_based_driver_report_creator import SqlBasedDriverReportCreator
 
 driver_report_router = InferringRouter(tags=["DriverReportController"])
 

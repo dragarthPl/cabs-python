@@ -3,14 +3,13 @@ from decimal import Decimal
 from unittest import IsolatedAsyncioTestCase
 from unittest.mock import ANY
 
-from fastapi.params import Depends
 from fastapi_events import middleware_identifier
 from httpx import AsyncClient
 
 from carfleet.car_class import CarClass
 from core.database import create_db_and_tables, drop_db_and_tables
 from dto.address_dto import AddressDTO
-from entity import CarType, Transit, DriverFee
+from entity import Transit
 from service.driver_session_service import DriverSessionService
 from service.driver_tracking_service import DriverTrackingService
 from service.geocoding_service import GeocodingService

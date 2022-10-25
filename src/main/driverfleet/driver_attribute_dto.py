@@ -1,11 +1,14 @@
 from typing import Optional, Any
 
-from entity import DriverAttribute
+
 from pydantic import BaseModel
+
+from driverfleet.driver_attribute import DriverAttribute
+from driverfleet.driver_attribute_name import DriverAttributeName
 
 
 class DriverAttributeDTO(BaseModel):
-    name: Optional[DriverAttribute.DriverAttributeName]
+    name: Optional[DriverAttributeName]
     value: Optional[str]
 
     def __init__(self, *, driver_attribute: DriverAttribute = None, **data: Any):

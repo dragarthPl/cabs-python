@@ -1,9 +1,10 @@
-from typing import List, Optional
+from typing import Optional
 
 from injector import inject
 
-from entity import Driver
 from sqlmodel import Session
+
+from driverfleet.driver import Driver
 
 
 class DriverRepositoryImp:

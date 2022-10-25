@@ -7,7 +7,7 @@ from distance.distance import Distance
 from dto.address_dto import AddressDTO
 from crm.claims.claim_dto import ClaimDTO
 from dto.client_dto import ClientDTO
-from dto.driver_dto import DriverDTO
+from driverfleet.driver_dto import DriverDTO
 from entity import Transit
 from pydantic import BaseModel
 

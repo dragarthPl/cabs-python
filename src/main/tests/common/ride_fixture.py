@@ -1,11 +1,11 @@
 from datetime import datetime
 
-from fastapi import Depends
 from freezegun import freeze_time
 from injector import inject
 
 from carfleet.car_class import CarClass
-from entity import Client, Driver, Address, Transit, CarType
+from driverfleet.driver import Driver
+from entity import Client, Address, Transit
 from money import Money
 from repository.address_repository import AddressRepositoryImp
 from repository.transit_repository import TransitRepositoryImp

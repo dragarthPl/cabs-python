@@ -4,7 +4,8 @@ from typing import List, Optional
 from injector import inject
 from sqlalchemy import desc, text
 
-from entity import Address, Client, Driver, Transit
+from driverfleet.driver import Driver
+from entity import Address, Client, Transit
 from sqlmodel import Session
 
 

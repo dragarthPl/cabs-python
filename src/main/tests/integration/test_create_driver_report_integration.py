@@ -12,10 +12,13 @@ from mockito import when
 from carfleet.car_class import CarClass
 from core.database import create_db_and_tables, drop_db_and_tables
 from carfleet.car_type_dto import CarTypeDTO
-from dto.driver_attribute_dto import DriverAttributeDTO
-from dto.driver_report import DriverReport
+from driverfleet.driver import Driver
+from driverfleet.driver_attribute_dto import DriverAttributeDTO
+from driverfleet.driver_attribute_name import DriverAttributeName
+from driverfleet.driver_fee import DriverFee
+from driverfleet.driverreport.driver_report import DriverReport
 from dto.transit_dto import TransitDTO
-from entity import CarType, Driver, DriverFee, DriverAttribute, Client, Transit, Address
+from entity import Client, Transit, Address
 from repository.address_repository import AddressRepositoryImp
 from carfleet.car_type_service import CarTypeService
 from crm.claims.claim_service import ClaimService
@@ -24,8 +27,8 @@ from service.driver_tracking_service import DriverTrackingService
 from service.geocoding_service import GeocodingService
 from service.transit_service import TransitService
 from tests.common.fixtures import DependencyResolver, Fixtures
-from driverreport.driver_report_controller import DriverReportController
-from driverreport.sql_based_driver_report_creator import SqlBasedDriverReportCreator
+from driverfleet.driverreport.driver_report_controller import DriverReportController
+from driverfleet.driverreport.sql_based_driver_report_creator import SqlBasedDriverReportCreator
 
 from cabs_application import CabsApplication
 
@@ -66,11 +69,11 @@ class TestCreateDriverReportIntegration(IsolatedAsyncioTestCase):
         driver = self.a_driver(Driver.Status.ACTIVE, "JAN", "NOWAK", "FARME100165AB5EW")
         # and
         self.fixtures.driver_has_attribute(
-            driver, DriverAttribute.DriverAttributeName.COMPANY_NAME, "UBER")
+            driver, DriverAttributeName.COMPANY_NAME, "UBER")
         self.fixtures.driver_has_attribute(
-            driver, DriverAttribute.DriverAttributeName.PENALTY_POINTS, "21")
+            driver, DriverAttributeName.PENALTY_POINTS, "21")
         self.fixtures.driver_has_attribute(
-            driver, DriverAttribute.DriverAttributeName.MEDICAL_EXAMINATION_REMARKS, "private info")
+            driver, DriverAttributeName.MEDICAL_EXAMINATION_REMARKS, "private info")
         # and
         self.driver_has_done_session_and_picks_someone_up_in_car(
             driver, client, CarClass.VAN, "WU1213", "SCODA FABIA", self.TODAY)
@@ -97,14 +100,14 @@ class TestCreateDriverReportIntegration(IsolatedAsyncioTestCase):
         self.assertEqual(2, len(driver_report_within_2_days.attributes))
         self.assertIn(
             DriverAttributeDTO(
-                name=DriverAttribute.DriverAttributeName.COMPANY_NAME,
+                name=DriverAttributeName.COMPANY_NAME,
                 value="UBER"
             ),
             driver_report_within_2_days.attributes
         )
         self.assertIn(
             DriverAttributeDTO(
-                name=DriverAttribute.DriverAttributeName.PENALTY_POINTS,
+                name=DriverAttributeName.PENALTY_POINTS,
                 value="21"
             ),
             driver_report_within_2_days.attributes

@@ -1,15 +1,15 @@
 from datetime import datetime
 
 import pytz
-from fastapi import Depends
 from injector import inject
 
 from carfleet.car_class import CarClass
 from distance.distance import Distance
+from driverfleet.driver import Driver
 from dto.address_dto import AddressDTO
 from dto.client_dto import ClientDTO
 from dto.transit_dto import TransitDTO
-from entity import Driver, Client, Transit, Address, CarType, Tariff
+from entity import Client, Transit, Address, Tariff
 from money import Money
 from repository.transit_repository import TransitRepositoryImp
 from service.transit_service import TransitService

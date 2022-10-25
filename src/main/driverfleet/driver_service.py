@@ -7,13 +7,16 @@ from typing import Dict, List
 
 from injector import inject
 
-from dto.driver_dto import DriverDTO
-from entity import Driver, DriverAttribute, DriverLicense
+from driverfleet.driver import Driver
+from driverfleet.driver_attribute import DriverAttribute
+from driverfleet.driver_attribute_name import DriverAttributeName
+from driverfleet.driver_dto import DriverDTO
+from entity import DriverLicense
 
 from money import Money
-from repository.driver_attribute_repository import DriverAttributeRepositoryImp
-from repository.driver_repository import DriverRepositoryImp
-from service.driver_fee_service import DriverFeeService
+from driverfleet.driver_attribute_repository import DriverAttributeRepositoryImp
+from driverfleet.driver_repository import DriverRepositoryImp
+from driverfleet.driver_fee_service import DriverFeeService
 from transitdetails.transit_details_dto import TransitDetailsDTO
 from transitdetails.transit_details_facade import TransitDetailsFacade
 
@@ -135,7 +138,7 @@ class DriverService:
             raise AttributeError("Driver does not exists, id = " + str(driver_id))
         return DriverDTO(**driver.dict())
 
-    def add_attribute(self, driver_id: int, attr: DriverAttribute.DriverAttributeName, value: str) -> None:
+    def add_attribute(self, driver_id: int, attr: DriverAttributeName, value: str) -> None:
         driver = self.driver_repository.get_one(driver_id)
         if driver is None:
             raise AttributeError("Driver does not exists, id = " + str(driver_id))

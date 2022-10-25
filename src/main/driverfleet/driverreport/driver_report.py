@@ -1,12 +1,11 @@
 from typing import Dict, List, Optional, Any
 
-from dto.driver_attribute_dto import DriverAttributeDTO
-from dto.driver_dto import DriverDTO
+from driverfleet.driver_attribute_dto import DriverAttributeDTO
+from driverfleet.driver_attribute_name import DriverAttributeName
+from driverfleet.driver_dto import DriverDTO
 from dto.driver_session_dto import DriverSessionDTO
 from dto.transit_dto import TransitDTO
 from pydantic import BaseModel
-
-from entity import DriverAttribute
 
 
 class DriverReport(BaseModel):
@@ -31,6 +30,6 @@ class DriverReport(BaseModel):
         self.attributes = attributes
         self.sessions = sessions
 
-    def add_attr(self, name: DriverAttribute.DriverAttributeName, value: str):
+    def add_attr(self, name: DriverAttributeName, value: str):
         self.attributes.append(DriverAttributeDTO(name=name, value=value))
 

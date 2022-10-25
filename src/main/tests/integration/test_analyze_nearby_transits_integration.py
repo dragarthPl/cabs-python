@@ -12,7 +12,7 @@ from httpx import AsyncClient
 from carfleet.car_class import CarClass
 from core.database import create_db_and_tables, drop_db_and_tables
 from dto.analyzed_addresses_dto import AnalyzedAddressesDTO
-from entity import Client, Driver, Address
+from entity import Client, Address
 from repository.address_repository import AddressRepositoryImp
 from service.geocoding_service import GeocodingService
 from crm.transitanalyzer.graph_transit_analyzer import GraphTransitAnalyzer

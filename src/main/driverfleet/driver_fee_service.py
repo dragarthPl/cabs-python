@@ -2,10 +2,9 @@ from typing import Optional
 
 from injector import inject
 
-from entity import DriverFee
-
+from driverfleet.driver_fee import DriverFee
 from money import Money
-from repository.driver_fee_repository import DriverFeeRepositoryImp
+from driverfleet.driver_fee_repository import DriverFeeRepositoryImp
 
 
 class DriverFeeService:

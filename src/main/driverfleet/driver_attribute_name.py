@@ -1,0 +1,12 @@
+import enum
+
+
+class DriverAttributeName(enum.Enum):
+    PENALTY_POINTS = 1
+    NATIONALITY = 2
+    YEARS_OF_EXPERIENCE = 3
+    MEDICAL_EXAMINATION_EXPIRATION_DATE = 4
+    MEDICAL_EXAMINATION_REMARKS = 5
+    EMAIL = 6
+    BIRTHPLACE = 7
+    COMPANY_NAME = 8

@@ -2,13 +2,12 @@ from datetime import datetime
 from typing import Dict
 from unittest import TestCase
 
-from fastapi.params import Depends
-
 from core.const import Month
 from core.database import create_db_and_tables, drop_db_and_tables
-from entity import Driver, DriverFee
+from driverfleet.driver import Driver
+from driverfleet.driver_fee import DriverFee
 from money import Money
-from service.driver_service import DriverService
+from driverfleet.driver_service import DriverService
 from tests.common.fixtures import DependencyResolver, Fixtures
 
 dependency_resolver = DependencyResolver()

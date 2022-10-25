@@ -3,17 +3,14 @@ import uuid as uuid_pkg
 from datetime import datetime
 from typing import Any, Optional
 
-import pytz
-import sqlalchemy.types as types
 from dateutil.relativedelta import relativedelta
 from pydantic import BaseModel
 from sqlalchemy import Column, DateTime
-from sqlalchemy.orm import composite, CompositeProperty
+from sqlalchemy.orm import composite
 from sqlmodel import Field, SQLModel
 
 from common.base_entity import new_uuid
 from distance.distance import Distance
-from entity.driver_position import DriverPosition
 
 
 class TimeSlot(BaseModel):

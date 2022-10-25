@@ -2,12 +2,12 @@ from typing import Optional
 
 from fastapi_injector import Injected
 
-from dto.driver_dto import DriverDTO
-from entity import Driver
+from driverfleet.driver import Driver
+from driverfleet.driver_dto import DriverDTO
 from fastapi_utils.cbv import cbv
 from fastapi_utils.inferring_router import InferringRouter
-from repository.driver_repository import DriverRepositoryImp
-from service.driver_service import DriverService
+from driverfleet.driver_repository import DriverRepositoryImp
+from driverfleet.driver_service import DriverService
 
 driver_router = InferringRouter(tags=["DriverController"])
 

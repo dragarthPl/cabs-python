@@ -1,7 +1,8 @@
 from typing import Optional, Any
 
-from entity import Driver
 from pydantic import BaseModel
+
+from driverfleet.driver import Driver
 
 
 class DriverDTO(BaseModel):

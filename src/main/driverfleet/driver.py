@@ -34,7 +34,7 @@ class Driver(BaseEntity, table=True):
     # @OneToOne
     fee: Optional[DriverFee] = Relationship(
         sa_relationship=relationship(
-            "entity.driver_fee.DriverFee",
+            "driverfleet.driver_fee.DriverFee",
             back_populates="driver", uselist=False,)
     )
 
@@ -43,7 +43,7 @@ class Driver(BaseEntity, table=True):
     # @OneToMany(mappedBy = "driver")
     attributes: Set[DriverAttribute] = Relationship(
         sa_relationship=relationship(
-            "entity.driver_attribute.DriverAttribute", back_populates="driver")
+            "driverfleet.driver_attribute.DriverAttribute", back_populates="driver")
     )
 
     def __init__(self, **data: Any):

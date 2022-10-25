@@ -4,30 +4,27 @@ from injector import inject
 
 from carfleet.car_class import CarClass
 from entity.driver_session import DriverSession
-from repository.driver_repository import DriverRepositoryImp
+from driverfleet.driver_repository import DriverRepositoryImp
 from repository.driver_session_repository import DriverSessionRepositoryImp
 from carfleet.car_type_service import CarTypeService
 
 
 class DriverSessionService:
-    driver_repository: DriverRepositoryImp
     driver_session_repository: DriverSessionRepositoryImp
     car_type_service: CarTypeService
 
     @inject
     def __init__(
             self,
-            driver_repository: DriverRepositoryImp,
             driver_session_repository: DriverSessionRepositoryImp,
             car_type_service: CarTypeService
     ):
-        self.driver_repository = driver_repository
         self.driver_session_repository = driver_session_repository
         self.car_type_service = car_type_service
 
     def log_in(self, driver_id: int, plates_number: str, car_class: CarClass, car_brand: str) -> DriverSession:
         session = DriverSession()
-        session.driver = self.driver_repository.get_one(driver_id)
+        session.driver_id = driver_id
         session.logged_at = datetime.now()
         session.car_class = car_class
         session.plates_number = plates_number
@@ -45,11 +42,11 @@ class DriverSessionService:
 
     def log_out_current_session(self, driver_id: int) -> None:
         session = self.driver_session_repository.find_top_by_driver_and_logged_out_at_is_null_order_by_logged_at_desc(
-            self.driver_repository.get_one(driver_id)
+            driver_id
         )
         if session != None:
             session.logged_out_at = datetime.now()
             self.car_type_service.unregister_car(session.car_class)
 
     def find_by_driver(self, driver_id):
-        return self.driver_session_repository.find_by_driver(self.driver_repository.get_one(driver_id))
+        return self.driver_session_repository.find_by_driver(driver_id)

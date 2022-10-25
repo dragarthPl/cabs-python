@@ -1,9 +1,10 @@
-from typing import List, Optional
+from typing import Optional
 
 from injector import inject
 
-from entity import Driver, DriverFee
-from sqlmodel import Session, select
+from sqlmodel import Session
+
+from driverfleet.driver_fee import DriverFee
 
 
 class DriverFeeRepositoryImp:

@@ -4,8 +4,7 @@ from typing import Optional
 from injector import inject
 from sqlalchemy import text
 from sqlmodel import Session
-from core.database import get_session
-from driverreport.travelleddistance.travelled_distance import TravelledDistance, TimeSlot
+from driverfleet.driverreport.travelleddistance.travelled_distance import TravelledDistance, TimeSlot
 
 
 class TravelledDistanceRepository:

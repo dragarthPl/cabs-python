@@ -8,10 +8,11 @@ from injector import inject
 
 from carfleet.car_class import CarClass
 from distance.distance import Distance
+from driverfleet.driver import Driver
 from dto.address_dto import AddressDTO
 from dto.driver_position_dtov_2 import DriverPositionDTOV2
 from dto.transit_dto import TransitDTO
-from entity import Address, Driver, Transit
+from entity import Address, Transit
 from fastapi_events.dispatcher import dispatch
 
 from entity.events.transit_completed import TransitCompleted
@@ -19,13 +20,13 @@ from money import Money
 from repository.address_repository import AddressRepositoryImp
 from repository.client_repository import ClientRepositoryImp
 from repository.driver_position_repository import DriverPositionRepositoryImp
-from repository.driver_repository import DriverRepositoryImp
+from driverfleet.driver_repository import DriverRepositoryImp
 from repository.driver_session_repository import DriverSessionRepositoryImp
 from repository.transit_repository import TransitRepositoryImp
 from service.awards_service import AwardsService
 from carfleet.car_type_service import CarTypeService
 from service.distance_calculator import DistanceCalculator
-from service.driver_fee_service import DriverFeeService
+from driverfleet.driver_fee_service import DriverFeeService
 from crm.notification.driver_notification_service import DriverNotificationService
 from service.geocoding_service import GeocodingService
 from invocing.invoice_generator import InvoiceGenerator
@@ -307,13 +308,11 @@ class TransitService:
                         else:
                             car_classes.extend(active_car_classes)
 
-                        drivers: List[Driver] = list(map(lambda pos: pos.driver, drivers_avg_positions))
+                        drivers: List[int] = list(map(lambda pos: pos.driver.id, drivers_avg_positions))
                         active_driver_ids_in_specific_car: List[int] = list(map(
-                                lambda ds: ds.driver.id,
-                                self.driver_session_repository.find_all_by_logged_out_at_null_and_driver_in_and_car_class_in(
-                                    drivers,
-                                    car_classes
-                                )
+                                lambda ds: ds.driver_id,
+                            self.driver_session_repository.find_all_by_logged_out_at_null_and_driver_id_in_and_car_class_in(
+                                drivers, car_classes)
                         ))
 
                         drivers_avg_positions = list(

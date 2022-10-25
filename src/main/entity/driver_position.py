@@ -2,7 +2,7 @@ from datetime import datetime
 from typing import Optional, Any
 
 from common.base_entity import BaseEntity
-from entity.driver import Driver
+from driverfleet.driver import Driver
 from sqlalchemy import Column, DateTime, Float
 from sqlalchemy.orm import relationship
 from sqlmodel import Field, Relationship
@@ -13,7 +13,7 @@ class DriverPosition(BaseEntity, table=True):
     driver_id: Optional[int] = Field(default=None, foreign_key="driver.id")
     driver: Optional[Driver] = Relationship(
         sa_relationship=relationship(
-            "entity.driver.Driver")
+            "driverfleet.driver.Driver")
     )
     # @Column(nullable = false)
     latitude: float = Field(sa_column=Column(Float, nullable=False))

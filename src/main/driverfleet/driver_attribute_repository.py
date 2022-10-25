@@ -2,8 +2,9 @@ from typing import Optional
 
 from injector import inject
 
-from entity import DriverAttribute
 from sqlmodel import Session
+
+from driverfleet.driver_attribute import DriverAttribute
 
 
 class DriverAttributeRepositoryImp:

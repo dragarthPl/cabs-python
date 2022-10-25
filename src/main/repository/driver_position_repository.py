@@ -3,8 +3,8 @@ from typing import List, Optional
 
 from injector import inject
 
+from driverfleet.driver import Driver
 from dto.driver_position_dtov_2 import DriverPositionDTOV2
-from entity import Driver
 from entity.driver_position import DriverPosition
 from sqlalchemy import text, Float, DateTime, Integer
 from sqlmodel import Session

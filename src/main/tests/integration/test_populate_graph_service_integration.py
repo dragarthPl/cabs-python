@@ -6,7 +6,7 @@ from mockito import when
 
 from cabs_application import CabsApplication
 from core.database import create_db_and_tables, drop_db_and_tables
-from entity import Client, Driver, Address
+from entity import Client, Address
 from service.geocoding_service import GeocodingService
 from crm.transitanalyzer.graph_transit_analyzer import GraphTransitAnalyzer
 from crm.transitanalyzer.populate_graph_service import PopulateGraphService

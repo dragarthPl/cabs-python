@@ -5,7 +5,7 @@ from injector import inject
 from sqlalchemy import desc
 
 from carfleet.car_class import CarClass
-from entity import Driver
+from driverfleet.driver import Driver
 from entity.driver_session import DriverSession
 from sqlmodel import Session
 
@@ -17,9 +17,9 @@ class DriverSessionRepositoryImp:
     def __init__(self, session: Session):
         self.session = session
 
-    def find_all_by_logged_out_at_null_and_driver_in_and_car_class_in(
+    def find_all_by_logged_out_at_null_and_driver_id_in_and_car_class_in(
             self,
-            drivers: List[Driver],
+            driver_ids: List[int],
             car_classes: List[CarClass]
     ) -> List[DriverSession]:
         return self.session.query(
@@ -27,15 +27,15 @@ class DriverSessionRepositoryImp:
         ).where(
             DriverSession.logged_out_at == None
         ).where(
-            DriverSession.driver_id.in_([d.id for d in drivers])
+            DriverSession.driver_id.in_(driver_ids)
         ).where(
             DriverSession.car_class.in_(car_classes)
         ).all()
 
-    def find_all_by_driver_and_logged_at_after(self, driver: Driver, since: datetime) -> List[DriverSession]:
+    def find_all_by_driver_and_logged_at_after(self, driver_id: int, since: datetime) -> List[DriverSession]:
         return self.session.query(
             DriverSession
-        ).where(DriverSession.driver_id == driver.id).where(DriverSession.logged_at > since).all()
+        ).where(DriverSession.driver_id == driver_id).where(DriverSession.logged_at > since).all()
 
     def save(self, driver_session: DriverSession) -> Optional[DriverSession]:
         self.session.add(driver_session)
@@ -47,17 +47,17 @@ class DriverSessionRepositoryImp:
         return self.session.query(DriverSession).where(DriverSession.id == session_id).first()
 
     def find_top_by_driver_and_logged_out_at_is_null_order_by_logged_at_desc(
-            self, driver: Driver) -> Optional[DriverSession]:
+            self, driver_id: int) -> Optional[DriverSession]:
         return self.session.query(
             DriverSession
         ).where(
-            DriverSession.driver_id == driver.id
+            DriverSession.driver_id == driver_id
         ).where(
             DriverSession.logged_out_at == None
         ).order_by(
             desc(DriverSession.logged_at)
         ).first()
 
-    def find_by_driver(self, driver: Driver) -> List[DriverSession]:
-        return self.session.query(DriverSession).where(DriverSession.driver_id == driver.id).all()
+    def find_by_driver(self, driver_id: int) -> List[DriverSession]:
+        return self.session.query(DriverSession).where(DriverSession.driver_id == driver_id).all()
 

@@ -1,17 +1,20 @@
 from datetime import datetime
 from random import random
 
-from fastapi import Depends
 from injector import inject
-from mockito import when, ANY
+from mockito import when
 
 from carfleet.car_class import CarClass
-from entity import Driver, DriverFee, Address, CarType, DriverAttribute
+from driverfleet.driver import Driver
+from driverfleet.driver_attribute import DriverAttribute
+from driverfleet.driver_attribute_name import DriverAttributeName
+from driverfleet.driver_fee import DriverFee
+from entity import Address
 from money import Money
-from repository.driver_attribute_repository import DriverAttributeRepositoryImp
-from repository.driver_fee_repository import DriverFeeRepositoryImp
-from service.driver_fee_service import DriverFeeService
-from service.driver_service import DriverService
+from driverfleet.driver_attribute_repository import DriverAttributeRepositoryImp
+from driverfleet.driver_fee_repository import DriverFeeRepositoryImp
+from driverfleet.driver_fee_service import DriverFeeService
+from driverfleet.driver_service import DriverService
 from service.driver_session_service import DriverSessionService
 from service.driver_tracking_service import DriverTrackingService
 from service.geocoding_service import GeocodingService
@@ -122,5 +125,5 @@ class DriverFixture:
     def driver_logs_out(self, driver: Driver) -> None:
         self.driver_session_service.log_out_current_session(driver.id)
 
-    def driver_has_attribute(self, driver: Driver, name: DriverAttribute.DriverAttributeName, value: str):
+    def driver_has_attribute(self, driver: Driver, name: DriverAttributeName, value: str):
         self.driver_attribute_repository.save(DriverAttribute(driver=driver, name=name, value=value))

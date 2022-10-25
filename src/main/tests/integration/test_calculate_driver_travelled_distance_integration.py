@@ -4,12 +4,11 @@ from unittest import TestCase
 import pytz
 from dateutil.relativedelta import relativedelta
 
-from fastapi.params import Depends
 from freezegun import freeze_time
 
 from core.database import create_db_and_tables, drop_db_and_tables
-from driverreport.travelleddistance.travelled_distance_service import TravelledDistanceService
-from entity import Driver
+from driverfleet.driver import Driver
+from driverfleet.driverreport.travelleddistance.travelled_distance_service import TravelledDistanceService
 from entity.driver_position import DriverPosition
 
 from tests.common.fixtures import DependencyResolver, Fixtures

@@ -2,7 +2,8 @@ from datetime import datetime
 from unittest import TestCase
 
 from distance.distance import Distance
-from entity import Transit, Client, Driver, Address
+from driverfleet.driver import Driver
+from entity import Transit, Address
 
 
 class TestTransitLifeCycle(TestCase):
