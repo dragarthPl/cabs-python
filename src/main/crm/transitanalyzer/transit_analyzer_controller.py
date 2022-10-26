@@ -3,7 +3,7 @@ from typing import List
 from fastapi_injector import Injected
 
 from geolocation.address.address_dto import AddressDTO
-from dto.analyzed_addresses_dto import AnalyzedAddressesDTO
+from crm.transitanalyzer.analyzed_addresses_dto import AnalyzedAddressesDTO
 from fastapi_utils.cbv import cbv
 from fastapi_utils.inferring_router import InferringRouter
 
