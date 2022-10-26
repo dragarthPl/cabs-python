@@ -9,15 +9,15 @@ from dateutil.relativedelta import relativedelta
 
 from crm.claims.claim_service import ClaimService
 from loyalty.awards_account_dto import AwardsAccountDTO
-from dto.client_dto import ClientDTO
+from crm.client_dto import ClientDTO
 from entity import Client
 from loyalty.awarded_miles import AwardedMiles
 from loyalty.awards_account import AwardsAccount
 from loyalty.awards_account_repository import AwardsAccountRepositoryImp
-from repository.client_repository import ClientRepositoryImp
+from crm.client_repository import ClientRepositoryImp
 from repository.transit_repository import TransitRepositoryImp
 from loyalty.awards_service import AwardsService
-from service.client_service import ClientService
+from crm.client_service import ClientService
 
 
 class AwardsServiceImpl(AwardsService):

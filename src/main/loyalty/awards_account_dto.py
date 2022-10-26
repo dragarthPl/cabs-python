@@ -3,7 +3,7 @@ from typing import Optional, Any
 
 from pydantic import BaseModel
 
-from dto.client_dto import ClientDTO
+from crm.client_dto import ClientDTO
 from loyalty.awards_account import AwardsAccount
 
 

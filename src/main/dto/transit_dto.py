@@ -6,7 +6,7 @@ from carfleet.car_class import CarClass
 from geolocation.distance import Distance
 from geolocation.address.address_dto import AddressDTO
 from crm.claims.claim_dto import ClaimDTO
-from dto.client_dto import ClientDTO
+from crm.client_dto import ClientDTO
 from driverfleet.driver_dto import DriverDTO
 from entity import Transit
 from pydantic import BaseModel

@@ -13,7 +13,7 @@ from loyalty.awards_service_impl import AwardsServiceImpl
 from loyalty.awards_account_controller import awards_account_router
 from carfleet.car_type_controller import car_type_router
 from crm.claims.claim_controller import claim_router
-from ui.client_controller import client_router
+from crm.client_controller import client_router
 from agreements.contract_controller import contract_router
 from driverfleet.driver_controller import driver_router
 from driverfleet.driverreport.driver_report_controller import driver_report_router

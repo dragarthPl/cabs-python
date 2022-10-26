@@ -1,8 +1,8 @@
 from injector import inject
 
-from dto.client_dto import ClientDTO
+from crm.client_dto import ClientDTO
 from entity import Client
-from repository.client_repository import ClientRepositoryImp
+from crm.client_repository import ClientRepositoryImp
 
 
 class ClientService:

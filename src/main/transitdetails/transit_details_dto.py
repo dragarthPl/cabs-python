@@ -4,7 +4,7 @@ from typing import Any
 from carfleet.car_class import CarClass
 from geolocation.distance import Distance
 from geolocation.address.address_dto import AddressDTO
-from dto.client_dto import ClientDTO
+from crm.client_dto import ClientDTO
 from entity import Transit
 from money import Money
 from transitdetails.transit_details import TransitDetails

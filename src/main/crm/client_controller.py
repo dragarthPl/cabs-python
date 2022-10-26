@@ -1,10 +1,10 @@
 from fastapi_injector import Injected
 
-from dto.client_dto import ClientDTO
-from entity.client import Client
+from crm.client_dto import ClientDTO
+from crm.client import Client
 from fastapi_utils.cbv import cbv
 from fastapi_utils.inferring_router import InferringRouter
-from service.client_service import ClientService
+from crm.client_service import ClientService
 
 client_router = InferringRouter(tags=["ClientController"])
 

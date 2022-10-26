@@ -9,7 +9,7 @@ from entity import Client
 from crm.claims.claim import Claim
 from crm.claims.claim_repository import ClaimRepositoryImp
 from crm.claims.claims_resolver_repository import ClaimsResolverRepositoryImp
-from repository.client_repository import ClientRepositoryImp
+from crm.client_repository import ClientRepositoryImp
 from loyalty.awards_service import AwardsService
 from crm.claims.claim_number_generator import ClaimNumberGenerator
 from crm.notification.client_notification_service import ClientNotificationService

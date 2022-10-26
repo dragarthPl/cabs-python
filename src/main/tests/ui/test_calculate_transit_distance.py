@@ -3,7 +3,7 @@ from unittest import TestCase
 
 from geolocation.distance import Distance
 from geolocation.address.address_dto import AddressDTO
-from dto.client_dto import ClientDTO
+from crm.client_dto import ClientDTO
 from dto.transit_dto import TransitDTO
 from entity import Transit
 from money import Money

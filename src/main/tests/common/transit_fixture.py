@@ -7,7 +7,7 @@ from carfleet.car_class import CarClass
 from geolocation.distance import Distance
 from driverfleet.driver import Driver
 from geolocation.address.address_dto import AddressDTO
-from dto.client_dto import ClientDTO
+from crm.client_dto import ClientDTO
 from dto.transit_dto import TransitDTO
 from entity import Client, Transit, Address, Tariff
 from money import Money

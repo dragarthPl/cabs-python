@@ -1,8 +1,7 @@
-from fastapi import Depends
 from injector import inject
 
 from entity import Client
-from repository.client_repository import ClientRepositoryImp
+from crm.client_repository import ClientRepositoryImp
 
 
 class ClientFixture:

@@ -6,7 +6,7 @@ from freezegun import freeze_time
 
 from core.database import create_db_and_tables, drop_db_and_tables
 from geolocation.address.address_dto import AddressDTO
-from dto.client_dto import ClientDTO
+from crm.client_dto import ClientDTO
 from dto.transit_dto import TransitDTO
 from entity import Client
 from service.transit_service import TransitService

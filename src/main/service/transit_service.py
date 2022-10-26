@@ -18,7 +18,7 @@ from fastapi_events.dispatcher import dispatch
 from entity.events.transit_completed import TransitCompleted
 from money import Money
 from geolocation.address.address_repository import AddressRepositoryImp
-from repository.client_repository import ClientRepositoryImp
+from crm.client_repository import ClientRepositoryImp
 from repository.driver_position_repository import DriverPositionRepositoryImp
 from driverfleet.driver_repository import DriverRepositoryImp
 from repository.driver_session_repository import DriverSessionRepositoryImp

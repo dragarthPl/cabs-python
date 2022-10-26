@@ -4,7 +4,7 @@ from .tariff import Tariff
 from geolocation.address.address import Address
 from carfleet.car_type import CarType
 from .transit import Transit
-from .client import Client
+from crm.client import Client
 
 
 __all__ = [
