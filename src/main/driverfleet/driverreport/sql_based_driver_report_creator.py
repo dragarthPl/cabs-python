@@ -10,10 +10,10 @@ from sqlmodel import Session
 from sqlalchemy import text
 
 from crm.claims.claim import Claim
-from distance.distance import Distance
+from geolocation.distance import Distance
 from driverfleet.driver import Driver
 from driverfleet.driver_attribute_name import DriverAttributeName
-from dto.address_dto import AddressDTO
+from geolocation.address.address_dto import AddressDTO
 from crm.claims.claim_dto import ClaimDTO
 from driverfleet.driver_dto import DriverDTO
 from driverfleet.driverreport.driver_report import DriverReport

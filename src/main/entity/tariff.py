@@ -2,7 +2,7 @@ import calendar
 from datetime import datetime
 from decimal import Decimal, ROUND_HALF_UP
 
-from distance.distance import Distance
+from geolocation.distance import Distance
 from money import Money
 
 

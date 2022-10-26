@@ -7,7 +7,7 @@ from carfleet.car_class import CarClass
 from driverfleet.driver import Driver
 from entity import Client, Address, Transit
 from money import Money
-from repository.address_repository import AddressRepositoryImp
+from geolocation.address.address_repository import AddressRepositoryImp
 from repository.transit_repository import TransitRepositoryImp
 from service.driver_session_service import DriverSessionService
 from service.transit_service import TransitService

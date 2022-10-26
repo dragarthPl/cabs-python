@@ -11,7 +11,7 @@ from crm.claims.claim import Claim
 from driverfleet.driver import Driver
 from driverfleet.driver_attribute_name import DriverAttributeName
 from driverfleet.driver_fee import DriverFee
-from dto.address_dto import AddressDTO
+from geolocation.address.address_dto import AddressDTO
 from dto.transit_dto import TransitDTO
 from entity import Transit, Address, Client
 from party.infra.party_relationship_repository_impl import PartyRelationshipRepositoryImpl
@@ -20,7 +20,7 @@ from party.model.party.party_relationship_repository import PartyRelationshipRep
 from party.model.party.party_repository import PartyRepository
 from loyalty.awards_service import AwardsService
 from loyalty.awards_service_impl import AwardsServiceImpl
-from service.geocoding_service import GeocodingService
+from geolocation.geocoding_service import GeocodingService
 from tests.common.address_fixture import AddressFixture
 from tests.common.awards_account_fixture import AwardsAccountFixture
 from tests.common.car_type_fixture import CarTypeFixture

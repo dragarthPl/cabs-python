@@ -2,12 +2,12 @@ from typing import List
 
 from fastapi_injector import Injected
 
-from dto.address_dto import AddressDTO
+from geolocation.address.address_dto import AddressDTO
 from dto.analyzed_addresses_dto import AnalyzedAddressesDTO
 from fastapi_utils.cbv import cbv
 from fastapi_utils.inferring_router import InferringRouter
 
-from repository.address_repository import AddressRepositoryImp
+from geolocation.address.address_repository import AddressRepositoryImp
 from crm.transitanalyzer.graph_transit_analyzer import GraphTransitAnalyzer
 
 transit_analyzer_router = InferringRouter(tags=["TransitAnalyzerController"])

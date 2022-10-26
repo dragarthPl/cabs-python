@@ -1,7 +1,7 @@
 from injector import inject
 
 from entity import Address
-from repository.address_repository import AddressRepositoryImp
+from geolocation.address.address_repository import AddressRepositoryImp
 
 class AddressFixture:
 

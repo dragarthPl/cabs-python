@@ -1,7 +1,7 @@
 from datetime import datetime
 from unittest import TestCase
 
-from distance.distance import Distance
+from geolocation.distance import Distance
 from entity import Tariff
 from money import Money
 

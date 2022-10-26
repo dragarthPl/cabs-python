@@ -3,11 +3,11 @@ from datetime import datetime
 
 from typing import Any, Optional
 
-from sqlalchemy import Column, Enum, Float, ForeignKey, Table, DateTime
+from sqlalchemy import Column, Enum, Float, DateTime
 
 from carfleet.car_class import CarClass
-from distance.distance import Distance
-from entity import Client, CarType, Address, Transit, Tariff
+from geolocation.distance import Distance
+from entity import Address, Tariff
 from money import Money
 
 from sqlalchemy.orm import relationship, backref

@@ -3,8 +3,8 @@ from decimal import Decimal
 from typing import Any, List, Optional
 
 from carfleet.car_class import CarClass
-from distance.distance import Distance
-from dto.address_dto import AddressDTO
+from geolocation.distance import Distance
+from geolocation.address.address_dto import AddressDTO
 from crm.claims.claim_dto import ClaimDTO
 from dto.client_dto import ClientDTO
 from driverfleet.driver_dto import DriverDTO

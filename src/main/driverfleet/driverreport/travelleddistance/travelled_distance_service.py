@@ -2,10 +2,10 @@ from datetime import datetime
 
 from injector import inject
 
-from distance.distance import Distance
+from geolocation.distance import Distance
 from driverfleet.driverreport.travelleddistance.travelled_distance import TimeSlot, TravelledDistance
 from driverfleet.driverreport.travelleddistance.travelled_distance_repository import TravelledDistanceRepository
-from service.distance_calculator import DistanceCalculator
+from geolocation.distance_calculator import DistanceCalculator
 
 
 class TravelledDistanceService:

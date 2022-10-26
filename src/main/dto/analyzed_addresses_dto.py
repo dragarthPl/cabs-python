@@ -1,6 +1,6 @@
 from typing import List
 
-from dto.address_dto import AddressDTO
+from geolocation.address.address_dto import AddressDTO
 from pydantic import BaseModel
 
 

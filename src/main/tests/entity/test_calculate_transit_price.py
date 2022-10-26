@@ -3,7 +3,7 @@ from unittest import TestCase
 
 import pytz
 
-from distance.distance import Distance
+from geolocation.distance import Distance
 from entity import Transit
 from money import Money
 

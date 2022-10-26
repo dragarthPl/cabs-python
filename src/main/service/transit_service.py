@@ -7,9 +7,9 @@ from dateutil.relativedelta import relativedelta
 from injector import inject
 
 from carfleet.car_class import CarClass
-from distance.distance import Distance
+from geolocation.distance import Distance
 from driverfleet.driver import Driver
-from dto.address_dto import AddressDTO
+from geolocation.address.address_dto import AddressDTO
 from dto.driver_position_dtov_2 import DriverPositionDTOV2
 from dto.transit_dto import TransitDTO
 from entity import Address, Transit
@@ -17,7 +17,7 @@ from fastapi_events.dispatcher import dispatch
 
 from entity.events.transit_completed import TransitCompleted
 from money import Money
-from repository.address_repository import AddressRepositoryImp
+from geolocation.address.address_repository import AddressRepositoryImp
 from repository.client_repository import ClientRepositoryImp
 from repository.driver_position_repository import DriverPositionRepositoryImp
 from driverfleet.driver_repository import DriverRepositoryImp
@@ -25,10 +25,10 @@ from repository.driver_session_repository import DriverSessionRepositoryImp
 from repository.transit_repository import TransitRepositoryImp
 from loyalty.awards_service import AwardsService
 from carfleet.car_type_service import CarTypeService
-from service.distance_calculator import DistanceCalculator
+from geolocation.distance_calculator import DistanceCalculator
 from driverfleet.driver_fee_service import DriverFeeService
 from crm.notification.driver_notification_service import DriverNotificationService
-from service.geocoding_service import GeocodingService
+from geolocation.geocoding_service import GeocodingService
 from invocing.invoice_generator import InvoiceGenerator
 from transitdetails.transit_details_dto import TransitDetailsDTO
 from transitdetails.transit_details_facade import TransitDetailsFacade

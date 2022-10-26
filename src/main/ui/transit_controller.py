@@ -1,6 +1,6 @@
 from fastapi_injector import Injected
 
-from dto.address_dto import AddressDTO
+from geolocation.address.address_dto import AddressDTO
 from dto.transit_dto import TransitDTO
 from fastapi_utils.cbv import cbv
 from fastapi_utils.inferring_router import InferringRouter

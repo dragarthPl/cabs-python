@@ -1,6 +1,6 @@
 from unittest import TestCase
 
-from distance.distance import Distance
+from geolocation.distance import Distance
 
 
 class TestDistance(TestCase):

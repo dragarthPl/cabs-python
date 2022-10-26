@@ -14,7 +14,7 @@ from loyalty.awards_service_impl import AwardsServiceImpl
 from crm.claims.claim_service import ClaimService
 from crm.notification.client_notification_service import ClientNotificationService
 from crm.notification.driver_notification_service import DriverNotificationService
-from service.geocoding_service import GeocodingService
+from geolocation.geocoding_service import GeocodingService
 from tests.common.fixtures import DependencyResolver, Fixtures
 
 dependency_resolver = DependencyResolver()

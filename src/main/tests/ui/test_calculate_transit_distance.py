@@ -1,11 +1,11 @@
 from datetime import datetime
 from unittest import TestCase
 
-from distance.distance import Distance
-from dto.address_dto import AddressDTO
+from geolocation.distance import Distance
+from geolocation.address.address_dto import AddressDTO
 from dto.client_dto import ClientDTO
 from dto.transit_dto import TransitDTO
-from entity import Transit, Address, Client
+from entity import Transit
 from money import Money
 from transitdetails.transit_details_dto import TransitDetailsDTO
 

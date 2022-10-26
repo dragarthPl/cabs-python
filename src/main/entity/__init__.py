@@ -1,7 +1,7 @@
 from driverfleet.driver_license import DriverLicense
 from .tariff import Tariff
 
-from .address import Address
+from geolocation.address.address import Address
 from carfleet.car_type import CarType
 from .transit import Transit
 from .client import Client

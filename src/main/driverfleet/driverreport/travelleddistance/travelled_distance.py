@@ -10,7 +10,7 @@ from sqlalchemy.orm import composite
 from sqlmodel import Field, SQLModel
 
 from common.base_entity import new_uuid
-from distance.distance import Distance
+from geolocation.distance import Distance
 
 
 class TimeSlot(BaseModel):

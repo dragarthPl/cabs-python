@@ -2,7 +2,7 @@ from datetime import datetime
 
 from injector import inject
 
-from distance.distance import Distance
+from geolocation.distance import Distance
 from driverfleet.driver import Driver
 from driverfleet.driverreport.travelleddistance.travelled_distance_service import TravelledDistanceService
 from entity.driver_position import DriverPosition

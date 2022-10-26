@@ -17,7 +17,7 @@ from driverfleet.driver_fee_service import DriverFeeService
 from driverfleet.driver_service import DriverService
 from service.driver_session_service import DriverSessionService
 from service.driver_tracking_service import DriverTrackingService
-from service.geocoding_service import GeocodingService
+from geolocation.geocoding_service import GeocodingService
 
 
 class DriverFixture:

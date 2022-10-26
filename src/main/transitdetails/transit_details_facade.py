@@ -4,8 +4,8 @@ from typing import Optional, List
 from injector import inject
 
 from carfleet.car_class import CarClass
-from distance.distance import Distance
-from entity import Address, Client, CarType, Tariff, Transit
+from geolocation.distance import Distance
+from entity import Address, Client, Tariff, Transit
 from money import Money
 from transitdetails.transit_details import TransitDetails
 from transitdetails.transit_details_dto import TransitDetailsDTO

@@ -8,11 +8,11 @@ from httpx import AsyncClient
 
 from carfleet.car_class import CarClass
 from core.database import create_db_and_tables, drop_db_and_tables
-from dto.address_dto import AddressDTO
+from geolocation.address.address_dto import AddressDTO
 from entity import Transit
 from service.driver_session_service import DriverSessionService
 from service.driver_tracking_service import DriverTrackingService
-from service.geocoding_service import GeocodingService
+from geolocation.geocoding_service import GeocodingService
 from service.transit_service import TransitService
 from tests.common.fixtures import Fixtures, DependencyResolver
 from mockito import when

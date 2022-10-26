@@ -19,12 +19,12 @@ from driverfleet.driver_fee import DriverFee
 from driverfleet.driverreport.driver_report import DriverReport
 from dto.transit_dto import TransitDTO
 from entity import Client, Transit, Address
-from repository.address_repository import AddressRepositoryImp
+from geolocation.address.address_repository import AddressRepositoryImp
 from carfleet.car_type_service import CarTypeService
 from crm.claims.claim_service import ClaimService
 from service.driver_session_service import DriverSessionService
 from service.driver_tracking_service import DriverTrackingService
-from service.geocoding_service import GeocodingService
+from geolocation.geocoding_service import GeocodingService
 from service.transit_service import TransitService
 from tests.common.fixtures import DependencyResolver, Fixtures
 from driverfleet.driverreport.driver_report_controller import DriverReportController

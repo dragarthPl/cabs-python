@@ -15,7 +15,7 @@ from loyalty.awarded_miles import AwardedMiles
 from loyalty.awards_account_repository import AwardsAccountRepositoryImp
 from loyalty.awards_service import AwardsService
 from loyalty.awards_service_impl import AwardsServiceImpl
-from service.geocoding_service import GeocodingService
+from geolocation.geocoding_service import GeocodingService
 
 from tests.common.fixtures import DependencyResolver, Fixtures
 

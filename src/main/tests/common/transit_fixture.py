@@ -4,9 +4,9 @@ import pytz
 from injector import inject
 
 from carfleet.car_class import CarClass
-from distance.distance import Distance
+from geolocation.distance import Distance
 from driverfleet.driver import Driver
-from dto.address_dto import AddressDTO
+from geolocation.address.address_dto import AddressDTO
 from dto.client_dto import ClientDTO
 from dto.transit_dto import TransitDTO
 from entity import Client, Transit, Address, Tariff
