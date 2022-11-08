@@ -5,11 +5,12 @@ from injector import inject
 
 from carfleet.car_class import CarClass
 from driverfleet.driver import Driver
+from dto.transit_dto import TransitDTO
 from entity import Client, Address, Transit
 from money import Money
 from geolocation.address.address_repository import AddressRepositoryImp
 from repository.transit_repository import TransitRepositoryImp
-from service.driver_session_service import DriverSessionService
+from tracking.driver_session_service import DriverSessionService
 from service.transit_service import TransitService
 from tests.common.car_type_fixture import CarTypeFixture
 from tests.common.driver_fixture import DriverFixture
@@ -60,7 +61,7 @@ class RideFixture:
         address_from = self.address_repository.save(address_from)
         destination = self.address_repository.save(destination)
         self.car_type_fixture.an_active_car_category(CarClass.VAN)
-        transit: Transit = self.transit_service.create_transit_transaction(
+        transit: TransitDTO = self.transit_service.create_transit_transaction(
             client.id, address_from, destination, CarClass.VAN)
         self.transit_service.publish_transit(transit.id)
         self.transit_service.find_drivers_for_transit(transit.id)
@@ -70,7 +71,7 @@ class RideFixture:
         self.__stub_price(price, transit)
         return self.transit_repository.get_one(transit.id)
 
-    def __stub_price(self, price: int, transit: Transit):
+    def __stub_price(self, price: int, transit: TransitDTO):
         fake_price: Money = Money(price)
         self.stubbed_price.stub(transit.id, fake_price)
         self.transit_details_facade.transit_completed(transit.id, datetime.now(), fake_price, fake_price)
@@ -89,7 +90,7 @@ class RideFixture:
         destination = self.address_repository.save(destination)
         with freeze_time(published_at):
             self.car_type_fixture.an_active_car_category(CarClass.VAN)
-            transit: Transit = self.transit_service.create_transit_transaction(
+            transit: TransitDTO = self.transit_service.create_transit_transaction(
                 client.id, address_from, destination, CarClass.VAN)
             self.transit_service.publish_transit(transit.id)
             self.transit_service.find_drivers_for_transit(transit.id)

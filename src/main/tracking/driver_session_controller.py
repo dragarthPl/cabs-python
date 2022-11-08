@@ -2,10 +2,10 @@ from typing import List
 
 from fastapi_injector import Injected
 
-from dto.driver_session_dto import DriverSessionDTO
+from tracking.driver_session_dto import DriverSessionDTO
 from fastapi_utils.cbv import cbv
 from fastapi_utils.inferring_router import InferringRouter
-from service.driver_session_service import DriverSessionService
+from tracking.driver_session_service import DriverSessionService
 
 driver_session_router = InferringRouter(tags=["DriverSessionController"])
 

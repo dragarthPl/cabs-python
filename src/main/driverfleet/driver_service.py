@@ -3,7 +3,7 @@ import calendar
 import re
 from datetime import datetime
 from functools import reduce
-from typing import Dict, List
+from typing import Dict, List, Set
 
 from injector import inject
 
@@ -143,3 +143,9 @@ class DriverService:
         if driver is None:
             raise AttributeError("Driver does not exists, id = " + str(driver_id))
         self.driver_attribute_repository.save(DriverAttribute(driver=driver, name=attr, value=value))
+
+    def load_drivers(self, ids: List[int]) -> Set[DriverDTO]:
+        return set(map(
+            lambda x: DriverDTO(**x.dict()),
+            self.driver_repository.find_all_by_id(ids)
+        ))

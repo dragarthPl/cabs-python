@@ -5,7 +5,7 @@ from geolocation.distance import Distance
 from geolocation.address.address_dto import AddressDTO
 from crm.client_dto import ClientDTO
 from dto.transit_dto import TransitDTO
-from entity import Transit
+from entity import Transit, Tariff
 from money import Money
 from transitdetails.transit_details_dto import TransitDetailsDTO
 
@@ -34,9 +34,7 @@ class TestCalculateTransitDistance(TestCase):
         self.assertEqual("0miles", self.transit_for_distance(0).get_distance("miles"))
 
     def transit_for_distance(self, km: float) -> TransitDTO:
-        distance: Distance = Distance.of_km(km)
-        transit: Transit = Transit(when=datetime.now(), distance=distance);
-        transit.set_price(Money(10))
+        tariff: Tariff = Tariff.of_time(datetime.now())
         transit_details: TransitDetailsDTO = TransitDetailsDTO(
             transit_id=1,
             date_time=datetime.now(),
@@ -47,7 +45,12 @@ class TestCalculateTransitDistance(TestCase):
             address_to=AddressDTO(),
             started=datetime.now(),
             accepted_at=datetime.now(),
-            distance=distance,
-            tariff=transit.get_tariff(),
+            distance=Distance.of_km(km),
+            tariff=tariff,
         )
-        return TransitDTO(transit=transit, transit_details=transit_details)
+        return TransitDTO(
+            transit_details=transit_details,
+            proposed_drivers=set(),
+            driver_rejection=set(),
+            assigned_driver=None
+        )

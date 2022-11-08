@@ -1,6 +1,6 @@
 from datetime import datetime
 from decimal import Decimal
-from typing import Any, List, Optional
+from typing import Any, List, Optional, Set
 
 from carfleet.car_class import CarClass
 from geolocation.distance import Distance
@@ -46,24 +46,31 @@ class TransitDTO(BaseModel):
     class Config:
         arbitrary_types_allowed = True
 
-    def __init__(self, *, transit: Transit = None, transit_details: TransitDetailsDTO = None, **data: Any):
-        if transit is not None:
-            data.update(**transit.dict())
-        if "proposed_drivers" in data:
-            data["proposed_drivers"] = data["proposed_drivers"] or []
+    def __init__(
+        self,
+        *,
+        transit_details: TransitDetailsDTO = None,
+        proposed_drivers: Set[DriverDTO] = None,
+        driver_rejections: Set[DriverDTO] = None,
+        assigned_driver: int = None,
+        **data: Any,
+    ):
         super().__init__(**data)
         self.factor = 1
-        if transit is not None:
-            if transit.proposed_drivers:
-                self.proposed_drivers = []
-                for driver in transit.proposed_drivers:
-                    self.proposed_drivers.append(DriverDTO(**driver.dict()))
-
-            self.distance = transit.get_km()
+        if assigned_driver and proposed_drivers:
+            self.driver = next(filter(
+                lambda driver: driver.id == assigned_driver,
+                proposed_drivers
+            ), None)
+            self.proposed_drivers = list(proposed_drivers)
 
         if transit_details is not None:
+            if hasattr(transit_details, "transit_id"):
+                self.id = transit_details.transit_id
+            if hasattr(transit_details, "status"):
+                self.status = transit_details.status
             if hasattr(transit_details, "price"):
-                self.price = Decimal(Money(transit.price).to_int() or 0)
+                self.price = Decimal(transit_details.price.to_int() or 0)
             if hasattr(transit_details, "driver_fee"):
                 self.driver_fee = Decimal(transit_details.driver_fee.to_int() or 0)
             if hasattr(transit_details, "estimated_price"):
@@ -87,6 +94,8 @@ class TransitDTO(BaseModel):
                 self.complete_at = transit_details.completed_at
             if transit_details.car_type:
                 self.car_class = transit_details.car_type
+            if transit_details.distance:
+                self.distance = transit_details.distance
             self.__set_tariff(transit_details)
 
     def __set_tariff(self, transit_details: TransitDetailsDTO) -> None:

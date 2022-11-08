@@ -3,6 +3,7 @@ from injector import inject
 
 from crm.claims.claim import Claim
 from crm.claims.claim_dto import ClaimDTO
+from dto.transit_dto import TransitDTO
 from entity import Client, Transit
 from crm.claims.claim_service import ClaimService
 from tests.common.client_fixture import ClientFixture
@@ -27,7 +28,7 @@ class ClaimFixture:
         claim: Claim = self.claim_service.create(claim_dto)
         return claim
 
-    def create_claim(self, client: Client, transit: Transit, reason: str) -> Claim:
+    def create_claim(self, client: Client, transit: TransitDTO, reason: str) -> Claim:
         claim_dto: ClaimDTO = self.claim_dto("Okradli mnie na hajs", reason, client.id, transit.id)
         claim_dto.is_draft = False
         return self.claim_service.create(claim_dto)

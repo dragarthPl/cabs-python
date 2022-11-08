@@ -95,6 +95,16 @@ class Fixtures:
     def an_address(self) -> Address:
         return self.address_fixture.an_address()
 
+    def an_address_mocked(
+        self,
+        geocoding_service: GeocodingService,
+        country: str,
+        city: str,
+        street: str,
+        building_number: int
+    ) -> AddressDTO:
+        return self.address_fixture.an_address_mock(geocoding_service, country, city, street, building_number)
+
     def a_client(self) -> Client:
         return self.client_fixture.a_client_default()
 
@@ -135,6 +145,15 @@ class Fixtures:
         return self.driver_fixture.a_random_nearby_driver(stubbed_geocoding_service, pickup)
 
     def a_nearby_driver_default(
+            self,
+            stubbed_geocoding_service: GeocodingService,
+            pickup: Address,
+            latitude: float,
+            longitude: float,
+    ) -> Driver:
+        return self.driver_fixture.a_nearby_driver_default(stubbed_geocoding_service, pickup, latitude, longitude)
+
+    def a_nearby_driver_car_brand(
         self,
         plate_number: str,
         latitude: float,
@@ -142,7 +161,7 @@ class Fixtures:
         car_class: CarClass,
         when: datetime
     ) -> Driver:
-        return self.driver_fixture.a_nearby_driver_default(plate_number, latitude, longitude, car_class, when)
+        return self.driver_fixture.a_nearby_driver(plate_number, latitude, longitude, car_class, when, "brand")
 
     def a_nearby_driver(
             self,
@@ -158,11 +177,11 @@ class Fixtures:
     def driver_has_attribute(self, driver: Driver, name: DriverAttributeName, value: str):
         self.driver_fixture.driver_has_attribute(driver, name, value)
 
-    def a_journey(
+    def a_ride(
             self, price: int, client: Client, driver: Driver, address_from: Address, destination: Address) -> Transit:
         return self.ride_fixture.a_ride(price, client, driver, address_from, destination)
 
-    def a_journey_with_fixed_clock(
+    def a_ride_with_fixed_clock(
             self,
             price: int,
             published_at: datetime,
@@ -181,12 +200,12 @@ class Fixtures:
         for _ in range(1, no_of_transits + 1):
             pickup: Address = self.an_address()
             driver: Driver = self.a_random_nearby_driver(geocoding_service, pickup)
-            self.a_journey(10, client, driver, pickup, self.an_address())
+            self.a_ride(10, client, driver, pickup, self.an_address())
 
     def create_claim(self, client: Client, transit: Transit) -> Claim:
         return self.claim_fixture.create_claim_default_reason(client, transit)
 
-    def create_claim_reason(self, client: Client, transit: Transit, reason: str) -> Claim:
+    def create_claim_reason(self, client: Client, transit: TransitDTO, reason: str) -> Claim:
         return self.claim_fixture.create_claim(client, transit, reason)
 
     def create_and_resolve_claim(self, client: Client, transit: Transit):

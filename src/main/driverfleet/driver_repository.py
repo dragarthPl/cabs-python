@@ -1,4 +1,4 @@
-from typing import Optional
+from typing import Optional, List
 
 from injector import inject
 
@@ -24,3 +24,8 @@ class DriverRepositoryImp:
         statement = self.session.query(Driver).where(Driver.id == driver_id)
         results = self.session.exec(statement)
         return results.scalar_one_or_none()
+
+    def find_all_by_id(self, ids: List[int]) -> List[Driver]:
+        return self.session.query(Driver).where(
+            Driver.id.in_(ids)
+        ).all()

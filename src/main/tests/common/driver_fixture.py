@@ -2,7 +2,7 @@ from datetime import datetime
 from random import random
 
 from injector import inject
-from mockito import when
+from mockito import when, arg_that
 
 from carfleet.car_class import CarClass
 from driverfleet.driver import Driver
@@ -15,8 +15,9 @@ from driverfleet.driver_attribute_repository import DriverAttributeRepositoryImp
 from driverfleet.driver_fee_repository import DriverFeeRepositoryImp
 from driverfleet.driver_fee_service import DriverFeeService
 from driverfleet.driver_service import DriverService
-from service.driver_session_service import DriverSessionService
-from service.driver_tracking_service import DriverTrackingService
+from tests.common.address_matcher import AddressMatcher
+from tracking.driver_session_service import DriverSessionService
+from tracking.driver_tracking_service import DriverTrackingService
 from geolocation.geocoding_service import GeocodingService
 
 
@@ -84,13 +85,17 @@ class DriverFixture:
 
     def a_nearby_driver_default(
         self,
-        plate_number: str,
+        stubbed_geocoding_service: GeocodingService,
+        pickup: Address,
         latitude: float,
         longitude: float,
-        car_class: CarClass,
-        when: datetime
     ) -> Driver:
-        return self.a_nearby_driver(plate_number, latitude, longitude, car_class, when, "brand")
+        when(
+            stubbed_geocoding_service
+        ).geocode_address(
+            arg_that(AddressMatcher(pickup).matches)
+        ).thenReturn([latitude, longitude])
+        return self.a_nearby_driver("WU DAMIAN", latitude, longitude, CarClass.VAN, datetime.now(), "brand")
 
     def a_nearby_driver(
         self,

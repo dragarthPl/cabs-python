@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import enum
+import json
 from datetime import datetime
 from typing import Optional, Set, Any
 
@@ -11,7 +12,7 @@ from dateutil.tz import tzlocal
 from common.base_entity import BaseEntity
 from geolocation.distance import Distance
 from entity import Address, Tariff
-from sqlalchemy import Column, Enum, Float, ForeignKey, Table, DateTime
+from sqlalchemy import Column, Enum, Float, ForeignKey, Table, DateTime, Integer
 from sqlalchemy.orm import relationship
 from sqlmodel import Field, Relationship, SQLModel
 
@@ -64,22 +65,12 @@ class Transit(BaseEntity, table=True):
     pickup_address_change_counter: Optional[int] = 0
 
     # @ManyToOne
-    driver_id: Optional[int] = Field(default=None, foreign_key="driver.id")
-    driver: Optional[Driver] = Relationship(
-        sa_relationship=relationship(
-            "driverfleet.driver.Driver")
-    )
+    driver_id: Optional[int] = Field(default=0, sa_column=Column(Integer, nullable=True))
 
     # @ManyToMany
-    drivers_rejections: Set[Driver] = Relationship(
-        sa_relationship=relationship(
-            "driverfleet.driver.Driver", secondary=drivers_rejections_link)
-    )
+    drivers_rejections: Optional[str]
     # @ManyToMany
-    proposed_drivers: Set[Driver] = Relationship(
-        sa_relationship=relationship(
-            "driverfleet.driver.Driver", secondary=proposed_drivers_link)
-    )
+    proposed_drivers: Optional[str]
     awaiting_drivers_responses: Optional[int] = 0
     tariff_km_rate: Optional[float] = 0
     tariff_name: Optional[str] = None
@@ -159,38 +150,42 @@ class Transit(BaseEntity, table=True):
             raise AttributeError("Transit cannot be canceled, id = " + str(self.id))
 
         self.status = Transit.Status.CANCELLED
-        self.driver = None
+        self.driver_id = None
         self.km = Distance.ZERO.to_km_in_float()
         self.awaiting_drivers_responses = 0
 
-    def can_propose_to(self, driver: Driver) -> bool:
-        return driver not in self.drivers_rejections
+    def can_propose_to(self, driver_id: int) -> bool:
+        return driver_id not in self.get_proposed_drivers()
 
-    def propose_to(self, driver: Driver) -> None:
-        if self.can_propose_to(driver):
-            self.proposed_drivers.append(driver)
+    def propose_to(self, driver_id: int) -> None:
+        if self.can_propose_to(driver_id):
+            self.__add_driver_to_proposed(driver_id)
             self.awaiting_drivers_responses = self.awaiting_drivers_responses + 1
+
+    def __add_driver_to_proposed(self, driver_id: int) -> None:
+        proposed_drivers_set: Set[int] = self.get_proposed_drivers()
+        proposed_drivers_set.add(driver_id)
+        self.proposed_drivers = json.dumps(list(proposed_drivers_set))
 
     def fail_driver_assignment(self) -> None:
         self.status = Transit.Status.DRIVER_ASSIGNMENT_FAILED
-        self.driver = None
+        self.driver_id = None
         self.km = Distance.ZERO.to_km_in_float()
         self.awaiting_drivers_responses = 0
 
     def should_not_wait_for_driver_any_more(self, when: datetime) -> bool:
         return self.status == Transit.Status.CANCELLED or self.published + relativedelta(seconds=300) < when
 
-    def accept_by(self, driver: Driver, when: datetime) -> None:
-        if self.driver != None:
+    def accept_by(self, driver_id: int, when: datetime) -> None:
+        if self.driver_id:
             raise AttributeError("Transit already accepted, id = " + str(self.id))
         else:
-            if driver not in self.proposed_drivers:
+            if driver_id not in self.get_proposed_drivers():
                 raise AttributeError("Driver out of possible drivers, id = " + str(self.id))
             else:
-                if driver in self.drivers_rejections:
+                if driver_id in self.get_driver_rejections():
                     raise AttributeError("Driver out of possible drivers, id = " + str(self.id))
-            self.driver = driver
-            self.driver.is_occupied = True
+            self.driver_id = driver_id
             self.awaiting_drivers_responses = 0
             self.status = Transit.Status.TRANSIT_TO_PASSENGER
 
@@ -199,9 +194,14 @@ class Transit(BaseEntity, table=True):
             raise AttributeError("Transit cannot be started, id = " + str(self.id))
         self.status = Transit.Status.IN_TRANSIT
 
-    def reject_by(self, driver: Driver) -> None:
-        self.drivers_rejections.append(driver)
-        self.awaiting_drivers_responses = self.awaiting_drivers_responses - 1
+    def reject_by(self, driver_id: int) -> None:
+        self.__add_to_driver_rejections(driver_id)
+        self.awaiting_drivers_responses -= 1
+
+    def __add_to_driver_rejections(self, driver_id) -> None:
+        driver_rejection_set: Set[int] = self.get_driver_rejections()
+        driver_rejection_set.add(driver_id)
+        self.drivers_rejections = json.dumps(list(driver_rejection_set))
 
     def publish_at(self, when: datetime) -> None:
         self.status = Transit.Status.WAITING_FOR_DRIVER_ASSIGNMENT
@@ -263,6 +263,12 @@ class Transit(BaseEntity, table=True):
 
     def set_date_time(self, date_time: datetime) -> None:
         self.set_tariff(Tariff.of_time(date_time.astimezone(tzlocal())))
+
+    def get_driver_rejections(self) -> Set[int]:
+        return set(json.loads(self.drivers_rejections)) if self.drivers_rejections else set()
+
+    def get_proposed_drivers(self) -> Set[int]:
+        return set(json.loads(self.proposed_drivers)) if self.proposed_drivers else set()
 
     def __eq__(self, o):
         if not isinstance(o, Transit):

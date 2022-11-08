@@ -17,7 +17,7 @@ from geolocation.address.address_dto import AddressDTO
 from crm.claims.claim_dto import ClaimDTO
 from driverfleet.driver_dto import DriverDTO
 from driverfleet.driverreport.driver_report import DriverReport
-from dto.driver_session_dto import DriverSessionDTO
+from tracking.driver_session_dto import DriverSessionDTO
 from dto.transit_dto import TransitDTO
 from entity import Transit
 

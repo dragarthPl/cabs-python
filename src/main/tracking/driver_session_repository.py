@@ -5,8 +5,7 @@ from injector import inject
 from sqlalchemy import desc
 
 from carfleet.car_class import CarClass
-from driverfleet.driver import Driver
-from entity.driver_session import DriverSession
+from tracking.driver_session import DriverSession
 from sqlmodel import Session
 
 

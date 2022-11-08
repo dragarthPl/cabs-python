@@ -12,3 +12,4 @@ class ClientDTO(BaseModel):
     default_payment_type: Optional[Client.PaymentType]
     client_type: Optional[Client.ClientType]
     number_of_claims: Optional[int]
+    is_occupied: Optional[bool]

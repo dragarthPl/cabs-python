@@ -3,7 +3,7 @@ from datetime import datetime
 
 from typing import Any, Optional
 
-from sqlalchemy import Column, Enum, Float, DateTime
+from sqlalchemy import Column, Enum, Float, DateTime, Integer
 
 from carfleet.car_class import CarClass
 from geolocation.distance import Distance
@@ -21,7 +21,7 @@ from entity import Transit
 class TransitDetails(BaseEntity, table=True):
     __table_args__ = {'extend_existing': True}
 
-    transit_id: Optional[int]
+    transit_id: Optional[int] = Field(default=0, sa_column=Column(Integer, nullable=True))
     date_time: Optional[datetime] = Field(default=None, sa_column=Column(DateTime, nullable=True))
     complete_at: Optional[datetime] = Field(default=None, sa_column=Column(DateTime, nullable=True))
 
@@ -56,7 +56,7 @@ class TransitDetails(BaseEntity, table=True):
     estimated_price: Optional[int] = 0
     drivers_fee: Optional[int] = 0
 
-    driver_id: Optional[int] = 0
+    driver_id: Optional[int] = Field(default=0, sa_column=Column(Integer, nullable=True))
     status: Optional[Transit.Status] = Field(sa_column=Column(Enum(Transit.Status)))
     # tariff: Tariff
     tariff_km_rate: Optional[float] = 0

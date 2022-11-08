@@ -49,7 +49,7 @@ class TestAnalyzeNearbyTransitsIntegration(IsolatedAsyncioTestCase):
         # given
         client: Client = self.fixtures.a_client()
         # and
-        driver: Driver = self.fixtures.a_nearby_driver_default("WA001", 1, 1, CarClass.VAN, datetime.now())
+        driver: Driver = self.fixtures.a_nearby_driver_car_brand("WA001", 1, 1, CarClass.VAN, datetime.now())
         with freeze_time(datetime(2021, 1, 1, 0, 0).astimezone(pytz.utc)):
             address1: Address = Address(country="1_1", district="1", city="1", street="1", building_number=1)
             address2: Address = Address(country="1_2", district="2", city="2", street="2", building_number=2)
@@ -177,7 +177,7 @@ class TestAnalyzeNearbyTransitsIntegration(IsolatedAsyncioTestCase):
         client3: Client = self.fixtures.a_client()
         client4: Client = self.fixtures.a_client()
         # and
-        driver: Driver = self.fixtures.a_nearby_driver_default("WA001", 1, 1, CarClass.VAN, datetime.now())
+        driver: Driver = self.fixtures.a_nearby_driver_car_brand("WA001", 1, 1, CarClass.VAN, datetime.now())
         # and
         with freeze_time(datetime(2021, 1, 1, 0, 0).astimezone(pytz.utc)):
             address1: Address = Address(country="2_1", district="1", city="1", street="1", building_number=1)
@@ -306,7 +306,7 @@ class TestAnalyzeNearbyTransitsIntegration(IsolatedAsyncioTestCase):
         # given
         client: Client = self.fixtures.a_client()
         # and
-        driver: Driver = self.fixtures.a_nearby_driver_default("WA001", 1, 1, CarClass.VAN, datetime.now())
+        driver: Driver = self.fixtures.a_nearby_driver_car_brand("WA001", 1, 1, CarClass.VAN, datetime.now())
         # and
         with freeze_time(datetime(2021, 1, 1, 0, 0).astimezone(pytz.utc)):
             address1: Address = Address(country="3_1", district="1", city="1", street="1", building_number=1)
@@ -378,7 +378,7 @@ class TestAnalyzeNearbyTransitsIntegration(IsolatedAsyncioTestCase):
         # given
         client: Client = self.fixtures.a_client()
         # and
-        driver: Driver = self.fixtures.a_nearby_driver_default("WA001", 1, 1, CarClass.VAN, datetime.now())
+        driver: Driver = self.fixtures.a_nearby_driver_car_brand("WA001", 1, 1, CarClass.VAN, datetime.now())
         # and
         with freeze_time(datetime(2021, 1, 1, 0, 0).astimezone(pytz.utc)):
             address1: Address = Address(country="4_1", district="1", city="1", street="1", building_number=1)
@@ -508,7 +508,7 @@ class TestAnalyzeNearbyTransitsIntegration(IsolatedAsyncioTestCase):
         # given
         client: Client = self.fixtures.a_client()
         # and
-        driver: Driver = self.fixtures.a_nearby_driver_default("WA001", 1, 1, CarClass.VAN, datetime.now())
+        driver: Driver = self.fixtures.a_nearby_driver_car_brand("WA001", 1, 1, CarClass.VAN, datetime.now())
         # and
         with freeze_time(datetime(2021, 1, 1, 0, 0).astimezone(pytz.utc)):
             address1: Address = Address(country="5_1", district="1", city="1", street="1", building_number=1)
@@ -567,8 +567,7 @@ class TestAnalyzeNearbyTransitsIntegration(IsolatedAsyncioTestCase):
     ) -> None:
         when(self.geocoding_service.geocode_address(destination)).thenReturn([1.0, 1.0])
         driver: Driver = self.fixtures.a_random_nearby_driver(self.geocoding_service, pickup)
-        self.fixtures.a_journey_with_fixed_clock(
-            40, published_at, completed_at, client, driver, pickup, destination,)
+        self.fixtures.a_ride_with_fixed_clock(40, published_at, completed_at, client, driver, pickup, destination)
 
     def addresses_contain_exactly(
         self,

@@ -1,16 +1,19 @@
 import functools
 import math
 from datetime import datetime
-from typing import List
+from typing import List, Set
 
 from dateutil.relativedelta import relativedelta
 from injector import inject
+from sqlalchemy import null
 
 from carfleet.car_class import CarClass
+from driverfleet.driver_dto import DriverDTO
+from driverfleet.driver_service import DriverService
 from geolocation.distance import Distance
 from driverfleet.driver import Driver
 from geolocation.address.address_dto import AddressDTO
-from dto.driver_position_dtov_2 import DriverPositionDTOV2
+from tracking.driver_position_dtov_2 import DriverPositionDTOV2
 from dto.transit_dto import TransitDTO
 from entity import Address, Transit
 from fastapi_events.dispatcher import dispatch
@@ -19,9 +22,9 @@ from entity.events.transit_completed import TransitCompleted
 from money import Money
 from geolocation.address.address_repository import AddressRepositoryImp
 from crm.client_repository import ClientRepositoryImp
-from repository.driver_position_repository import DriverPositionRepositoryImp
+from tracking.driver_position_repository import DriverPositionRepositoryImp
 from driverfleet.driver_repository import DriverRepositoryImp
-from repository.driver_session_repository import DriverSessionRepositoryImp
+from tracking.driver_session_repository import DriverSessionRepositoryImp
 from repository.transit_repository import TransitRepositoryImp
 from loyalty.awards_service import AwardsService
 from carfleet.car_type_service import CarTypeService
@@ -30,6 +33,7 @@ from driverfleet.driver_fee_service import DriverFeeService
 from crm.notification.driver_notification_service import DriverNotificationService
 from geolocation.geocoding_service import GeocodingService
 from invocing.invoice_generator import InvoiceGenerator
+from tracking.driver_tracking_service import DriverTrackingService
 from transitdetails.transit_details_dto import TransitDetailsDTO
 from transitdetails.transit_details_facade import TransitDetailsFacade
 
@@ -41,14 +45,14 @@ class TransitService:
     invoice_generator: InvoiceGenerator
     notification_service: DriverNotificationService
     distance_calculator: DistanceCalculator
-    driver_position_repository: DriverPositionRepositoryImp
-    driver_session_repository: DriverSessionRepositoryImp
     car_type_service: CarTypeService
     geocoding_service: GeocodingService
     address_repository: AddressRepositoryImp
     driver_fee_service: DriverFeeService
     awards_service: AwardsService
     transit_details_facade: TransitDetailsFacade
+    driver_tracking_service: DriverTrackingService
+    driver_service: DriverService
 
     @inject
     def __init__(
@@ -67,6 +71,8 @@ class TransitService:
             driver_fee_service: DriverFeeService,
             awards_service: AwardsService,
             transit_details_facade: TransitDetailsFacade,
+            driver_tracking_service: DriverTrackingService,
+            driver_service: DriverService,
     ):
         self.driver_repository = driver_repository
         self.transit_repository = transit_repository
@@ -82,8 +88,10 @@ class TransitService:
         self.driver_fee_service = driver_fee_service
         self.awards_service = awards_service
         self.transit_details_facade = transit_details_facade
+        self.driver_tracking_service = driver_tracking_service
+        self.driver_service = driver_service
 
-    def create_transit(self, transit_dto: TransitDTO) -> Transit:
+    def create_transit(self, transit_dto: TransitDTO) -> TransitDTO:
         address_from = self.__address_from_dto(transit_dto.address_from)
         address_to = self.__address_from_dto(transit_dto.address_to)
         return self.create_transit_transaction(
@@ -94,7 +102,7 @@ class TransitService:
         return self.address_repository.save(address)
 
     def create_transit_transaction(
-            self, client_id: int, address_from: Address, address_to: Address, car_class: CarClass) -> Transit:
+            self, client_id: int, address_from: Address, address_to: Address, car_class: CarClass) -> TransitDTO:
         client = self.client_repository.get_one(client_id)
         if client is None:
             raise AttributeError("Client does not exist, id = " + str(client_id))
@@ -123,7 +131,7 @@ class TransitService:
             estimated_price,
             transit.get_tariff()
         )
-        return transit
+        return self.load_transit(transit.id)
 
     def _change_transit_address_from(self, transit_id: int, new_address: Address) -> None:
         new_address = self.address_repository.save(new_address)
@@ -171,8 +179,8 @@ class TransitService:
             new_distance
         )
 
-        for driver in transit.proposed_drivers:
-            self.notification_service.notify_about_changed_transit_address(driver.id, transit_id)
+        for driver_id in transit.proposed_drivers:
+            self.notification_service.notify_about_changed_transit_address(driver_id, transit_id)
 
     def change_transit_address_to(self, transit_id: int, new_address: AddressDTO) -> None:
         self._change_transit_address_to(transit_id, new_address.to_address_entity())
@@ -197,8 +205,8 @@ class TransitService:
         transit.change_destination_to(new_address, new_distance)
         self.transit_repository.save(transit)
         self.transit_details_facade.destination_changed(transit.id, new_address, new_distance)
-        if transit.driver is not None:
-            self.notification_service.notify_about_changed_transit_address(transit.driver.id, transit_id)
+        if transit.driver_id is not None:
+            self.notification_service.notify_about_changed_transit_address(transit.driver_id, transit_id)
 
     def cancel_transit(self, transit_id: int) -> None:
         transit = self.transit_repository.get_one(transit_id)
@@ -206,8 +214,8 @@ class TransitService:
         if transit is None:
             raise AttributeError("Transit does not exist, id = " + str(transit_id))
 
-        if transit.driver != None:
-            self.notification_service.notify_about_cancelled_transit(transit.driver.id, transit.id)
+        if transit.driver_id != None:
+            self.notification_service.notify_about_cancelled_transit(transit.driver_id, transit.id)
 
         transit.cancel()
         self.transit_details_facade.transit_cancelled(transit_id)
@@ -279,67 +287,48 @@ class TransitService:
                     longitude_min = longitude - d_lon * 180 / math.pi
                     longitude_max = longitude + d_lon * 180 / math.pi
 
-                    drivers_avg_positions: List[DriverPositionDTOV2] = \
-                        self.driver_position_repository.find_average_driver_position_since(
-                            latitude_min,
-                            latitude_max,
-                            longitude_min,
-                            longitude_max,
-                            datetime.now() - relativedelta(minutes=5)
-                        )
-                    if drivers_avg_positions:
-                        comparator = lambda d1, d2: math.sqrt(
-                            math.pow(latitude - d1.latitude, 2) + math.pow(longitude - d1.longitude, 2)
-                        ) - math.sqrt(
-                            math.pow(latitude - d2.latitude, 2) + math.pow(longitude - d2.longitude, 2)
-                        )
+                    car_classes: List[CarClass] = self.choose_possible_car_classes(transit_details.car_type)
+                    if not car_classes:
+                        return transit
 
-                        drivers_avg_positions = sorted(drivers_avg_positions, key=functools.cmp_to_key(comparator))
-                        drivers_avg_positions = drivers_avg_positions[:20]
-                        car_classes = []
-                        active_car_classes = self.car_type_service.find_active_car_classes()
-                        if not active_car_classes:
-                            return transit
-                        if transit_details.car_type != None:
-                            if transit_details.car_type in active_car_classes:
-                                car_classes.append(transit_details.car_type)
-                            else:
-                                return transit
-                        else:
-                            car_classes.extend(active_car_classes)
+                    drivers_avg_positions: List[DriverPositionDTOV2] = self.driver_tracking_service.find_active_drivers_nearby(
+                        latitude_min,
+                        latitude_max,
+                        longitude_min,
+                        longitude_max,
+                        latitude,
+                        longitude,
+                        car_classes,
+                    )
 
-                        drivers: List[int] = list(map(lambda pos: pos.driver.id, drivers_avg_positions))
-                        active_driver_ids_in_specific_car: List[int] = list(map(
-                                lambda ds: ds.driver_id,
-                            self.driver_session_repository.find_all_by_logged_out_at_null_and_driver_id_in_and_car_class_in(
-                                drivers, car_classes)
-                        ))
-
-                        drivers_avg_positions = list(
-                            filter(
-                                lambda dp: dp.driver.id in active_driver_ids_in_specific_car,
-                                drivers_avg_positions
-                            ),
-                        )
-
-                        # Iterate across average driver positions
-                        for driver_avg_position in drivers_avg_positions:
-                            driver = driver_avg_position.driver
-                            if driver.status == Driver.Status.ACTIVE and not driver.is_occupied:
-                                if transit.can_propose_to(driver):
-                                    transit.propose_to(driver)
-                                    self.notification_service.notify_about_possible_transit(driver.id, transit_id)
-                            else:
-                                # Not implemented yet!
-                                pass
-                        self.transit_repository.save(transit)
-                    else:
-                        # Next iteration, no drivers at specified area
+                    if not drivers_avg_positions:
+                        # next iteration
                         continue
+
+                    # Iterate across average driver positions
+                    for driver_avg_position in drivers_avg_positions:
+                        if transit.can_propose_to(driver_avg_position.driver_id):
+                            transit.propose_to(driver_avg_position.driver_id)
+                            self.notification_service.notify_about_possible_transit(
+                                driver_avg_position.driver_id,
+                                transit_id
+                            )
+                    return transit
+
             else:
                 raise AttributeError("..., id = " + str(transit_id))
         else:
             raise AttributeError("Transit does not exist, id = " + str(transit_id))
+
+    def choose_possible_car_classes(self, car_class: CarClass) -> List[CarClass]:
+        car_classes: List[CarClass] = []
+        active_car_classes: List[CarClass] = self.car_type_service.find_active_car_classes()
+        if car_class != None:
+            if car_class in active_car_classes:
+                car_classes.append(car_class)
+        else:
+            car_classes.extend(active_car_classes)
+        return car_classes
 
     def accept_transit(self, driver_id: int, transits_id: int):
         driver = self.driver_repository.get_one(driver_id)
@@ -353,7 +342,8 @@ class TransitService:
                 raise AttributeError("Transit does not exist, id = " + str(transits_id))
             else:
                 now = datetime.now()
-                transit.accept_by(driver, now)
+                transit.accept_by(driver_id, now)
+                driver.is_occupied = True
                 self.transit_details_facade.transit_accepted(transits_id, now, driver_id)
                 self.transit_repository.save(transit)
                 self.driver_repository.save(driver)
@@ -385,7 +375,7 @@ class TransitService:
         if transit is None:
             raise AttributeError("Transit does not exist, id = " + str(transits_id))
 
-        transit.reject_by(driver)
+        transit.reject_by(driver_id)
         self.transit_repository.save(transit)
 
     def complete_transit(self, driver_id: int, transits_id: int, destination: AddressDTO):
@@ -437,7 +427,15 @@ class TransitService:
 
     def load_transit(self, transit_id: int) -> TransitDTO:
         transit_details: TransitDetailsDTO = self.find_transit_details(transit_id)
-        return TransitDTO(transit=self.transit_repository.get_one(transit_id), transit_details=transit_details)
+        transit: Transit = self.transit_repository.get_one(transit_id)
+        proposed_drivers: Set[DriverDTO] = self.driver_service.load_drivers(list(transit.get_proposed_drivers()))
+        driver_rejections: Set [DriverDTO] = self.driver_service.load_drivers(list(transit.get_driver_rejections()))
+        return TransitDTO(
+            transit_details=transit_details,
+            proposed_drivers=proposed_drivers,
+            driver_rejections=driver_rejections,
+            assigned_driver=transit.driver_id
+        )
 
     def find_transit_details(self, transit_id: int) -> TransitDetailsDTO:
         return self.transit_details_facade.find(transit_id)

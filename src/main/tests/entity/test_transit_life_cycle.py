@@ -2,11 +2,12 @@ from datetime import datetime
 from unittest import TestCase
 
 from geolocation.distance import Distance
-from driverfleet.driver import Driver
 from entity import Transit, Address
 
 
 class TestTransitLifeCycle(TestCase):
+    DRIVER_ID: int = 1
+    SECOND_DRIVER_ID: int = 2
     
     def test_can_create_transit(self):
         # when
@@ -36,15 +37,13 @@ class TestTransitLifeCycle(TestCase):
         # given
         destination = Address(country="Polska", city="Warszawa", street="Żytnia", building_number=25)
         # and
-        driver = Driver()
-        # and
         transit = self.request_transit()
         # and
         transit.publish_at(datetime.now())
         # and
-        transit.propose_to(driver)
+        transit.propose_to(self.DRIVER_ID)
         # and
-        transit.accept_by(driver, datetime.now())
+        transit.accept_by(self.DRIVER_ID, datetime.now())
         # and
         transit.start(datetime.now())
         # and
@@ -72,17 +71,15 @@ class TestTransitLifeCycle(TestCase):
         # given
         destination = Address(country="Polska", city="Warszawa", street="Żytnia", building_number=25)
         # and
-        driver = Driver()
-        # and
         transit = self.request_transit()
         # and
         changed_to = Address(country="Polska", city="Warszawa", street="Żytnia", building_number=27)
         # and
         transit.publish_at(datetime.now())
         # and
-        transit.propose_to(driver)
+        transit.propose_to(self.DRIVER_ID)
         # and
-        transit.accept_by(driver, datetime.now())
+        transit.accept_by(self.DRIVER_ID, datetime.now())
 
         # expect
         with self.assertRaises(AttributeError):
@@ -158,13 +155,11 @@ class TestTransitLifeCycle(TestCase):
         # and
         transit = self.request_transit()
         # and
-        driver = Driver()
-        # and
         transit.publish_at(datetime.now())
         # and
-        transit.propose_to(driver)
+        transit.propose_to(self.DRIVER_ID)
         # and
-        transit.accept_by(driver, datetime.now())
+        transit.accept_by(self.DRIVER_ID, datetime.now())
 
         # and
         transit.start(datetime.now())
@@ -192,14 +187,12 @@ class TestTransitLifeCycle(TestCase):
         # given
         transit = self.request_transit()
         # and
-        driver = Driver()
-        # and
         transit.publish_at(datetime.now())
         # and
-        transit.propose_to(driver)
+        transit.propose_to(self.DRIVER_ID)
 
         # when
-        transit.accept_by(driver, datetime.now())
+        transit.accept_by(self.DRIVER_ID, datetime.now())
 
         # then
         self.assertEqual(Transit.Status.TRANSIT_TO_PASSENGER, transit.status)
@@ -208,56 +201,46 @@ class TestTransitLifeCycle(TestCase):
         # given
         transit = self.request_transit()
         # and
-        driver = Driver()
-        # and
-        second_driver = Driver()
-        # and
         transit.publish_at(datetime.now())
         # and
-        transit.propose_to(driver)
+        transit.propose_to(self.DRIVER_ID)
         # and
-        transit.accept_by(driver, datetime.now())
+        transit.accept_by(self.DRIVER_ID, datetime.now())
 
         with self.assertRaises(AttributeError):
-            transit.accept_by(second_driver, datetime.now())
+            transit.accept_by(self.SECOND_DRIVER_ID, datetime.now())
 
     def test_transit_cannot_by_accepted_by_driver_who_already_rejected(self):
         # given
         transit = self.request_transit()
         # and
-        driver = Driver()
-        # and
         transit.publish_at(datetime.now())
         # and
-        transit.reject_by(driver)
+        transit.reject_by(self.DRIVER_ID)
 
         # when
         with self.assertRaises(AttributeError):
-            transit.accept_by(driver, datetime.now())
+            transit.accept_by(self.DRIVER_ID, datetime.now())
 
     def test_transit_cannot_by_accepted_by_driver_who_has_not_seen_proposal(self):
         # given
         transit = self.request_transit()
         # and
-        driver = Driver()
-        # and
         transit.publish_at(datetime.now())
 
         # when
         with self.assertRaises(AttributeError):
-            transit.accept_by(driver, datetime.now())
+            transit.accept_by(self.DRIVER_ID, datetime.now())
 
     def test_can_start_transit(self):
         # given
         transit = self.request_transit()
         # and
-        driver = Driver()
-        # and
         transit.publish_at(datetime.now())
         # and
-        transit.propose_to(driver)
+        transit.propose_to(self.DRIVER_ID)
         # and
-        transit.accept_by(driver, datetime.now())
+        transit.accept_by(self.DRIVER_ID, datetime.now())
 
         # when
         transit.start(datetime.now())
@@ -281,13 +264,11 @@ class TestTransitLifeCycle(TestCase):
         # and
         transit = self.request_transit()
         # and
-        driver = Driver()
-        # and
         transit.publish_at(datetime.now())
         # and
-        transit.propose_to(driver)
+        transit.propose_to(self.DRIVER_ID)
         # and
-        transit.accept_by(driver, datetime.now())
+        transit.accept_by(self.DRIVER_ID, datetime.now())
         # and
         transit.start(datetime.now())
 
@@ -305,13 +286,11 @@ class TestTransitLifeCycle(TestCase):
         # and
         transit = self.request_transit()
         # and
-        driver = Driver()
-        # and
         transit.publish_at(datetime.now())
         # and
-        transit.propose_to(driver)
+        transit.propose_to(self.DRIVER_ID)
         # and
-        transit.accept_by(driver, datetime.now())
+        transit.accept_by(self.DRIVER_ID, datetime.now())
 
         # when
         with self.assertRaises(AttributeError):
@@ -321,12 +300,10 @@ class TestTransitLifeCycle(TestCase):
         # given
         transit = self.request_transit()
         # and
-        driver = Driver()
-        # and
         transit.publish_at(datetime.now())
 
         # when
-        transit.reject_by(driver)
+        transit.reject_by(self.DRIVER_ID)
 
         # then
         self.assertEqual(Transit.Status.WAITING_FOR_DRIVER_ASSIGNMENT, transit.status)

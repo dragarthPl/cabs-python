@@ -2,11 +2,11 @@ from datetime import datetime
 
 from fastapi_injector import Injected
 
-from dto.driver_position_dto import DriverPositionDTO
-from entity.driver_position import DriverPosition
+from tracking.driver_position_dto import DriverPositionDTO
+from tracking.driver_position import DriverPosition
 from fastapi_utils.cbv import cbv
 from fastapi_utils.inferring_router import InferringRouter
-from service.driver_tracking_service import DriverTrackingService
+from tracking.driver_tracking_service import DriverTrackingService
 
 driver_tracking_router = InferringRouter(tags=["DriverTrackingController"])
 
@@ -33,7 +33,7 @@ class DriverTrackingController:
 
     def __to_dto(self, driver_position: DriverPosition):
         dto = DriverPositionDTO()
-        dto.driver_id = driver_position.driver.id
+        dto.driver_id = driver_position.driver_id
         dto.latitude = driver_position.latitude
         dto.longitude = driver_position.longitude
         dto.seen_at = driver_position.seen_at

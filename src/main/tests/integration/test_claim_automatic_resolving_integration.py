@@ -263,7 +263,7 @@ class TestClaimAutomaticResolvingIntegration(TestCase):
         verifyZeroInteractions(self.claim_service.awards_service)
 
     async def a_transit(self, pickup: Address, client: Client, driver: Driver, price: int) -> Transit:
-        return self.fixtures.a_journey(price, client, driver, pickup, self.fixtures.an_address())
+        return self.fixtures.a_ride(price, client, driver, pickup, self.fixtures.an_address())
 
     async def low_cost_threshold_is(self, price: int) -> None:
         self.claim_service.app_properties.automatic_refund_for_vip_threshold = price

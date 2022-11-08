@@ -4,8 +4,8 @@ from typing import List, Optional
 from injector import inject
 
 from driverfleet.driver import Driver
-from dto.driver_position_dtov_2 import DriverPositionDTOV2
-from entity.driver_position import DriverPosition
+from tracking.driver_position_dtov_2 import DriverPositionDTOV2
+from tracking.driver_position import DriverPosition
 from sqlalchemy import text, Float, DateTime, Integer
 from sqlmodel import Session
 
@@ -63,7 +63,7 @@ class DriverPositionRepositoryImp:
         ).all()
         return [
             DriverPositionDTOV2(
-                driver=d.driver,
+                driver_id=d.driver_id,
                 latitude=d.latitude,
                 longitude=d.longitude,
                 seen_at=d.seen_at

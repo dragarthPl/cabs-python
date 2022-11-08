@@ -22,8 +22,8 @@ from entity import Client, Transit, Address
 from geolocation.address.address_repository import AddressRepositoryImp
 from carfleet.car_type_service import CarTypeService
 from crm.claims.claim_service import ClaimService
-from service.driver_session_service import DriverSessionService
-from service.driver_tracking_service import DriverTrackingService
+from tracking.driver_session_service import DriverSessionService
+from tracking.driver_tracking_service import DriverTrackingService
 from geolocation.geocoding_service import GeocodingService
 from service.transit_service import TransitService
 from tests.common.fixtures import DependencyResolver, Fixtures
@@ -146,7 +146,7 @@ class TestCreateDriverReportIntegration(IsolatedAsyncioTestCase):
         plate_number: str,
         car_brand: str,
         when: datetime,
-    ) -> Transit:
+    ) -> TransitDTO:
         with freeze_time(when):
             driver_id = driver.id
             self.driver_session_service.log_in(driver_id, plate_number, car_class, car_brand)

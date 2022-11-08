@@ -8,14 +8,16 @@ from httpx import AsyncClient
 
 from carfleet.car_class import CarClass
 from core.database import create_db_and_tables, drop_db_and_tables
+from dto.transit_dto import TransitDTO
 from geolocation.address.address_dto import AddressDTO
 from entity import Transit
-from service.driver_session_service import DriverSessionService
-from service.driver_tracking_service import DriverTrackingService
+from tests.common.address_matcher import AddressMatcher
+from tracking.driver_session_service import DriverSessionService
+from tracking.driver_tracking_service import DriverTrackingService
 from geolocation.geocoding_service import GeocodingService
 from service.transit_service import TransitService
 from tests.common.fixtures import Fixtures, DependencyResolver
-from mockito import when
+from mockito import when, arg_that
 
 from cabs_application import CabsApplication
 
@@ -36,13 +38,20 @@ class TestTransitLifeCycleIntegration(IsolatedAsyncioTestCase):
 
         self.client = AsyncClient(app=app)
         self.fixtures.an_active_car_category(CarClass.VAN)
-        when(self.geocoding_service).geocode_address(ANY).thenReturn([1.0, 1.0])
+        when(self.transit_service.geocoding_service).geocode_address(ANY).thenReturn([1.0, 1.0])
 
     async def test_can_create_transit(self):
+        # given
+        pickup: AddressDTO = AddressDTO(country="Polska", city="Warszawa", street="Młynarska", building_number=20)
+        # and
+        destination: AddressDTO = AddressDTO(country="Polska", city="Warszawa", street="Żytnia", building_number=25)
+        # and
+        self.a_nearby_driver(pickup)
+
         # when
         transit = self.request_transit_from_to(
-            AddressDTO(country="Polska", city="Warszawa", street="Młynarska", building_number=20),
-            AddressDTO(country="Polska", city="Warszawa", street="Żytnia", building_number=25),
+            pickup,
+            destination,
         )
 
         # then
@@ -66,16 +75,21 @@ class TestTransitLifeCycleIntegration(IsolatedAsyncioTestCase):
 
     async def test_can_change_transit_destination(self):
         # given
+        pickup: AddressDTO = AddressDTO(country="Polska", city="Warszawa", street="Młynarska", building_number=20);
+        # and
+        destination: AddressDTO = AddressDTO(country="Polska", city="Warszawa", street="Żytnia", building_number=25)
+        # and
+        self.a_nearby_driver(pickup)
+        # given
         transit = self.request_transit_from_to(
-            AddressDTO(country="Polska", city="Warszawa", street="Młynarska", building_number=20),
-            AddressDTO(country="Polska", city="Warszawa", street="Żytnia", building_number=25),
+            pickup,
+            destination,
         )
 
         # when
-        self.transit_service.change_transit_address_to(
-            transit.id,
-            AddressDTO(country="Polska", city="Warszawa", street="Mazowiecka", building_number=30)
-        )
+        new_destination: AddressDTO = self.new_address("Polska", "Warszawa", "Mazowiecka", 30);
+        # and
+        self.transit_service.change_transit_address_to(transit.id, new_destination)
 
         # then
         loaded = self.transit_service.load_transit(transit.id)
@@ -86,15 +100,16 @@ class TestTransitLifeCycleIntegration(IsolatedAsyncioTestCase):
 
     async def test_cannot_change_destination_when_transit_is_completed(self):
         # given
+        pickup: AddressDTO = AddressDTO(country="Polska", city="Warszawa", street="Młynarska", building_number=20)
+        # and
         destination = AddressDTO(country="Polska", city="Warszawa", street="Żytnia", building_number=25)
         # and
-        transit = self.request_transit_from_to(
-            AddressDTO(country="Polska", city="Warszawa", street="Młynarska", building_number=20),
+        driver: int = self.a_nearby_driver(pickup)
+        # and
+        transit: TransitDTO = self.request_transit_from_to(
+            pickup,
             destination
         )
-
-        # and
-        driver = self.a_nearby_driver("WU1212")
         # and
         self.transit_service.publish_transit(transit.id)
         # and
@@ -108,20 +123,30 @@ class TestTransitLifeCycleIntegration(IsolatedAsyncioTestCase):
         with self.assertRaises(AttributeError):
             self.transit_service.change_transit_address_to(
                 transit.id,
-                AddressDTO(country="Polska", city="Warszawa", street="Żytnia", building_number=23)
+                self.new_address(country="Polska", city="Warszawa", street="Żytnia", building_number=23)
             )
 
     async def test_can_change_pickup_place(self):
         # given
+        pickup: AddressDTO = AddressDTO(country="Polska", city="Warszawa", street="Młynarska", building_number=20)
+        # and
+        destination = AddressDTO(country="Polska", city="Warszawa", street="Żytnia", building_number=25)
+        # and
+        self.a_nearby_driver(pickup)
+        # and
         transit = self.request_transit_from_to(
-            AddressDTO(country="Polska", city="Warszawa", street="Młynarska", building_number=20),
-            AddressDTO(country="Polska", city="Warszawa", street="Żytnia", building_number=25),
+            pickup,
+            destination,
         )
+        # and
+        self.transit_service.publish_transit(transit.id)
 
         # when
+        new_pickup: AddressDTO = self.new_pickup_address_with_street("Puławska", 28)
+        # and
         self.transit_service.change_transit_address_from(
             transit.id,
-            AddressDTO(country="Polska", city="Warszawa", street="Puławska", building_number=28)
+            new_pickup
         )
 
         # then
@@ -131,16 +156,18 @@ class TestTransitLifeCycleIntegration(IsolatedAsyncioTestCase):
 
     async def test_cannot_change_pickup_place_after_transit_is_accepted(self):
         # given
+        pickup: AddressDTO = AddressDTO(country="Polska", city="Warszawa", street="Młynarska", building_number=20)
+        # and
         destination = AddressDTO(country="Polska", city="Warszawa", street="Żytnia", building_number=25)
         # and
-        transit = self.request_transit_from_to(
-            AddressDTO(country="Polska", city="Warszawa", street="Młynarska", building_number=20),
+        driver: int = self.a_nearby_driver(pickup)
+        # and
+        transit: TransitDTO = self.request_transit_from_to(
+            pickup,
             destination
         )
         # and
-        changed_to = AddressDTO(country="Polska", city="Warszawa", street="Żytnia", building_number=27)
-        # and
-        driver = self.a_nearby_driver("WU1212")
+        changed_to = self.new_pickup_address(10)
         # and
         self.transit_service.publish_transit(transit.id)
         # and
@@ -155,52 +182,69 @@ class TestTransitLifeCycleIntegration(IsolatedAsyncioTestCase):
 
     async def test_cannot_change_pickup_place_more_than_three_times(self):
         # given
+        pickup: AddressDTO = AddressDTO(country="Polska", city="Warszawa", street="Młynarska", building_number=20)
+        # and
+        destination = AddressDTO(country="Polska", city="Warszawa", street="Żytnia", building_number=25)
+        # and
+        self.a_nearby_driver(pickup)
+        # and
         transit = self.request_transit_from_to(
-            AddressDTO(country="Polska", city="Warszawa", street="Młynarska", building_number=20),
-            AddressDTO(country="Polska", city="Warszawa", street="Żytnia", building_number=25),
+            pickup,
+            destination,
         )
         # and
-        self.transit_service.change_transit_address_from(
-            transit.id,
-            AddressDTO(country="Polska", city="Warszawa", street="Żytnia", building_number=26)
-        )
+        self.transit_service.publish_transit(transit.id)
+
         # and
-        self.transit_service.change_transit_address_from(
-            transit.id,
-            AddressDTO(country="Polska", city="Warszawa", street="Żytnia", building_number=27)
-        )
+        new_pickup_1: AddressDTO = self.new_pickup_address(10)
+        self.transit_service.change_transit_address_from(transit.id, new_pickup_1)
         # and
-        self.transit_service.change_transit_address_from(
-            transit.id,
-            AddressDTO(country="Polska", city="Warszawa", street="Żytnia", building_number=28)
-        )
+        new_pickup_2: AddressDTO = self.new_pickup_address(11)
+        self.transit_service.change_transit_address_from(transit.id, new_pickup_2)
+        # and
+        new_pickup_3: AddressDTO = self.new_pickup_address(12)
+        self.transit_service.change_transit_address_from(transit.id, new_pickup_3)
 
         # expect
         with self.assertRaises(AttributeError):
             self.transit_service.change_transit_address_from(
                 transit.id,
-                AddressDTO(country="Polska", city="Warszawa", street="Żytnia", building_number=29)
+                self.new_pickup_address(13)
             )
 
     async def test_cannot_change_pickup_place_when_it_is_far_way_from_original(self):
         # given
+        pickup: AddressDTO = AddressDTO(country="Polska", city="Warszawa", street="Młynarska", building_number=20)
+        # and
+        destination = AddressDTO(country="Polska", city="Warszawa", street="Żytnia", building_number=25)
+        # and
+        self.a_nearby_driver(pickup)
+        # and
         transit = self.request_transit_from_to(
-            AddressDTO(country="Polska", city="Warszawa", street="Młynarska", building_number=20),
-            AddressDTO(country="Polska", city="Warszawa", street="Żytnia", building_number=25),
+            pickup,
+            destination,
         )
+        # and
+        self.transit_service.publish_transit(transit.id)
 
         # expect
         with self.assertRaises(AttributeError):
             self.transit_service.change_transit_address_from(
                 transit.id,
-                self.far_away_address(transit)
+                self.far_away_address()
             )
 
     async def test_can_cancel_transit(self):
         # given
+        pickup: AddressDTO = AddressDTO(country="Polska", city="Warszawa", street="Młynarska", building_number=20)
+        # and
+        destination = AddressDTO(country="Polska", city="Warszawa", street="Żytnia", building_number=25)
+        # and
+        self.a_nearby_driver(pickup)
+        # and
         transit = self.request_transit_from_to(
-            AddressDTO(country="Polska", city="Warszawa", street="Młynarska", building_number=20),
-            AddressDTO(country="Polska", city="Warszawa", street="Żytnia", building_number=25),
+            pickup,
+            destination,
         )
 
         # when
@@ -212,14 +256,16 @@ class TestTransitLifeCycleIntegration(IsolatedAsyncioTestCase):
 
     async def test_cannot_cancel_transit_after_it_was_started(self):
         # given
+        pickup: AddressDTO = AddressDTO(country="Polska", city="Warszawa", street="Młynarska", building_number=20)
+        # and
         destination = AddressDTO(country="Polska", city="Warszawa", street="Żytnia", building_number=25)
         # and
+        driver: int = self.a_nearby_driver(pickup)
+        # and
         transit = self.request_transit_from_to(
-            AddressDTO(country="Polska", city="Warszawa", street="Młynarska", building_number=20),
+            pickup,
             destination
         )
-        # and
-        driver = self.a_nearby_driver("WU1212")
         # and
         self.transit_service.publish_transit(transit.id)
         # and
@@ -238,12 +284,17 @@ class TestTransitLifeCycleIntegration(IsolatedAsyncioTestCase):
             self.transit_service.cancel_transit(transit.id)
 
     async def test_can_publish_transit(self):
-        transit = self.request_transit_from_to(
-            AddressDTO(country="Polska", city="Warszawa", street="Młynarska", building_number=20),
-            AddressDTO(country="Polska", city="Warszawa", street="Żytnia", building_number=25),
-        )
+        # given
+        pickup: AddressDTO = AddressDTO(country="Polska", city="Warszawa", street="Młynarska", building_number=20)
         # and
-        driver = self.a_nearby_driver("WU1212")
+        destination = AddressDTO(country="Polska", city="Warszawa", street="Żytnia", building_number=25)
+        # and
+        self.a_nearby_driver(pickup)
+        # and
+        transit = self.request_transit_from_to(
+            pickup,
+            destination,
+        )
 
         # when
         self.transit_service.publish_transit(transit.id)
@@ -255,12 +306,16 @@ class TestTransitLifeCycleIntegration(IsolatedAsyncioTestCase):
 
     async def test_can_accept_transit(self):
         # given
-        transit = self.request_transit_from_to(
-            AddressDTO(country="Polska", city="Warszawa", street="Młynarska", building_number=20),
-            AddressDTO(country="Polska", city="Warszawa", street="Żytnia", building_number=25),
-        )
+        pickup: AddressDTO = AddressDTO(country="Polska", city="Warszawa", street="Młynarska", building_number=20)
         # and
-        driver = self.a_nearby_driver("WU1212")
+        destination = AddressDTO(country="Polska", city="Warszawa", street="Żytnia", building_number=25)
+        # and
+        driver: int = self.a_nearby_driver(pickup)
+        # and
+        transit = self.request_transit_from_to(
+            pickup,
+            destination,
+        )
         # and
         self.transit_service.publish_transit(transit.id)
 
@@ -274,14 +329,18 @@ class TestTransitLifeCycleIntegration(IsolatedAsyncioTestCase):
 
     async def test_only_one_driver_can_accept_transit(self):
         # given
+        pickup: AddressDTO = AddressDTO(country="Polska", city="Warszawa", street="Młynarska", building_number=20)
+        # and
+        destination = AddressDTO(country="Polska", city="Warszawa", street="Żytnia", building_number=25)
+        # and
+        driver: int = self.a_nearby_driver(pickup)
+        # and
         transit = self.request_transit_from_to(
-            AddressDTO(country="Polska", city="Warszawa", street="Młynarska", building_number=20),
-            AddressDTO(country="Polska", city="Warszawa", street="Żytnia", building_number=25),
+            pickup,
+            destination,
         )
         # and
-        driver = self.a_nearby_driver("WU1212")
-        # and
-        second_driver = self.a_nearby_driver("DW MARIO")
+        second_driver = self.a_nearby_driver(pickup)
         # and
         self.transit_service.publish_transit(transit.id)
         # and
@@ -293,12 +352,17 @@ class TestTransitLifeCycleIntegration(IsolatedAsyncioTestCase):
 
     async def test_transit_cannot_by_accepted_by_driver_who_already_rejected(self):
         # given
-        transit = self.request_transit_from_to(
-            AddressDTO(country="Polska", city="Warszawa", street="Młynarska", building_number=20),
-            AddressDTO(country="Polska", city="Warszawa", street="Żytnia", building_number=25),
-        )
+        pickup: AddressDTO = AddressDTO(country="Polska", city="Warszawa", street="Młynarska", building_number=20)
         # and
-        driver = self.a_nearby_driver("WU1212")
+        destination = AddressDTO(country="Polska", city="Warszawa", street="Żytnia", building_number=25)
+        # and
+        driver: int = self.a_nearby_driver(pickup)
+        # and
+        transit = self.request_transit_from_to(
+            pickup,
+            destination,
+        )
+
         # and
         self.transit_service.publish_transit(transit.id)
         # and
@@ -310,12 +374,17 @@ class TestTransitLifeCycleIntegration(IsolatedAsyncioTestCase):
 
     async def test_transit_cannot_by_accepted_by_driver_who_has_not_seen_proposal(self):
         # given
-        transit = self.request_transit_from_to(
-            AddressDTO(country="Polska", city="Warszawa", street="Młynarska", building_number=20),
-            AddressDTO(country="Polska", city="Warszawa", street="Żytnia", building_number=25),
-        )
+        pickup: AddressDTO = AddressDTO(country="Polska", city="Warszawa", street="Młynarska", building_number=20)
         # and
-        far_away_driver = self.a_far_away_driver("WU1212")
+        destination = AddressDTO(country="Polska", city="Warszawa", street="Żytnia", building_number=25)
+        # and
+        far_away_driver = self.a_far_away_driver(pickup)
+        # and
+        transit = self.request_transit_from_to(
+            pickup,
+            destination,
+        )
+
         # and
         self.transit_service.publish_transit(transit.id)
 
@@ -325,12 +394,16 @@ class TestTransitLifeCycleIntegration(IsolatedAsyncioTestCase):
 
     async def test_can_start_transit(self):
         # given
-        transit = self.request_transit_from_to(
-            AddressDTO(country="Polska", city="Warszawa", street="Młynarska", building_number=20),
-            AddressDTO(country="Polska", city="Warszawa", street="Żytnia", building_number=25),
-        )
+        pickup: AddressDTO = AddressDTO(country="Polska", city="Warszawa", street="Młynarska", building_number=20)
         # and
-        driver = self.a_nearby_driver("WU1212")
+        destination = AddressDTO(country="Polska", city="Warszawa", street="Żytnia", building_number=25)
+        # and
+        driver: int = self.a_nearby_driver(pickup)
+        # and
+        transit = self.request_transit_from_to(
+            pickup,
+            destination,
+        )
         # and
         self.transit_service.publish_transit(transit.id)
         # and
@@ -346,12 +419,17 @@ class TestTransitLifeCycleIntegration(IsolatedAsyncioTestCase):
 
     async def test_cannot_start_not_accepted_transit(self):
         # given
-        transit = self.request_transit_from_to(
-            AddressDTO(country="Polska", city="Warszawa", street="Młynarska", building_number=20),
-            AddressDTO(country="Polska", city="Warszawa", street="Żytnia", building_number=25),
-        )
+        pickup: AddressDTO = AddressDTO(country="Polska", city="Warszawa", street="Młynarska", building_number=20)
         # and
-        driver = self.a_nearby_driver("WU1212")
+        destination = AddressDTO(country="Polska", city="Warszawa", street="Żytnia", building_number=25)
+        # and
+        driver = self.a_nearby_driver(pickup)
+        # and
+        transit = self.request_transit_from_to(
+            pickup,
+            destination,
+        )
+
         # and
         self.transit_service.publish_transit(transit.id)
 
@@ -361,14 +439,17 @@ class TestTransitLifeCycleIntegration(IsolatedAsyncioTestCase):
 
     async def test_can_complete_transit(self):
         # given
+        pickup: AddressDTO = AddressDTO(country="Polska", city="Warszawa", street="Młynarska", building_number=20)
+        # and
         destination = AddressDTO(country="Polska", city="Warszawa", street="Żytnia", building_number=25)
         # and
+        driver = self.a_nearby_driver(pickup)
+        # and
         transit = self.request_transit_from_to(
-            AddressDTO(country="Polska", city="Warszawa", street="Młynarska", building_number=20),
+            pickup,
             destination,
         )
-        # and
-        driver = self.a_nearby_driver("WU1212")
+
         # and
         self.transit_service.publish_transit(transit.id)
         # and
@@ -391,12 +472,15 @@ class TestTransitLifeCycleIntegration(IsolatedAsyncioTestCase):
         # given
         address_to = AddressDTO(country="Polska", city="Warszawa", street="Żytnia", building_number=25)
         # and
+        pickup: AddressDTO = AddressDTO(country=None, city=None, street=None, building_number=0)
+        # and
+        driver = self.a_nearby_driver(pickup)
+        # and
         transit = self.request_transit_from_to(
-            AddressDTO(country="Polska", city="Warszawa", street="Młynarska", building_number=20),
+            pickup,
             address_to,
         )
-        # and
-        driver = self.a_nearby_driver("WU1212")
+
         # and
         self.transit_service.publish_transit(transit.id)
         # and
@@ -408,12 +492,17 @@ class TestTransitLifeCycleIntegration(IsolatedAsyncioTestCase):
 
     async def test_can_reject_transit(self):
         # given
-        transit = self.request_transit_from_to(
-            AddressDTO(country="Polska", city="Warszawa", street="Młynarska", building_number=20),
-            AddressDTO(country="Polska", city="Warszawa", street="Żytnia", building_number=25),
-        )
+        pickup: AddressDTO = AddressDTO(country="Polska", city="Warszawa", street="Młynarska", building_number=20)
         # and
-        driver = self.a_nearby_driver("WU1212")
+        destination = AddressDTO(country="Polska", city="Warszawa", street="Żytnia", building_number=25)
+        # and
+        driver = self.a_nearby_driver(pickup)
+        # and
+        transit = self.request_transit_from_to(
+            pickup,
+            destination,
+        )
+
         # and
         self.transit_service.publish_transit(transit.id)
 
@@ -425,22 +514,64 @@ class TestTransitLifeCycleIntegration(IsolatedAsyncioTestCase):
         self.assertEqual(Transit.Status.WAITING_FOR_DRIVER_ASSIGNMENT, loaded.status)
         self.assertIsNone(loaded.accepted_at)
 
-    def far_away_address(self, address_from: AddressDTO):
-        address_dto = AddressDTO(country="Dania", city="Kopenhaga", street="Mylve", building_number=2)
-        when(self.geocoding_service).geocode_address(ANY).thenReturn([1000.0, 1000.0])
-        when(self.geocoding_service).geocode_address(address_from.to_address_entity()).thenReturn([1.0, 1.0])
+    def new_address(self, country: str, city: str, street: str, building_number: int) -> AddressDTO:
+        address_dto: AddressDTO = self.fixtures.an_address_mocked(
+            geocoding_service=self.geocoding_service,
+            country=country,
+            city=city,
+            street=street,
+            building_number=building_number
+        )
+        when(self.transit_service.geocoding_service).geocode_address(
+            AddressMatcher(dto=address_dto)
+        ).thenReturn([1.0, 1.0])
         return address_dto
 
-    def a_nearby_driver(self, plate_number: str) -> int:
-        return self.fixtures.a_nearby_driver(plate_number, 1, 1, CarClass.VAN, datetime.now(), "BRAND").id
+    def far_away_address(self):
+        address_dto = AddressDTO(country="Dania", city="Kopenhaga", street="Mylve", building_number=2)
+        when(self.transit_service.geocoding_service).geocode_address(
+            AddressMatcher(dto=address_dto)
+        ).thenReturn(
+            [10000.0, 21211321.0]
+        )
+        return address_dto
 
-    def request_transit_from_to(self, pickup: AddressDTO, destination: AddressDTO) -> Transit:
+    def a_nearby_driver(self, address_from: AddressDTO) -> int:
+        return self.fixtures.a_nearby_driver_default(self.geocoding_service, address_from.to_address_entity(), 1, 1).id
+
+    def a_far_away_driver(self, address: AddressDTO) -> int:
+        when(self.transit_service.geocoding_service).geocode_address(
+            AddressMatcher(dto=address)
+        ).thenReturn(
+            [20000000.0, 100000000.0]
+        )
+        return self.fixtures.a_nearby_driver(
+            "DW MARIO", 1000000000, 1000000000, CarClass.VAN, datetime.now(), "BRAND"
+        ).id
+
+    def request_transit_from_to(self, pickup_dto: AddressDTO, destination: AddressDTO) -> TransitDTO:
+        when(self.transit_service.geocoding_service).geocode_address(
+            AddressMatcher(dto=destination)
+        ).thenReturn([1.0, 1.0])
         return self.transit_service.create_transit(
-            self.fixtures.a_transit_dto(pickup, destination)
+            self.fixtures.a_transit_dto(pickup_dto, destination)
         )
 
-    def a_far_away_driver(self, plate_number: str) -> int:
-        return self.fixtures.a_nearby_driver(plate_number, 1000, 1000, CarClass.VAN, datetime.now(), "BRAND").id
+    def new_pickup_address(self, building_number: int) -> AddressDTO:
+        new_pickup: AddressDTO = AddressDTO(
+            country="Polska", city="Warszawa", street="Mazowiecka", building_number=building_number)
+        when(self.transit_service.geocoding_service).geocode_address(
+            AddressMatcher(dto=new_pickup)
+        ).thenReturn([1, 1])
+        return new_pickup
+
+    def new_pickup_address_with_street(self, street: str, building_number: int) -> AddressDTO:
+        new_pickup: AddressDTO = AddressDTO(
+            country="Polska", city="Warszawa", street=street, building_number=building_number)
+        when(self.transit_service.geocoding_service).geocode_address(
+            AddressMatcher(dto=new_pickup)
+        ).thenReturn([1, 1])
+        return new_pickup
 
     async def asyncTearDown(self) -> None:
         drop_db_and_tables()

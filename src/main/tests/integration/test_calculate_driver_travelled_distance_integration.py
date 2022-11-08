@@ -9,7 +9,7 @@ from freezegun import freeze_time
 from core.database import create_db_and_tables, drop_db_and_tables
 from driverfleet.driver import Driver
 from driverfleet.driverreport.travelleddistance.travelled_distance_service import TravelledDistanceService
-from entity.driver_position import DriverPosition
+from tracking.driver_position import DriverPosition
 
 from tests.common.fixtures import DependencyResolver, Fixtures
 

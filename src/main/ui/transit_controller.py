@@ -18,8 +18,7 @@ class TransitController:
 
     @transit_router.post("/transits/")
     def create_transit(self, transit_dto: TransitDTO) -> TransitDTO:
-        transit = self.transit_service.create_transit(transit_dto)
-        return self.transit_service.load_transit(transit.id)
+        return self.transit_service.create_transit(transit_dto)
 
     @transit_router.post("/transits/{transits_id}/changeAddressTo")
     def change_address_to(self, transits_id: int, address_dto: AddressDTO) -> TransitDTO:

@@ -1,11 +1,11 @@
 from datetime import datetime
+from typing import List
 
 from injector import inject
 
 from carfleet.car_class import CarClass
-from entity.driver_session import DriverSession
-from driverfleet.driver_repository import DriverRepositoryImp
-from repository.driver_session_repository import DriverSessionRepositoryImp
+from tracking.driver_session import DriverSession
+from tracking.driver_session_repository import DriverSessionRepositoryImp
 from carfleet.car_type_service import CarTypeService
 
 
@@ -50,3 +50,12 @@ class DriverSessionService:
 
     def find_by_driver(self, driver_id):
         return self.driver_session_repository.find_by_driver(driver_id)
+
+    def find_currently_logged_driver_ids(self, drivers_ids: List[int] , car_classes: List[CarClass]) -> List[int]:
+        return list(map(
+            lambda driver_session: driver_session.driver_id,
+            self.driver_session_repository.find_all_by_logged_out_at_null_and_driver_id_in_and_car_class_in(
+                drivers_ids,
+                car_classes
+            )
+        ))

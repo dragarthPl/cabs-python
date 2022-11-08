@@ -8,7 +8,7 @@ from freezegun import freeze_time
 from core.database import create_db_and_tables, drop_db_and_tables
 from geolocation.distance import Distance
 from driverfleet.driver import Driver
-from service.driver_tracking_service import DriverTrackingService
+from tracking.driver_tracking_service import DriverTrackingService
 from tests.common.fixtures import DependencyResolver, Fixtures
 
 dependency_resolver = DependencyResolver()

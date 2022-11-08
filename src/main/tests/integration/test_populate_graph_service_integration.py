@@ -51,7 +51,7 @@ class TestPopulateGraphServiceIntegration(TestCase):
     def a_transit_from_to(self, pickup: Address, destination: Address, client: Client):
         when(self.geocoding_service).geocode_address(destination).thenReturn([1, 1])
         driver: Driver = self.fixtures.a_random_nearby_driver(self.geocoding_service, pickup)
-        self.fixtures.a_journey(50, client, driver, pickup, destination)
+        self.fixtures.a_ride(50, client, driver, pickup, destination)
 
     async def tearDown(self) -> None:
         drop_db_and_tables()
