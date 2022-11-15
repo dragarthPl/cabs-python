@@ -14,11 +14,11 @@ class CarType(BaseEntity, table=True):
         INACTIVE = 1
         ACTIVE = 2
 
-    #@Enumerated(EnumType.STRING)
-    #@Column(nullable = false)
+    # @Enumerated(EnumType.STRING)
+    # @Column(nullable = false)
     car_class: CarClass = Field(sa_column=Column(Enum(CarClass), nullable=False))
     description: Optional[str]
-    #@Enumerated(EnumType.STRING)
+    # @Enumerated(EnumType.STRING)
     status: Optional[Status] = Field(default=Status.INACTIVE, sa_column=Column(Enum(Status)))
     # @Column(nullable = false)
     cars_counter: int = Field(default=0, sa_column=Column(Integer, nullable=False))
@@ -35,7 +35,9 @@ class CarType(BaseEntity, table=True):
 
     def activate(self):
         if self.cars_counter < self.min_no_of_cars_to_activate_class:
-            raise ValueError(f"Cannot activate car class when less than {self.min_no_of_cars_to_activate_class} cars in the fleet")
+            raise ValueError(
+                f"Cannot activate car class when less than {self.min_no_of_cars_to_activate_class} cars in the fleet"
+            )
         self.status = self.Status.ACTIVE
 
     def deactivate(self):

@@ -25,7 +25,10 @@ class ContractAttachment(BaseEntity, table=True):
     accepted_at: Optional[datetime]
     rejected_at: Optional[datetime]
     change_date: Optional[datetime]
-    status: Optional[ContractAttachmentStatus] = Field(default=ContractAttachmentStatus.PROPOSED, sa_column=Column(Enum(ContractAttachmentStatus)))
+    status: Optional[ContractAttachmentStatus] = Field(
+        default=ContractAttachmentStatus.PROPOSED,
+        sa_column=Column(Enum(ContractAttachmentStatus))
+    )
 
     # @ManyToOne
     contract_id: Optional[int] = Field(default=None, foreign_key="contract.id")

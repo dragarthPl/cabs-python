@@ -40,4 +40,5 @@ class Client(BaseEntity, table=True):
             return False
         return self.id is not None and self.id == o.id
 
+
 __all__ = ["Client"]

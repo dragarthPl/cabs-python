@@ -10,12 +10,12 @@ from dateutil.relativedelta import relativedelta
 from crm.claims.claim_service import ClaimService
 from loyalty.awards_account_dto import AwardsAccountDTO
 from crm.client_dto import ClientDTO
-from entity import Client
+from crm.client import Client
 from loyalty.awarded_miles import AwardedMiles
 from loyalty.awards_account import AwardsAccount
 from loyalty.awards_account_repository import AwardsAccountRepositoryImp
 from crm.client_repository import ClientRepositoryImp
-from repository.transit_repository import TransitRepositoryImp
+from ride.transit_repository import TransitRepositoryImp
 from loyalty.awards_service import AwardsService
 from crm.client_service import ClientService
 
@@ -86,13 +86,13 @@ class AwardsServiceImpl(AwardsService):
         account.deactivate()
         self.account_repository.save(account)
 
-    def register_miles(self, client_id: int, transit_id: int) -> AwardedMiles:
+    def register_miles(self, client_id: int, transit_id: int) -> Optional[AwardedMiles]:
         account = self.account_repository.find_by_client_id(client_id)
         transit = self.transit_repository.get_one(transit_id)
         if transit is None:
             raise AttributeError("Transit does not exists, id = " + str(transit_id))
 
-        if account == None or not account.is_active:
+        if account is None or not account.is_active:
             return None
         else:
             expire_at = datetime.now() + relativedelta(days=self.app_properties.miles_expiration_in_days)
@@ -111,7 +111,7 @@ class AwardsServiceImpl(AwardsService):
     def register_non_expiring_miles(self, client_id: int, miles: int) -> AwardedMiles:
         account = self.account_repository.find_by_client_id(client_id)
 
-        if account == None:
+        if account is None:
             raise AttributeError("Account does not exists, client_id = " + str(client_id))
         else:
             _miles = account.add_non_expiring_miles(
@@ -141,7 +141,8 @@ class AwardsServiceImpl(AwardsService):
             )
 
     def choose_strategy(
-            self, transits_counter: int, claims_counter: int, client_type: Client.Type, is_sunday: bool) -> Callable:
+            self, transits_counter: int, claims_counter: int, client_type: Client.Type, is_sunday: bool
+    ) -> Callable:
         if claims_counter >= 3:
             return lambda x: (x is None, -x.get_expiration_date().timestamp() or -sys.maxsize)
         elif client_type == Client.Type.VIP:

@@ -21,5 +21,6 @@ class DriverDTO(BaseModel):
         super().__init__(**data)
         if driver is not None and driver.get_driver_license():
             self.driver_license = driver.get_driver_license().as_string()
+
     def __hash__(self):
         return hash((self.id, self.first_name, self.last_name))

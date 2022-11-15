@@ -44,14 +44,14 @@ class DriverSessionService:
         session = self.driver_session_repository.find_top_by_driver_and_logged_out_at_is_null_order_by_logged_at_desc(
             driver_id
         )
-        if session != None:
+        if session is not None:
             session.logged_out_at = datetime.now()
             self.car_type_service.unregister_car(session.car_class)
 
     def find_by_driver(self, driver_id):
         return self.driver_session_repository.find_by_driver(driver_id)
 
-    def find_currently_logged_driver_ids(self, drivers_ids: List[int] , car_classes: List[CarClass]) -> List[int]:
+    def find_currently_logged_driver_ids(self, drivers_ids: List[int], car_classes: List[CarClass]) -> List[int]:
         return list(map(
             lambda driver_session: driver_session.driver_id,
             self.driver_session_repository.find_all_by_logged_out_at_null_and_driver_id_in_and_car_class_in(

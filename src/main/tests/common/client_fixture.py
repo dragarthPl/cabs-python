@@ -1,6 +1,6 @@
 from injector import inject
 
-from entity import Client
+from crm.client import Client
 from crm.client_repository import ClientRepositoryImp
 
 

@@ -114,7 +114,7 @@ class TestAcmeContract(TestCase):
                 AcmeContractStateAssembler.VERIFIED
             ).with_param(
                 AcmeContractStateAssembler.PARAM_VERIFIER,
-                 self.OTHER_USER
+                self.OTHER_USER
             )
         )
         self.assertEqual(AcmeContractStateAssembler.VERIFIED, state.state_descriptor)

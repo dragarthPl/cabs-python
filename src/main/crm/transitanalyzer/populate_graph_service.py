@@ -1,9 +1,9 @@
 from injector import inject
 
-from repository.transit_repository import TransitRepositoryImp
+from ride.transit_repository import TransitRepositoryImp
 from crm.transitanalyzer.graph_transit_analyzer import GraphTransitAnalyzer
-from transitdetails.transit_details_dto import TransitDetailsDTO
-from transitdetails.transit_details_facade import TransitDetailsFacade
+from ride.details.transit_details_dto import TransitDetailsDTO
+from ride.details.transit_details_facade import TransitDetailsFacade
 
 
 class PopulateGraphService:

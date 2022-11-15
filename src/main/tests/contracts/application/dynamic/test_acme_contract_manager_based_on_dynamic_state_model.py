@@ -1,10 +1,6 @@
 from typing import Dict, Any
 from unittest import TestCase
 
-import fastapi
-from fastapi.params import Depends
-
-from common.application_event_publisher import ApplicationEventPublisher
 from contracts.application.editor.commit_result import CommitResult
 from contracts.application.editor.document_dto import DocumentDTO
 from contracts.model.state.dynamic.config.statechange.author_is_not_averifier import AuthorIsNotAVerifier
@@ -22,8 +18,6 @@ from contracts.model.state.dynamic.acme.acme_contract_state_assembler import Acm
 
 from tests.contracts.application.dynamic.document_operation_result_assert import DocumentOperationResultAssert
 from tests.common.fixtures import DependencyResolver
-from tests.contracts.application.straightforward.acme.test_acme_contract_process_based_on_straightforward_state_model import \
-    DefaultFakeApplicationEventPublisher
 
 dependency_resolver = DependencyResolver()
 

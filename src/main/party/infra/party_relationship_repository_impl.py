@@ -30,9 +30,9 @@ class PartyRelationshipRepositoryImpl(PartyRelationshipRepository):
             "SELECT * FROM PartyRelationship AS r "
             "WHERE r.name = :name "
             "AND ("
-                "(r.party_a_id = :party_a AND r.party_b_id = :party_b) "
-                "OR "
-                "(r.party_a_id = :party_b AND r.party_b_id = :party_a)"
+            "(r.party_a_id = :party_a AND r.party_b_id = :party_b) "
+            "OR "
+            "(r.party_a_id = :party_b AND r.party_b_id = :party_a)"
             ")"
         )
         stmt = stmt.bindparams(

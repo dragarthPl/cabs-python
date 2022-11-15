@@ -54,7 +54,7 @@ class RepairProcess:
             role: Optional[RoleForRepairer] = role_object_factory.get_role(RoleForRepairer)
             if role:
                 # actual repair request handling
-                repairing_result: RepairingResult = role.handle(repair_request);
+                repairing_result: RepairingResult = role.handle(repair_request)
                 return ResolveResult(
                     ResolveResult.Status.SUCCESS,
                     repairing_result.handling_party,

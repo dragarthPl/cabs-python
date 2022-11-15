@@ -1,6 +1,5 @@
 from typing import Optional, Any
 
-
 from pydantic import BaseModel
 
 from driverfleet.driver_attribute import DriverAttribute

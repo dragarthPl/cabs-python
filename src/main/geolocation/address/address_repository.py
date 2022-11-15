@@ -2,9 +2,9 @@ from typing import Optional
 
 from injector import inject
 
-from core.database import get_session
-from entity import Address
 from sqlmodel import Session
+
+from geolocation.address.address import Address
 
 
 class AddressRepositoryImp:
@@ -33,7 +33,7 @@ class AddressRepositoryImp:
     def find_by_hash(self, value: str) -> Optional[Address]:
         return self.session.query(Address).where(Address.hash == value).first()
 
-    def find_hash_by_id(self, address_id: int) -> Optional[Address]:
+    def find_hash_by_id(self, address_id: int) -> Optional[int]:
         return self.session.query(Address).where(Address.id == address_id).first().hash
 
     def get_by_hash(self, hash: int) -> Address:

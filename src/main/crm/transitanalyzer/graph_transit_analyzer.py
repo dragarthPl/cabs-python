@@ -5,7 +5,7 @@ from typing import List, Tuple
 
 from neo4j import GraphDatabase, Query
 
-from entity.events.transit_completed import TransitCompleted
+from ride.events.transit_completed import TransitCompleted
 from fastapi_events.handlers.local import local_handler
 from fastapi_events.typing import Event
 
@@ -26,7 +26,9 @@ class GraphTransitAnalyzer:
             f"MATCH p=(a:Address)-[:Transit*]->(:Address) "
             f"WHERE a.hash = {address_hash} "
             f"AND (ALL(x IN range(1, length(p)-1) WHERE ((relationships(p)[x]).clientId = {client_id}) AND "
-            f"0 <= duration.inSeconds( (relationships(p)[x-1]).completeAt, (relationships(p)[x]).started).minutes <= 15)) "
+            f"0 <= duration.inSeconds( "
+            f"(relationships(p)[x-1]).completeAt, (relationships(p)[x]).started).minutes <= 15)"
+            f") "
             f"AND length(p) >= 1 "
             f"RETURN [x in nodes(p) | x.hash] AS hashes ORDER BY length(p) DESC LIMIT 1"
         )
@@ -54,7 +56,8 @@ class GraphTransitAnalyzer:
             session.run(Query((
                 f"MATCH (from:Address {{hash: {address_from_hash}}}), (to:Address {{hash: {address_to_hash}}}) "
                 f"CREATE (from)-[:Transit {{clientId: {client_id}, transitId: {transit_id}, "
-                f"started: datetime(\"{started.isoformat()}\"), completeAt: datetime(\"{complete_at.isoformat()}\") }}]->(to)")))
+                f"started: datetime(\"{started.isoformat()}\"),"
+                f" completeAt: datetime(\"{complete_at.isoformat()}\") }}]->(to)")))
 
     def handle(self, event: Tuple[str, TransitCompleted]):
         event_name: str = event[0]

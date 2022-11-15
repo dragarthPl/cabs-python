@@ -1,7 +1,8 @@
 from typing import Optional
 
-from entity import Address
 from pydantic import BaseModel
+
+from geolocation.address.address import Address
 
 
 class AddressDTO(BaseModel):

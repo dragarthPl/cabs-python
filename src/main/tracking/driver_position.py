@@ -11,11 +11,11 @@ class DriverPosition(BaseEntity, table=True):
     # @ManyToOne
     driver_id: Optional[int] = Field(default=0, sa_column=Column(Integer, nullable=True))
     # @Column(nullable = false)
-    latitude: float = Field(sa_column=Column(Float, nullable=False))
+    latitude: Optional[float] = Field(sa_column=Column(Float, nullable=False))
     # @Column(nullable = false)
-    longitude: float = Field(sa_column=Column(Float, nullable=False))
+    longitude: Optional[float] = Field(sa_column=Column(Float, nullable=False))
     # @Column(nullable = false)
-    seen_at: datetime = Field(sa_column=Column(DateTime, nullable=False))
+    seen_at: Optional[datetime] = Field(sa_column=Column(DateTime, nullable=False))
 
     def __eq__(self, o):
         if not isinstance(o, DriverPosition):

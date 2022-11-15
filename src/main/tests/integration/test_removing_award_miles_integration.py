@@ -6,16 +6,20 @@ import pytz
 from dateutil.relativedelta import relativedelta
 from fastapi_events import middleware_identifier
 from freezegun import freeze_time
+from mockito import when, ANY
 
 from cabs_application import CabsApplication
 from config.app_properties import AppProperties
 from core.database import create_db_and_tables, drop_db_and_tables
-from entity import Client
+from crm.client import Client
 from loyalty.awarded_miles import AwardedMiles
 from loyalty.awards_account_repository import AwardsAccountRepositoryImp
 from loyalty.awards_service import AwardsService
 from loyalty.awards_service_impl import AwardsServiceImpl
 from geolocation.geocoding_service import GeocodingService
+from money import Money
+from pricing.tariff import Tariff
+from pricing.tariffs import Tariffs
 
 from tests.common.fixtures import DependencyResolver, Fixtures
 
@@ -36,6 +40,7 @@ class TestRemovingAwardMilesIntegration(TestCase):
     fixtures: Fixtures = dependency_resolver.resolve_dependency(Fixtures)
     app_properties: AppProperties = dependency_resolver.resolve_dependency(AppProperties)
     geocoding_service: GeocodingService = dependency_resolver.resolve_dependency(GeocodingService)
+    tariffs: Tariffs = dependency_resolver.resolve_dependency(Tariffs)
 
     async def setUp(self):
         create_db_and_tables()
@@ -64,6 +69,7 @@ class TestRemovingAwardMilesIntegration(TestCase):
         # given
         client = self.client_with_an_active_miles_program(Client.Type.NORMAL)
         # and
+        when(self.tariffs).choose(ANY).thenReturn(Tariff(km_rate=0, name="fake", base_fee=Money(10)))
         self.fixtures.client_has_done_transits(client, 15, self.geocoding_service)
         # and
         oldest = self.granted_miles_that_will_expire_in_days(10, 60, self.DAY_BEFORE_YESTERDAY, client)
@@ -123,7 +129,9 @@ class TestRemovingAwardMilesIntegration(TestCase):
         self.assert_that_miles_were_reduced_to(second_to_expire, 4, awarded_miles)
         self.assert_that_miles_were_reduced_to(third_to_expire, 5, awarded_miles)
 
-    async def test_should_remove_soon_to_expire_miles_first_when_removing_on_sunday_and_client_has_done_many_transits(self):
+    async def test_should_remove_soon_to_expire_miles_first_when_removing_on_sunday_and_client_has_done_many_transits(
+            self
+    ):
         # given
         client = self.client_with_an_active_miles_program(Client.Type.NORMAL)
         # and

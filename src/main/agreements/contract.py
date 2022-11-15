@@ -3,7 +3,7 @@ from __future__ import annotations
 import uuid as uuid_pkg
 
 from datetime import datetime
-from typing import Set, Optional, Any
+from typing import Optional, Any, List
 
 from sqlalchemy import Column, DateTime, Enum, String
 from sqlalchemy.orm import relationship
@@ -19,7 +19,7 @@ class Contract(BaseEntity, table=True):
     __table_args__ = {'extend_existing': True}
 
     # @OneToMany(mappedBy = "contract")
-    attachments: Set[ContractAttachment] = Relationship(
+    attachments: List[ContractAttachment] = Relationship(
         sa_relationship=relationship(
             "agreements.contract_attachment.ContractAttachment", back_populates="contract")
     )
@@ -31,7 +31,13 @@ class Contract(BaseEntity, table=True):
     rejected_at: Optional[datetime]
     change_date: Optional[datetime]
     # @Column(nullable = false)
-    status: ContractStatus = Field(default=ContractStatus.NEGOTIATIONS_IN_PROGRESS, sa_column=Column(Enum(ContractStatus), nullable=False))
+    status: ContractStatus = Field(
+        default=ContractStatus.NEGOTIATIONS_IN_PROGRESS,
+        sa_column=Column(
+            Enum(ContractStatus),
+            nullable=False
+        )
+    )
     # @Column(nullable = false)
     contract_no: str = Field(default=0, sa_column=Column(String, nullable=False))
 

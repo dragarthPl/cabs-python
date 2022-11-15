@@ -9,7 +9,7 @@ from driverfleet.driver import Driver
 from driverfleet.driver_attribute import DriverAttribute
 from driverfleet.driver_attribute_name import DriverAttributeName
 from driverfleet.driver_fee import DriverFee
-from entity import Address
+from geolocation.address.address import Address
 from money import Money
 from driverfleet.driver_attribute_repository import DriverAttributeRepositoryImp
 from driverfleet.driver_fee_repository import DriverFeeRepositoryImp
@@ -77,11 +77,23 @@ class DriverFixture:
             "",
         )
 
+    def a_nearby_driver_only_stubbed(
+            self,
+            stubbed_geocoding_service: GeocodingService,
+            pickup: Address,
+            latitude: float,
+            longitude: float
+    ) -> Driver:
+        when(stubbed_geocoding_service).geocode_address(
+            AddressMatcher(pickup)
+        ).thenReturn([latitude, longitude])
+        return self.a_nearby_driver("WU DAMIAN", latitude, longitude, CarClass.VAN, datetime.now(), "brand")
+
     def a_random_nearby_driver(self, stubbed_geocoding_service: GeocodingService, pickup: Address) -> Driver:
         latitude: float = random()
         longitude: float = random()
-        when(stubbed_geocoding_service).geocode_address(pickup).thenReturn([latitude, longitude])
-        return self.a_nearby_driver("WU DAMIAN", latitude, longitude, CarClass.VAN, datetime.now(), "brand")
+        return self.a_nearby_driver_only_stubbed(
+            stubbed_geocoding_service, pickup, latitude, longitude)
 
     def a_nearby_driver_default(
         self,
@@ -112,23 +124,21 @@ class DriverFixture:
         return self.driver_is_at_geo_localization(
             plate_number, latitude, longitude, car_class, driver, when, car_brand)
 
-    def driver_is_at_geo_localization(self,
+    def driver_is_at_geo_localization(
+        self,
         plate_number: str,
         latitude: float,
         longitude: float,
         car_class: CarClass,
         driver: Driver,
-        when: datetime,
+        since: datetime,
         car_brand: str
     ) -> Driver:
-        self.driver_tracking_service.register_position(driver.id, latitude, longitude, when)
+        self.driver_tracking_service.register_position(driver.id, latitude, longitude, since)
         return driver
 
     def driver_logs_in(self, plate_number: str, car_class: CarClass, driver: Driver, car_brand: str) -> None:
         self.driver_session_service.log_in(driver.id, plate_number, car_class, car_brand)
-
-    def driver_logs_out(self, driver: Driver) -> None:
-        self.driver_session_service.log_out_current_session(driver.id)
 
     def driver_has_attribute(self, driver: Driver, name: DriverAttributeName, value: str):
         self.driver_attribute_repository.save(DriverAttribute(driver=driver, name=name, value=value))

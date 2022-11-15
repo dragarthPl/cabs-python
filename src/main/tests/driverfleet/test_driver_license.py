@@ -1,6 +1,6 @@
 from unittest import TestCase
 
-from entity import DriverLicense
+from driverfleet.driver_license import DriverLicense
 
 
 class TestDriverLicense(TestCase):

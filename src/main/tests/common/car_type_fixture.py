@@ -2,7 +2,6 @@ from injector import inject
 
 from carfleet.car_class import CarClass
 from carfleet.car_type_dto import CarTypeDTO
-from entity import CarType
 from carfleet.car_type_service import CarTypeService
 
 

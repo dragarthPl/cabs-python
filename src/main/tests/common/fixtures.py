@@ -8,12 +8,13 @@ from carfleet.car_type_dto import CarTypeDTO
 from common.application_event_publisher import ApplicationEventPublisher
 from core.database import DatabaseModule
 from crm.claims.claim import Claim
+from crm.client import Client
 from driverfleet.driver import Driver
 from driverfleet.driver_attribute_name import DriverAttributeName
 from driverfleet.driver_fee import DriverFee
+from geolocation.address.address import Address
 from geolocation.address.address_dto import AddressDTO
-from dto.transit_dto import TransitDTO
-from entity import Transit, Address, Client
+from ride.transit_dto import TransitDTO
 from party.infra.party_relationship_repository_impl import PartyRelationshipRepositoryImpl
 from party.infra.party_repository_impl import PartyRepositoryImpl
 from party.model.party.party_relationship_repository import PartyRelationshipRepository
@@ -21,6 +22,7 @@ from party.model.party.party_repository import PartyRepository
 from loyalty.awards_service import AwardsService
 from loyalty.awards_service_impl import AwardsServiceImpl
 from geolocation.geocoding_service import GeocodingService
+from ride.transit import Transit
 from tests.common.address_fixture import AddressFixture
 from tests.common.awards_account_fixture import AwardsAccountFixture
 from tests.common.car_type_fixture import CarTypeFixture
@@ -190,8 +192,16 @@ class Fixtures:
             driver: Driver,
             address_from: Address,
             destination: Address
-    ) -> Transit:
-        return self.ride_fixture.a_ride_with_fixed_clock(price, published_at, completed_at, client, driver, address_from, destination)
+    ) -> TransitDTO:
+        return self.ride_fixture.a_ride_with_fixed_clock(
+            price,
+            published_at,
+            completed_at,
+            client,
+            driver,
+            address_from,
+            destination
+        )
 
     def an_active_car_category(self, car_class: CarClass) -> CarTypeDTO:
         return self.car_type_fixture.an_active_car_category(car_class)

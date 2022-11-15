@@ -36,7 +36,13 @@ class DriverPositionRepositoryImp:
         ).all()
 
     def find_average_driver_position_since(
-            self, latitude_min, latitude_max, longitude_min, longitude_max, date: datetime) -> List[DriverPositionDTOV2]:
+        self,
+        latitude_min,
+        latitude_max,
+        longitude_min,
+        longitude_max,
+        date: datetime
+    ) -> List[DriverPositionDTOV2]:
         stmt = text(
             "SELECT "
             "p.id, "

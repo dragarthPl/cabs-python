@@ -12,7 +12,9 @@ from httpx import AsyncClient
 from carfleet.car_class import CarClass
 from core.database import create_db_and_tables, drop_db_and_tables
 from crm.transitanalyzer.analyzed_addresses_dto import AnalyzedAddressesDTO
-from entity import Client, Address
+from crm.client import Client
+from driverfleet.driver import Driver
+from geolocation.address.address import Address
 from geolocation.address.address_repository import AddressRepositoryImp
 from geolocation.geocoding_service import GeocodingService
 from crm.transitanalyzer.graph_transit_analyzer import GraphTransitAnalyzer
@@ -59,104 +61,82 @@ class TestAnalyzeNearbyTransitsIntegration(IsolatedAsyncioTestCase):
             # and
             # 1-2-3-4
             self.a_transit_from_to(
-                50,
                 datetime(2021, 1, 1, 0, 00).astimezone(pytz.utc),
                 datetime(2021, 1, 1, 0, 5).astimezone(pytz.utc),
                 client,
-                driver,
                 address1,
                 address2,
             )
             self.a_transit_from_to(
-                50,
                 datetime(2021, 1, 1, 0, 6).astimezone(pytz.utc),
                 datetime(2021, 1, 1, 0, 10).astimezone(pytz.utc),
                 client,
-                driver,
                 address2,
                 address3,
             )
             self.a_transit_from_to(
-                50,
                 datetime(2021, 1, 1, 0, 15).astimezone(pytz.utc),
                 datetime(2021, 1, 1, 0, 20).astimezone(pytz.utc),
                 client,
-                driver,
                 address3,
                 address4,
             )
             # 1-2-3
             self.a_transit_from_to(
-                50,
                 datetime(2021, 1, 2, 0, 00).astimezone(pytz.utc),
                 datetime(2021, 1, 2, 0, 10).astimezone(pytz.utc),
                 client,
-                driver,
                 address1,
                 address2,
             )
             self.a_transit_from_to(
-                50,
                 datetime(2021, 1, 2, 0, 15).astimezone(pytz.utc),
                 datetime(2021, 1, 2, 0, 20).astimezone(pytz.utc),
                 client,
-                driver,
                 address2,
                 address3,
             )
             # 1-3
             self.a_transit_from_to(
-                50,
                 datetime(2021, 1, 3, 0, 00).astimezone(pytz.utc),
                 datetime(2021, 1, 3, 0, 10).astimezone(pytz.utc),
                 client,
-                driver,
                 address1,
                 address3,
             )
             # 3-1-2-5-4-5
             self.a_transit_from_to(
-                50,
                 datetime(2021, 2, 1, 0, 00).astimezone(pytz.utc),
                 datetime(2021, 2, 1, 0, 10).astimezone(pytz.utc),
                 client,
-                driver,
                 address3,
                 address1,
             )
             self.a_transit_from_to(
-                50,
                 datetime(2021, 2, 1, 0, 20).astimezone(pytz.utc),
                 datetime(2021, 2, 1, 0, 25).astimezone(pytz.utc),
                 client,
-                driver,
                 address1,
                 address2,
             )
             self.a_transit_from_to(
-                50,
                 datetime(2021, 2, 1, 0, 30).astimezone(pytz.utc),
                 datetime(2021, 2, 1, 0, 35).astimezone(pytz.utc),
                 client,
-                driver,
                 address2,
                 address5,
             )
             self.a_transit_from_to(
-                50,
                 datetime(2021, 2, 1, 0, 40).astimezone(pytz.utc),
                 datetime(2021, 2, 1, 0, 45).astimezone(pytz.utc),
                 client,
-                driver,
                 address5,
                 address4,
             )
             self.a_transit_from_to(
-                50,
                 datetime(2021, 2, 1, 0, 50).astimezone(pytz.utc),
                 datetime(2021, 2, 1, 0, 55).astimezone(pytz.utc),
                 client,
-                driver,
                 address4,
                 address5,
             )
@@ -188,104 +168,82 @@ class TestAnalyzeNearbyTransitsIntegration(IsolatedAsyncioTestCase):
             # and
             # 1-2-3-4
             self.a_transit_from_to(
-                50,
                 datetime(2021, 1, 1, 0, 00).astimezone(pytz.utc),
                 datetime(2021, 1, 1, 0, 10).astimezone(pytz.utc),
                 client1,
-                driver,
                 address1,
                 address2,
             )
             self.a_transit_from_to(
-                50,
                 datetime(2021, 1, 1, 0, 15).astimezone(pytz.utc),
                 datetime(2021, 1, 1, 0, 20).astimezone(pytz.utc),
                 client1,
-                driver,
                 address2,
                 address3,
             )
             self.a_transit_from_to(
-                50,
                 datetime(2021, 1, 1, 0, 25).astimezone(pytz.utc),
                 datetime(2021, 1, 1, 0, 30).astimezone(pytz.utc),
                 client1,
-                driver,
                 address3,
                 address4,
             )
             # 1-2-3
             self.a_transit_from_to(
-                50,
                 datetime(2021, 1, 2, 0, 00).astimezone(pytz.utc),
                 datetime(2021, 1, 2, 0, 10).astimezone(pytz.utc),
                 client2,
-                driver,
                 address1,
                 address2,
             )
             self.a_transit_from_to(
-                50,
                 datetime(2021, 1, 2, 0, 15).astimezone(pytz.utc),
                 datetime(2021, 1, 2, 0, 20).astimezone(pytz.utc),
                 client2,
-                driver,
                 address2,
                 address3,
             )
             # 1-3
             self.a_transit_from_to(
-                50,
                 datetime(2021, 1, 3, 0, 00).astimezone(pytz.utc),
                 datetime(2021, 1, 3, 0, 10).astimezone(pytz.utc),
                 client3,
-                driver,
                 address1,
                 address3,
             )
             # 3-1-2-5-4-5
             self.a_transit_from_to(
-                50,
                 datetime(2021, 2, 1, 0, 00).astimezone(pytz.utc),
                 datetime(2021, 2, 1, 0, 10).astimezone(pytz.utc),
                 client4,
-                driver,
                 address3,
                 address1,
             )
             self.a_transit_from_to(
-                50,
                 datetime(2021, 2, 1, 0, 20).astimezone(pytz.utc),
                 datetime(2021, 2, 1, 0, 25).astimezone(pytz.utc),
                 client4,
-                driver,
                 address1,
                 address2,
             )
             self.a_transit_from_to(
-                50,
                 datetime(2021, 2, 1, 0, 30).astimezone(pytz.utc),
                 datetime(2021, 2, 1, 0, 35).astimezone(pytz.utc),
                 client4,
-                driver,
                 address2,
                 address5,
             )
             self.a_transit_from_to(
-                50,
                 datetime(2021, 2, 1, 0, 40).astimezone(pytz.utc),
                 datetime(2021, 2, 1, 0, 45).astimezone(pytz.utc),
                 client4,
-                driver,
                 address5,
                 address4,
             )
             self.a_transit_from_to(
-                50,
                 datetime(2021, 2, 1, 0, 50).astimezone(pytz.utc),
                 datetime(2021, 2, 1, 0, 55).astimezone(pytz.utc),
                 client4,
-                driver,
                 address4,
                 address5,
             )
@@ -317,47 +275,37 @@ class TestAnalyzeNearbyTransitsIntegration(IsolatedAsyncioTestCase):
             # and
             # 1-2-3-4-(stop)-5-1
             self.a_transit_from_to(
-                50,
                 datetime(2021, 2, 1, 0, 0).astimezone(pytz.utc),
                 datetime(2021, 2, 1, 0, 5).astimezone(pytz.utc),
                 client,
-                driver,
                 address1,
                 address2,
             )
             self.a_transit_from_to(
-                50,
                 datetime(2021, 2, 1, 0, 10).astimezone(pytz.utc),
                 datetime(2021, 2, 1, 0, 15).astimezone(pytz.utc),
                 client,
-                driver,
                 address2,
                 address3,
             )
             self.a_transit_from_to(
-                50,
                 datetime(2021, 2, 1, 0, 20).astimezone(pytz.utc),
                 datetime(2021, 2, 1, 0, 25).astimezone(pytz.utc),
                 client,
-                driver,
                 address3,
                 address4,
             )
             self.a_transit_from_to(
-                50,
                 datetime(2021, 2, 1, 1, 0).astimezone(pytz.utc),
                 datetime(2021, 2, 1, 1, 10).astimezone(pytz.utc),
                 client,
-                driver,
                 address4,
                 address5,
             )
             self.a_transit_from_to(
-                50,
                 datetime(2021, 2, 1, 1, 10).astimezone(pytz.utc),
                 datetime(2021, 2, 1, 1, 15).astimezone(pytz.utc),
                 client,
-                driver,
                 address5,
                 address1,
             )
@@ -389,104 +337,82 @@ class TestAnalyzeNearbyTransitsIntegration(IsolatedAsyncioTestCase):
             # and
             # 5-1-2-3
             self.a_transit_from_to(
-                50,
                 datetime(2021, 1, 1, 0, 00).astimezone(pytz.utc),
                 datetime(2021, 1, 1, 0, 5).astimezone(pytz.utc),
                 client,
-                driver,
                 address5,
                 address1,
             )
             self.a_transit_from_to(
-                50,
                 datetime(2021, 1, 1, 0, 6).astimezone(pytz.utc),
                 datetime(2021, 1, 1, 0, 10).astimezone(pytz.utc),
                 client,
-                driver,
                 address1,
                 address2,
             )
             self.a_transit_from_to(
-                50,
                 datetime(2021, 1, 1, 0, 15).astimezone(pytz.utc),
                 datetime(2021, 1, 1, 0, 20).astimezone(pytz.utc),
                 client,
-                driver,
                 address2,
                 address3,
             )
             # 3-2-1
             self.a_transit_from_to(
-                50,
                 datetime(2021, 1, 2, 0, 00).astimezone(pytz.utc),
                 datetime(2021, 1, 2, 0, 10).astimezone(pytz.utc),
                 client,
-                driver,
                 address3,
                 address2,
             )
             self.a_transit_from_to(
-                50,
                 datetime(2021, 1, 2, 0, 15).astimezone(pytz.utc),
                 datetime(2021, 1, 2, 0, 20).astimezone(pytz.utc),
                 client,
-                driver,
                 address2,
                 address1,
             )
             # 1-5
             self.a_transit_from_to(
-                50,
                 datetime(2021, 1, 3, 0, 00).astimezone(pytz.utc),
                 datetime(2021, 1, 3, 0, 10).astimezone(pytz.utc),
                 client,
-                driver,
                 address1,
                 address5,
             )
             # 3-1-2-5-4-5
             self.a_transit_from_to(
-                50,
                 datetime(2021, 2, 1, 0, 00).astimezone(pytz.utc),
                 datetime(2021, 2, 1, 0, 10).astimezone(pytz.utc),
                 client,
-                driver,
                 address3,
                 address1,
             )
             self.a_transit_from_to(
-                50,
                 datetime(2021, 2, 1, 0, 20).astimezone(pytz.utc),
                 datetime(2021, 2, 1, 0, 25).astimezone(pytz.utc),
                 client,
-                driver,
                 address1,
                 address2,
             )
             self.a_transit_from_to(
-                50,
                 datetime(2021, 2, 1, 0, 30).astimezone(pytz.utc),
                 datetime(2021, 2, 1, 0, 35).astimezone(pytz.utc),
                 client,
-                driver,
                 address2,
                 address5,
             )
             self.a_transit_from_to(
-                50,
                 datetime(2021, 2, 1, 0, 40).astimezone(pytz.utc),
                 datetime(2021, 2, 1, 0, 45).astimezone(pytz.utc),
                 client,
-                driver,
                 address5,
                 address4,
             )
             self.a_transit_from_to(
-                50,
                 datetime(2021, 2, 1, 0, 50).astimezone(pytz.utc),
                 datetime(2021, 2, 1, 0, 55).astimezone(pytz.utc),
                 client,
-                driver,
                 address4,
                 address5,
             )
@@ -519,30 +445,24 @@ class TestAnalyzeNearbyTransitsIntegration(IsolatedAsyncioTestCase):
             # and
             # 1-2-3
             self.a_transit_from_to(
-                50,
                 datetime(2021, 1, 1, 0, 0).astimezone(pytz.utc),
                 datetime(2021, 1, 1, 0, 5).astimezone(pytz.utc),
                 client,
-                driver,
                 address1,
                 address2,
             )
             self.a_transit_from_to(
-                50,
                 datetime(2021, 1, 1, 0, 10).astimezone(pytz.utc),
                 datetime(2021, 1, 1, 0, 15).astimezone(pytz.utc),
                 client,
-                driver,
                 address2,
                 address3,
             )
             # 4-5
             self.a_transit_from_to(
-                50,
                 datetime(2021, 1, 1, 0, 20).astimezone(pytz.utc),
                 datetime(2021, 1, 1, 0, 25).astimezone(pytz.utc),
                 client,
-                driver,
                 address4,
                 address5,
             )

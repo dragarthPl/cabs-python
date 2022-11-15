@@ -7,11 +7,11 @@ from freezegun import freeze_time
 from core.database import create_db_and_tables, drop_db_and_tables
 from geolocation.address.address_dto import AddressDTO
 from crm.client_dto import ClientDTO
-from dto.transit_dto import TransitDTO
-from entity import Client
-from service.transit_service import TransitService
+from ride.transit_dto import TransitDTO
+from crm.client import Client
+from ride.transit_service import TransitService
 from tests.common.fixtures import Fixtures, DependencyResolver
-from ui.transit_controller import TransitController
+from ride.transit_controller import TransitController
 
 dependency_resolver = DependencyResolver()
 
@@ -29,7 +29,7 @@ class TestTariffRecognizingIntegration(TestCase):
         transit_dto: TransitDTO = self.create_transit(datetime(2021, 12, 31, 8, 30).astimezone(pytz.utc))
 
         # when
-        transit_dto = self.transit_controller.get_transit(transit_dto.id)
+        transit_dto = self.transit_controller.get_transit(transit_dto.request_id)
 
         # then
         self.assertEqual("Sylwester", transit_dto.tariff)
@@ -40,7 +40,7 @@ class TestTariffRecognizingIntegration(TestCase):
         transit_dto: TransitDTO = self.create_transit(datetime(2021, 4, 17, 8, 30).astimezone(pytz.utc))
 
         # when
-        transit_dto = self.transit_controller.get_transit(transit_dto.id)
+        transit_dto = self.transit_controller.get_transit(transit_dto.request_id)
 
         # then
         self.assertEqual("Weekend", transit_dto.tariff)
@@ -51,7 +51,7 @@ class TestTariffRecognizingIntegration(TestCase):
         transit_dto: TransitDTO = self.create_transit(datetime(2021, 4, 17, 22, 30).astimezone(pytz.utc))
 
         # when
-        transit_dto = self.transit_controller.get_transit(transit_dto.id)
+        transit_dto = self.transit_controller.get_transit(transit_dto.request_id)
 
         # then
         self.assertEqual("Weekend+", transit_dto.tariff)
@@ -62,7 +62,7 @@ class TestTariffRecognizingIntegration(TestCase):
         transit_dto: TransitDTO = self.create_transit(datetime(2021, 4, 13, 22, 30).astimezone(pytz.utc))
 
         # when
-        transit_dto = self.transit_controller.get_transit(transit_dto.id)
+        transit_dto = self.transit_controller.get_transit(transit_dto.request_id)
 
         # then
         self.assertEqual("Standard", transit_dto.tariff)

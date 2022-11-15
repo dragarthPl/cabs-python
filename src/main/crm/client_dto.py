@@ -1,7 +1,8 @@
 from typing import Optional
 
-from entity import Client
 from pydantic import BaseModel
+
+from crm.client import Client
 
 
 class ClientDTO(BaseModel):

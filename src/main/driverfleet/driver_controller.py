@@ -29,8 +29,6 @@ class DriverController:
 
     @driver_router.post("/drivers/{driver_id}")
     def update_driver(self, driver_id: int) -> DriverDTO:
-
-
         return self.driver_service.load_driver(driver_id)
 
     @driver_router.post("/drivers/{driver_id}/deactivate")

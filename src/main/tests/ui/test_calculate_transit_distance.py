@@ -4,10 +4,9 @@ from unittest import TestCase
 from geolocation.distance import Distance
 from geolocation.address.address_dto import AddressDTO
 from crm.client_dto import ClientDTO
-from dto.transit_dto import TransitDTO
-from entity import Transit, Tariff
-from money import Money
-from transitdetails.transit_details_dto import TransitDetailsDTO
+from pricing.tariff import Tariff
+from ride.transit_dto import TransitDTO
+from ride.details.transit_details_dto import TransitDetailsDTO
 
 
 class TestCalculateTransitDistance(TestCase):

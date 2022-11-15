@@ -3,8 +3,8 @@ from __future__ import annotations
 import enum
 from typing import Optional, Any
 
-from sqlalchemy import Column, Enum, ForeignKey, Integer
-from sqlalchemy.orm import backref, relationship
+from sqlalchemy import Column, Enum
+from sqlalchemy.orm import relationship
 from sqlmodel import Field, Relationship
 
 from common.base_entity import BaseEntity

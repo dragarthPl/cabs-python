@@ -1,6 +1,5 @@
 from __future__ import annotations
 
-
 from datetime import datetime
 from typing import Optional, Any
 
@@ -20,7 +19,7 @@ class AwardedMiles(BaseEntity, table=True):
     # @Column(nullable = false)
     date: datetime = Field(default=datetime.now(), sa_column=Column(DateTime, nullable=False))
 
-    miles_json: str = None
+    miles_json: Optional[str] = None
 
     transit_id: Optional[int] = Field(default=0, sa_column=Column(Integer, nullable=True))
 
@@ -33,11 +32,11 @@ class AwardedMiles(BaseEntity, table=True):
     def __init__(
             self,
             *,
-            awards_account: AwardsAccount,
-            transit_id: int,
-            client_id: int,
-            when: datetime,
-            constant_until: Miles,
+            awards_account: Optional[AwardsAccount],
+            transit_id: Optional[int],
+            client_id: Optional[int],
+            when: Optional[datetime],
+            constant_until: Optional[Miles],
             **data: Any
     ):
         super().__init__(**data)

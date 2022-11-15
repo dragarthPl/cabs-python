@@ -1,11 +1,11 @@
 from datetime import datetime
 from typing import Optional
 
-from entity import Claim
 from sqlalchemy import Column, DateTime, LargeBinary
 from sqlmodel import Field
 
 from common.base_entity import BaseEntity
+from crm.claims.claim import Claim
 
 
 class ClaimAttachment(BaseEntity, table=True):

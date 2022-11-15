@@ -17,9 +17,9 @@ from geolocation.address.address_dto import AddressDTO
 from crm.claims.claim_dto import ClaimDTO
 from driverfleet.driver_dto import DriverDTO
 from driverfleet.driverreport.driver_report import DriverReport
+from ride.details.status import Status
 from tracking.driver_session_dto import DriverSessionDTO
-from dto.transit_dto import TransitDTO
-from entity import Transit
+from ride.transit_dto import TransitDTO
 
 
 class SqlBasedDriverReportCreator:
@@ -33,7 +33,8 @@ class SqlBasedDriverReportCreator:
 
     QUERY_FOR_SESSIONS = (
         "SELECT ds.logged_at, ds.logged_out_at, ds.plates_number, ds.car_class, ds.car_brand, "
-        "td.transit_id as TRANSIT_ID, td.tariff_name as TARIFF_NAME, td.status as TRANSIT_STATUS, "
+        "td.transit_id as TRANSIT_ID, td.request_uuid as REQUEST_ID, td.tariff_name as TARIFF_NAME, "
+        "td.status as TRANSIT_STATUS, "
         "td.distance, td.tariff_km_rate, "
         "td.price, td.drivers_fee, td.estimated_price, td.tariff_base_fee, "
         "td.date_time, td.published_at, td.accepted_at, td.started, td.complete_at, td.car_type, "
@@ -50,7 +51,7 @@ class SqlBasedDriverReportCreator:
         "WHERE ds.driver_id = :driver_id AND td.status = :transit_status "
         "AND ds.logged_at >= :since "
         "AND td.complete_at >= ds.logged_at "
-        "AND td.complete_at <= ds.logged_out_at GROUP BY ds.logged_at"
+        "AND td.complete_at <= ds.logged_out_at GROUP BY ds.id, ds.logged_at"
     )
 
     session: Session
@@ -74,7 +75,7 @@ class SqlBasedDriverReportCreator:
         stmt = text(self.QUERY_FOR_SESSIONS)
         stmt = stmt.params(
             driver_id=driver_id,
-            transit_status=Transit.Status.COMPLETED.name,
+            transit_status=Status.COMPLETED.name,
             since=self.calculate_starting_point(last_days)
         )
         result_stream = self.session.execute(stmt).all()
@@ -96,8 +97,9 @@ class SqlBasedDriverReportCreator:
         return TransitDTO(
             id=row.get('TRANSIT_ID'),
             factor=1,
+            # TODO: LF back
             tariff=row.get('TARIFF_NAME'),
-            status=Transit.Status[row.get("TRANSIT_STATUS")],
+            status=Status[row.get("TRANSIT_STATUS")],
             driver=None,
             distance=Distance.of_km(row.get('km')),
             km_rate=row.get('tariff_km_rate'),
@@ -190,8 +192,3 @@ class SqlBasedDriverReportCreator:
             DriverAttributeName[cells._asdict().get("name")],
             cells[8]
         )
-
-
-
-
-

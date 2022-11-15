@@ -17,15 +17,15 @@ class AwardsAccount(BaseEntity, table=True):
     __table_args__ = {'extend_existing': True}
 
     client_id: Optional[int] = Field(default=0, sa_column=Column(Integer, nullable=True))
-    #@Column(nullable = false)
+    # @Column(nullable = false)
     date: datetime = Field(default=datetime.now(), sa_column=Column(DateTime, nullable=False))
     # @Column(nullable = false)
     is_active: bool = Field(default=False, sa_column=Column(Boolean, nullable=False))
-    #@Column(nullable = false)
+    # @Column(nullable = false)
     transactions: int = Field(default=0, sa_column=Column(Integer, nullable=False))
 
     # @OneToMany(mappedBy = "account")
-    #@Fetch(value=FetchMode.JOIN)
+    # @Fetch(value=FetchMode.JOIN)
     miles: Set[AwardedMiles] = Relationship(
         sa_relationship=relationship(
             "loyalty.awarded_miles.AwardedMiles", back_populates="account")
@@ -78,7 +78,7 @@ class AwardsAccount(BaseEntity, table=True):
                 lambda t: t.get_miles_amount(at),
                 filter(
                     lambda
-                        t: t.get_expiration_date() != None
+                        t: t.get_expiration_date() is not None
                            and t.get_expiration_date().utctimetuple() > at.utctimetuple() or t.can_expire(),
                     self.miles
                 )

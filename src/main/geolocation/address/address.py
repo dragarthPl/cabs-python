@@ -18,8 +18,8 @@ class Address(BaseEntity, table=True):
     additional_number: Optional[int]
     postal_code: Optional[str]
     name: Optional[str]
-    #@Column(unique=true)
-    hash: str = Field(sa_column=Column("hash", String, unique=True))
+    # @Column(unique=true)
+    hash: Optional[str] = Field(sa_column=Column("hash", String, unique=True))
 
     def __str__(self):
         return (f"Address{{"

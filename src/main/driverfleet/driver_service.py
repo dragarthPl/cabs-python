@@ -11,14 +11,14 @@ from driverfleet.driver import Driver
 from driverfleet.driver_attribute import DriverAttribute
 from driverfleet.driver_attribute_name import DriverAttributeName
 from driverfleet.driver_dto import DriverDTO
-from entity import DriverLicense
+from driverfleet.driver_license import DriverLicense
 
 from money import Money
 from driverfleet.driver_attribute_repository import DriverAttributeRepositoryImp
 from driverfleet.driver_repository import DriverRepositoryImp
 from driverfleet.driver_fee_service import DriverFeeService
-from transitdetails.transit_details_dto import TransitDetailsDTO
-from transitdetails.transit_details_facade import TransitDetailsFacade
+from ride.details.transit_details_dto import TransitDetailsDTO
+from ride.details.transit_details_facade import TransitDetailsFacade
 
 
 def is_base_64(s):
@@ -117,7 +117,11 @@ class DriverService:
         from_date = datetime(year, month, 1)
         to_date = datetime(year, month, calendar.monthrange(year, month)[1])
 
-        transit_list: List[TransitDetailsDTO] = self.transit_details_facade.find_by_driver(driver_id, from_date, to_date)
+        transit_list: List[TransitDetailsDTO] = self.transit_details_facade.find_by_driver(
+            driver_id,
+            from_date,
+            to_date
+        )
 
         sum: Money = reduce(
             lambda a, b: a.add(b),

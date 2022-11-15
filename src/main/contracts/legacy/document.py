@@ -9,7 +9,6 @@ from contracts.legacy.document_status import DocumentStatus
 from contracts.legacy.printable import Printable
 from contracts.legacy.user import User
 
-
 document_user_link = Table(
     'document_user_link',
     SQLModel.metadata,
@@ -70,7 +69,7 @@ class Document(BaseAggregateRoot, Printable, table=True):
             raise AttributeError(f"Can not publish in status: {self.status}")
         self.status = DocumentStatus.PUBLISHED
 
-    #===============================================================
+    # ===============================================================
 
     def change_title(self, title: str):
         if self.status == DocumentStatus.ARCHIVED or self.status == DocumentStatus.PUBLISHED:
@@ -86,6 +85,6 @@ class Document(BaseAggregateRoot, Printable, table=True):
 
         if self.status == DocumentStatus.ARCHIVED or self.status == DocumentStatus.PUBLISHED:
             raise AttributeError(f"Can not change content in status: {self.status}")
-        self.status = content
+        self.content = content
         if self.status == DocumentStatus.VERIFIED:
             self.status = DocumentStatus.DRAFT

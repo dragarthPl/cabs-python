@@ -1,18 +1,20 @@
 from injector import inject
+from mockito import when
 
-from entity import Transit
 from money import Money
-from repository.transit_repository import TransitRepositoryImp
+from pricing.tariff import Tariff
+from pricing.tariffs import Tariffs
+from ride.transit import Transit
 
 
 class StubbedTransitPrice:
-    transit_repository: TransitRepositoryImp
+    tariffs: Tariffs
 
     @inject
-    def __init__(self, transit_repository: TransitRepositoryImp):
-        self.transit_repository = transit_repository
+    def __init__(self, tariffs: Tariffs):
+        self.tariffs = tariffs
 
-    def stub(self, transit_id: int, faked: Money) -> Transit:
-        transit: Transit = self.transit_repository.get_one(transit_id)
-        transit.set_price(faked)
-        return transit
+    def stub(self, faked: Money) -> Transit:
+        fake_tariff: Tariff = Tariff(0, "fake", faked)
+        # when(self.tariffs).choose(isA(Instant.class)).thenReturn(fake_tariff)
+

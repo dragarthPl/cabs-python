@@ -5,10 +5,11 @@ from decimal import Decimal
 from typing import Optional, Set, Any
 
 from common.base_entity import BaseEntity
-from entity import DriverLicense
 from sqlalchemy import Column, Enum, String
 from sqlalchemy.orm import relationship
 from sqlmodel import Field, Relationship
+
+from driverfleet.driver_license import DriverLicense
 
 
 class Driver(BaseEntity, table=True):

@@ -20,7 +20,7 @@ from driverfleet.driverreport.driver_report_controller import driver_report_rout
 from tracking.driver_session_controller import driver_session_router
 from tracking.driver_tracking_controller import driver_tracking_router
 from crm.transitanalyzer.transit_analyzer_controller import transit_analyzer_router
-from ui.transit_controller import transit_router
+from ride.transit_controller import transit_router
 
 from fastapi_events.middleware import EventHandlerASGIMiddleware
 from fastapi_events.handlers.local import local_handler

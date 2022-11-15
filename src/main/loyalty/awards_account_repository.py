@@ -2,7 +2,7 @@ from typing import Optional, List
 
 from injector import inject
 
-from entity import Client
+from crm.client import Client
 from loyalty.awarded_miles import AwardedMiles
 from loyalty.awards_account import AwardsAccount
 from sqlmodel import Session

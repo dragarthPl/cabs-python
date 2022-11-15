@@ -46,7 +46,8 @@ class DriverSessionRepositoryImp:
         return self.session.query(DriverSession).where(DriverSession.id == session_id).first()
 
     def find_top_by_driver_and_logged_out_at_is_null_order_by_logged_at_desc(
-            self, driver_id: int) -> Optional[DriverSession]:
+            self, driver_id: int
+    ) -> Optional[DriverSession]:
         return self.session.query(
             DriverSession
         ).where(
@@ -59,4 +60,3 @@ class DriverSessionRepositoryImp:
 
     def find_by_driver(self, driver_id: int) -> List[DriverSession]:
         return self.session.query(DriverSession).where(DriverSession.driver_id == driver_id).all()
-

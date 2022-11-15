@@ -16,7 +16,7 @@ class OOParadigm(metaclass=ABCMeta):
         raise NotImplementedError
 
 
-#4. dziedziczenie - technika wspierająca polimorizm
+# 4. dziedziczenie - technika wspierająca polimorizm
 class ConcreteType(OOParadigm):
 
     def _abstract_step(self):

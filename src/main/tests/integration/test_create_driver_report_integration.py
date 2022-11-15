@@ -17,15 +17,13 @@ from driverfleet.driver_attribute_dto import DriverAttributeDTO
 from driverfleet.driver_attribute_name import DriverAttributeName
 from driverfleet.driver_fee import DriverFee
 from driverfleet.driverreport.driver_report import DriverReport
-from dto.transit_dto import TransitDTO
-from entity import Client, Transit, Address
+from ride.transit_dto import TransitDTO
+from crm.client import Client
+from geolocation.address.address import Address
 from geolocation.address.address_repository import AddressRepositoryImp
-from carfleet.car_type_service import CarTypeService
 from crm.claims.claim_service import ClaimService
-from tracking.driver_session_service import DriverSessionService
-from tracking.driver_tracking_service import DriverTrackingService
+from tests.common.ride_fixture import RideFixture
 from geolocation.geocoding_service import GeocodingService
-from service.transit_service import TransitService
 from tests.common.fixtures import DependencyResolver, Fixtures
 from driverfleet.driverreport.driver_report_controller import DriverReportController
 from driverfleet.driverreport.sql_based_driver_report_creator import SqlBasedDriverReportCreator
@@ -40,12 +38,8 @@ class TestCreateDriverReportIntegration(IsolatedAsyncioTestCase):
     YESTERDAY = DAY_BEFORE_YESTERDAY + relativedelta(days=1)
     TODAY = YESTERDAY + relativedelta(days=1)
 
-    transit_service: TransitService = dependency_resolver.resolve_dependency(TransitService)
-    driver_tracking_service: DriverTrackingService = dependency_resolver.resolve_dependency(
-        DriverTrackingService)
-    driver_session_service: DriverSessionService = dependency_resolver.resolve_dependency(DriverSessionService)
-    car_type_service: CarTypeService = dependency_resolver.resolve_dependency(CarTypeService)
     fixtures: Fixtures = dependency_resolver.resolve_dependency(Fixtures)
+    ride_fixture: RideFixture = dependency_resolver.resolve_dependency(RideFixture)
     driver_report_controller: DriverReportController = DriverReportController(
         driver_report_creator=dependency_resolver.resolve_dependency(SqlBasedDriverReportCreator)
     )
@@ -59,8 +53,8 @@ class TestCreateDriverReportIntegration(IsolatedAsyncioTestCase):
         middleware_identifier.set(app.middleware_stack.app._id)
 
         self.client = AsyncClient(app=app)
-        self.an_active_car_category(CarClass.VAN)
-        self.an_active_car_category(CarClass.PREMIUM)
+        self.fixtures.an_active_car_category(CarClass.VAN)
+        self.fixtures.an_active_car_category(CarClass.PREMIUM)
 
     async def test_should_create_drivers_report(self):
         # given
@@ -75,12 +69,33 @@ class TestCreateDriverReportIntegration(IsolatedAsyncioTestCase):
         self.fixtures.driver_has_attribute(
             driver, DriverAttributeName.MEDICAL_EXAMINATION_REMARKS, "private info")
         # and
-        self.driver_has_done_session_and_picks_someone_up_in_car(
-            driver, client, CarClass.VAN, "WU1213", "SCODA FABIA", self.TODAY)
-        self.driver_has_done_session_and_picks_someone_up_in_car(
-            driver, client, CarClass.VAN, "WU1213", "SCODA OCTAVIA", self.YESTERDAY)
-        in_bmw = self.driver_has_done_session_and_picks_someone_up_in_car(
-            driver, client, CarClass.VAN, "WU1213", "BMW M2", self.DAY_BEFORE_YESTERDAY)
+        self.ride_fixture.driver_has_done_session_and_picks_someone_up_in_car(
+            driver,
+            client,
+            CarClass.VAN,
+            "WU1213",
+            "SCODA FABIA",
+            self.TODAY,
+            self.geocoding_service
+        )
+        self.ride_fixture.driver_has_done_session_and_picks_someone_up_in_car(
+            driver,
+            client,
+            CarClass.VAN,
+            "WU1213",
+            "SCODA OCTAVIA",
+            self.YESTERDAY,
+            self.geocoding_service,
+        )
+        in_bmw: TransitDTO = self.ride_fixture.driver_has_done_session_and_picks_someone_up_in_car(
+            driver,
+            client,
+            CarClass.VAN,
+            "WU1213",
+            "BMW M2",
+            self.DAY_BEFORE_YESTERDAY,
+            self.geocoding_service,
+        )
         # and
         self.fixtures.create_claim_reason(client, in_bmw, "za szybko")
 
@@ -138,72 +153,10 @@ class TestCreateDriverReportIntegration(IsolatedAsyncioTestCase):
             )).items()
         ))
 
-    def driver_has_done_session_and_picks_someone_up_in_car(
-        self,
-        driver: Driver,
-        client: Client,
-        car_class: CarClass,
-        plate_number: str,
-        car_brand: str,
-        when: datetime,
-    ) -> TransitDTO:
-        with freeze_time(when):
-            driver_id = driver.id
-            self.driver_session_service.log_in(driver_id, plate_number, car_class, car_brand)
-            self.driver_tracking_service.register_position(driver_id, 10, 20, datetime.now())
-            address_to = self.address("PL", "MAZ", "WAW", "STREET", 100, 10.01, 20.01)
-            transit = self.transit_service.create_transit_transaction(
-                client.id,
-                self.address("PL", "MAZ", "WAW", "STREET", 1, 10, 20),
-                address_to,
-                car_class
-            )
-            self.transit_service.publish_transit(transit.id)
-            self.transit_service.accept_transit(driver_id, transit.id)
-            self.transit_service.start_transit(driver_id, transit.id)
-            self.transit_service._complete_transit(
-                driver_id,
-                transit.id,
-                address_to
-            )
-            self.driver_session_service.log_out_current_session(driver_id)
-            return transit
-
     def a_driver(self, status: Driver.Status, name: str, last_name: str, driver_license: str) -> Driver:
         driver = self.fixtures.a_driver(status, name, last_name, driver_license)
         self.fixtures.driver_has_fee(driver, DriverFee.FeeType.FLAT, 10)
         return driver
-
-    def address(
-        self,
-        country: str,
-        district: str,
-        city: str,
-        street: str,
-        building_number: int,
-        latitude: float,
-        longitude: float,
-    ) -> Address:
-        address = Address()
-        address.country = country
-        address.district = district
-        address.city = city
-        address.street = street
-        address.building_number = building_number
-        address = self.address_repository.save(address)
-        when(self.geocoding_service).geocode_address(address).thenReturn([latitude, longitude])
-        when(self.transit_service.geocoding_service).geocode_address(address).thenReturn([latitude, longitude])
-        return address
-
-    def an_active_car_category(self, car_class: CarClass) -> CarTypeDTO:
-        car_type_dto = CarTypeDTO()
-        car_type_dto.car_class = car_class
-        car_type_dto.description = "opis"
-        car_type = self.car_type_service.create(car_type_dto)
-        for _ in range(car_type.min_no_of_cars_to_activate_class + 1):
-            self.car_type_service.register_car(car_type.car_class)
-        self.car_type_service.activate(car_type.id)
-        return car_type
 
     async def asyncTearDown(self) -> None:
         drop_db_and_tables()

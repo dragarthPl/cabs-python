@@ -1,6 +1,6 @@
 from injector import inject
 
-from entity import Client
+from crm.client import Client
 from loyalty.awards_service import AwardsService
 
 

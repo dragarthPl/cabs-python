@@ -1,6 +1,6 @@
 import hashlib
 import math
-from typing import Any
+from typing import Any, Optional
 
 from pydantic import BaseModel
 
@@ -14,7 +14,7 @@ class Distance(BaseModel):
     def ZERO(cls):
         return cls.of_km(0)
 
-    def __init__(self, km: float, **data: Any):
+    def __init__(self, km: Optional[float] = 0, **data: Any):
         super().__init__(**data)
         self.km = km
 

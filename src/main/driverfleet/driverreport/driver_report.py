@@ -4,7 +4,7 @@ from driverfleet.driver_attribute_dto import DriverAttributeDTO
 from driverfleet.driver_attribute_name import DriverAttributeName
 from driverfleet.driver_dto import DriverDTO
 from tracking.driver_session_dto import DriverSessionDTO
-from dto.transit_dto import TransitDTO
+from ride.transit_dto import TransitDTO
 from pydantic import BaseModel
 
 

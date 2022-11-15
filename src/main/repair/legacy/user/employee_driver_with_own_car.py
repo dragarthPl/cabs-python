@@ -15,7 +15,7 @@ from repair.legacy.user.signed_contract import SignedContract
 class EmployeeDriverWithOwnCar(EmployeeDriver, table=True):
     __table_args__ = {'extend_existing': True}
 
-    #@OneToOne
+    # @OneToOne
     contract_id: Optional[int] = Field(sa_column=Column(Integer, ForeignKey('signedcontract.id')))
     contract: Optional[SignedContract] = Relationship(
         sa_relationship=relationship(

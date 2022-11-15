@@ -122,21 +122,6 @@ class TestCalculateDriverTravelledDistanceIntegration(TestCase):
         # then
         self.assertEqual("12.026km", distance.print_in("km"))
 
-    def register_position(
-            self,
-            driver: Driver,
-            seen_at: datetime,
-            latitude: float,
-            longitude: float,
-    ):
-        driver_position: DriverPosition = DriverPosition(
-            driver=driver,
-            seen_at=seen_at,
-            latitude=latitude,
-            longitude=longitude,
-        )
-        self.travelled_distance_service.add_position(driver_position)
-
     def tearDown(self) -> None:
         drop_db_and_tables()
 

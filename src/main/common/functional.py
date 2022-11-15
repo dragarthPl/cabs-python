@@ -13,6 +13,7 @@ def require_non_none(obj):
         raise AttributeError()
     return obj
 
+
 class Predicate(Generic[T]):
     predicate_function: Callable[[T], bool]
 
@@ -85,6 +86,6 @@ class BiFunction(Function[T, R], Generic[T, U, R]):
 
 if __name__ == '__main__':
     print("start")
-    assert Predicate[str](lambda _: False).test("abc") == False
+    assert Predicate[str](lambda _: False).test("abc") is False
     assert BiFunction[int, int, int](lambda a, b: a + b).apply(3, 3) == 6
     print("Done")

@@ -16,7 +16,7 @@ class ContractController:
     @contract_router.post("/contracts/")
     def create(self, contract_dto: ContractDTO) -> ContractDTO:
         created: ContractDTO = self.contract_service.create_contract(contract_dto)
-        return ContractDTO(contract=created)
+        return created
 
     @contract_router.get("/contracts/{contract_id}")
     def find(self, contract_id: int) -> ContractDTO:
@@ -35,12 +35,12 @@ class ContractController:
 
     @contract_router.post("/contracts/{contract_id}/attachment/{attachment_id}/accept")
     def accept_attachment(self, contract_id: int, attachment_id: int) -> dict:
-        self.contract_service.accept_attachment(contract_id, attachment_id)
+        self.contract_service.accept_attachment(contract_id)
         return {}
 
     @contract_router.delete("/contracts/{contract_id}/attachment/{attachment_id}")
     def remove_attachment(self, contract_id: int, attachment_id: int) -> dict:
-        self.contract_service.remove_attachment(attachment_id)
+        self.contract_service.remove_attachment(contract_id, attachment_id)
         return {}
 
     @contract_router.get("/contracts/{contract_id}/accept")

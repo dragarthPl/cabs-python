@@ -1,11 +1,10 @@
 from typing import Any
 
-from sqlalchemy import Column, Enum, Integer
+from sqlalchemy import Column, Integer
 from sqlmodel import SQLModel, Field
 
 from carfleet.car_class import CarClass
 from common.base_entity import EnumAsInteger
-from entity import CarType
 
 
 class CarTypeActiveCounter(SQLModel, table=True):

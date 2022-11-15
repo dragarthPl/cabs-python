@@ -9,12 +9,14 @@ from core.database import create_db_and_tables, drop_db_and_tables
 from crm.claims.claim import Claim
 from crm.claims.status import Status
 from driverfleet.driver import Driver
-from entity import Client, Transit, Address
+from crm.client import Client
+from geolocation.address.address import Address
 from loyalty.awards_service_impl import AwardsServiceImpl
 from crm.claims.claim_service import ClaimService
 from crm.notification.client_notification_service import ClientNotificationService
 from crm.notification.driver_notification_service import DriverNotificationService
 from geolocation.geocoding_service import GeocodingService
+from ride.transit import Transit
 from tests.common.fixtures import DependencyResolver, Fixtures
 
 dependency_resolver = DependencyResolver()

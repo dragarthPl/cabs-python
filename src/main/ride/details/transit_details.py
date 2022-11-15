@@ -2,26 +2,31 @@ from __future__ import annotations
 from datetime import datetime
 
 from typing import Any, Optional
+from uuid import UUID
 
 from sqlalchemy import Column, Enum, Float, DateTime, Integer
 
+from assignment.assignment_status import AssignmentStatus
+from assignment.involved_drivers_summary import InvolvedDriversSummary
 from carfleet.car_class import CarClass
+
 from geolocation.distance import Distance
-from entity import Address, Tariff
 from money import Money
 
 from sqlalchemy.orm import relationship, backref
 from sqlmodel import Field, Relationship
 
 from common.base_entity import BaseEntity
-from entity import Client
-from entity import Transit
+from crm.client import Client
+from pricing.tariff import Tariff
+from ride.details.status import Status
 
 
 class TransitDetails(BaseEntity, table=True):
     __table_args__ = {'extend_existing': True}
 
     transit_id: Optional[int] = Field(default=0, sa_column=Column(Integer, nullable=True))
+    request_uuid: UUID = Field(nullable=False)
     date_time: Optional[datetime] = Field(default=None, sa_column=Column(DateTime, nullable=True))
     complete_at: Optional[datetime] = Field(default=None, sa_column=Column(DateTime, nullable=True))
 
@@ -57,7 +62,7 @@ class TransitDetails(BaseEntity, table=True):
     drivers_fee: Optional[int] = 0
 
     driver_id: Optional[int] = Field(default=0, sa_column=Column(Integer, nullable=True))
-    status: Optional[Transit.Status] = Field(sa_column=Column(Enum(Transit.Status)))
+    status: Optional[Status] = Field(sa_column=Column(Enum(Status)))
     # tariff: Tariff
     tariff_km_rate: Optional[float] = 0
     tariff_name: Optional[str] = None
@@ -68,6 +73,7 @@ class TransitDetails(BaseEntity, table=True):
         distance: Optional[Distance] = None
         estimated_price: Optional[Money] = None
         when: Optional[datetime] = None
+        request_uuid: Optional[UUID] = None
         if "tariff" in data:
             tariff = data.pop("tariff")
         if "distance" in data:
@@ -76,8 +82,9 @@ class TransitDetails(BaseEntity, table=True):
             estimated_price = data.pop("estimated_price")
         if "when" in data:
             when = data.pop("when")
+        if "request_id" in data:
+            request_uuid = data.pop("request_id")
         super().__init__(**data)
-
         if data.get("date_time", None) or when:
             self.date_time = data.get("date_time", None) or when
         if data.get("transit_id"):
@@ -92,7 +99,7 @@ class TransitDetails(BaseEntity, table=True):
             self.client = data["client"]
         if data.get("car_class"):
             self.car_type = data["car_class"]
-        self.status = Transit.Status.DRAFT
+        self.status = Status.DRAFT
         if estimated_price:
             self.set_estimated_price(estimated_price)
         if distance:
@@ -101,39 +108,47 @@ class TransitDetails(BaseEntity, table=True):
             self.tariff_name = tariff.name
             self.tariff_base_fee = tariff.base_fee
             self.tariff_km_rate = tariff.km_rate
+        if request_uuid:
+            self.request_uuid = request_uuid
 
     def set_estimated_price(self, estimated_price: Money) -> None:
         self.estimated_price = estimated_price.value
 
-    def set_started_at(self, when: datetime):
+    def set_started_at(self, when: datetime, transit_id: int):
         self.started = when
-        self.status = Transit.Status.IN_TRANSIT
+        self.status = Status.IN_TRANSIT
+        self.transit_id = transit_id
 
     def set_accepted_at(self, when: datetime, driver_id: int):
         self.accepted_at = when
         self.driver_id = driver_id
-        self.status = Transit.Status.TRANSIT_TO_PASSENGER
+        self.status = Status.TRANSIT_TO_PASSENGER
 
     def set_published_at(self, when: datetime):
         self.published_at = when
-        self.status = Transit.Status.WAITING_FOR_DRIVER_ASSIGNMENT
+        self.status = Status.WAITING_FOR_DRIVER_ASSIGNMENT
 
     def set_completed_at(self, when: datetime, price: Money, driver_fee: Money):
         self.complete_at = when
         self.price = price.value if price else None
         self.drivers_fee = driver_fee.value if driver_fee else None
-        self.status = Transit.Status.COMPLETED
+        self.status = Status.COMPLETED
 
     def pickup_changed_to(self, new_address: Address, new_distance: Distance):
         self.address_from = new_address
         self.distance = new_distance.to_km_in_float()
 
-    def destination_changed_to(self, new_address: Address, distance: Distance):
+    def destination_changed_to(self, new_address: Address):
         self.address_to = new_address
-        self.distance = distance.to_km_in_float()
+
+    def involved_drivers_are(self, involved_drivers_summary: InvolvedDriversSummary):
+        if involved_drivers_summary.status == AssignmentStatus.DRIVER_ASSIGNMENT_FAILED:
+            self.status = Status.DRIVER_ASSIGNMENT_FAILED
+        else:
+            self.status = Status.TRANSIT_TO_PASSENGER
 
     def cancelled(self):
-        self.status = Transit.Status.CANCELLED
+        self.status = Status.CANCELLED
 
     def get_price(self) -> Money:
         return Money(self.price)

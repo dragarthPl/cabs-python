@@ -26,7 +26,8 @@ class StateBuilder(StateConfig):
 
     class Mode(enum.Enum):
         """
-        Rules for state transition {@link #check(BiFunction) check}  method called or {@link #from(String) from}  method called
+        Rules for state transition {@link #check(BiFunction) check}  method called or
+        {@link #from(String) from}  method called
         """
         STATE_CHANGE = 1
         """

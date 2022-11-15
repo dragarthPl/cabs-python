@@ -2,7 +2,6 @@ from typing import Optional
 
 from mockito.matchers import Matcher
 
-from geolocation.address import address
 from geolocation.address.address import Address
 from geolocation.address.address_dto import AddressDTO
 import logging

@@ -23,25 +23,25 @@ class Claim(BaseEntity, table=True):
 
     transit_id: Optional[int] = Field(default=0, sa_column=Column(Integer, nullable=True))
 
-    creation_date: datetime = Field(sa_column=Column(DateTime, nullable=False))
+    creation_date: Optional[datetime] = Field(sa_column=Column(DateTime, nullable=False))
     completion_date: Optional[datetime]
     change_date: Optional[datetime]
-    reason: str = Field(sa_column=Column(String, nullable=False))
+    reason: Optional[str] = Field(sa_column=Column(String, nullable=False))
     incident_description: Optional[str]
     completion_mode: Optional[CompletionMode] = Field(sa_column=Column(Enum(CompletionMode)))
-    status: Status = Field(sa_column=Column(Enum(Status), nullable=False))
-    claim_no: str = Field(sa_column=Column(String, nullable=False))
+    status: Optional[Status] = Field(sa_column=Column(Enum(Status), nullable=False))
+    claim_no: Optional[str] = Field(sa_column=Column(String, nullable=False))
 
-    transit_price: int = Field(default=0, sa_column=Column(Integer, nullable=False))
+    transit_price: Optional[int] = Field(default=0, sa_column=Column(Integer, nullable=False))
 
     def escalate(self) -> None:
-        self.status = Claim.Status.ESCALATED
+        self.status = Status.ESCALATED
         self.completion_date = datetime.now()
         self.change_date = datetime.now()
         self.completion_mode = Claim.CompletionMode.MANUAL
 
     def refund(self) -> None:
-        self.status = Claim.Status.REFUNDED
+        self.status = Status.REFUNDED
         self.completion_date = datetime.now()
         self.change_date = datetime.now()
         self.completion_mode = Claim.CompletionMode.AUTOMATIC

@@ -1,6 +1,7 @@
 from datetime import datetime
 from decimal import Decimal
 from typing import Any, List, Optional, Set
+from uuid import UUID
 
 from carfleet.car_class import CarClass
 from geolocation.distance import Distance
@@ -8,17 +9,17 @@ from geolocation.address.address_dto import AddressDTO
 from crm.claims.claim_dto import ClaimDTO
 from crm.client_dto import ClientDTO
 from driverfleet.driver_dto import DriverDTO
-from entity import Transit
 from pydantic import BaseModel
 
-from money import Money
-from transitdetails.transit_details_dto import TransitDetailsDTO
+from ride.details.status import Status
+from ride.details.transit_details_dto import TransitDetailsDTO
 
 
 class TransitDTO(BaseModel):
     id: Optional[int]
+    request_id: Optional[UUID]
     tariff: Optional[str]
-    status: Optional[Transit.Status]
+    status: Optional[Status]
     driver: Optional[DriverDTO]
     factor: Optional[int]
     distance: Optional[Distance]
@@ -36,7 +37,6 @@ class TransitDTO(BaseModel):
     complete_at: Optional[datetime]
     claim_dto: Optional[ClaimDTO]
 
-    #new ArrayList<>();
     proposed_drivers: List[DriverDTO] = []
     address_to: Optional[AddressDTO]
     address_from: Optional[AddressDTO]
@@ -67,6 +67,8 @@ class TransitDTO(BaseModel):
         if transit_details is not None:
             if hasattr(transit_details, "transit_id"):
                 self.id = transit_details.transit_id
+            if hasattr(transit_details, "request_uuid"):
+                self.request_id = transit_details.request_uuid
             if hasattr(transit_details, "status"):
                 self.status = transit_details.status
             if hasattr(transit_details, "price"):

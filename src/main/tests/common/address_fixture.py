@@ -3,7 +3,7 @@ from random import random
 from injector import inject
 from mockito import arg_that, when
 
-from entity import Address
+from geolocation.address.address import Address
 from geolocation.address.address_dto import AddressDTO
 from geolocation.address.address_repository import AddressRepositoryImp
 from geolocation.geocoding_service import GeocodingService

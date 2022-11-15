@@ -2,7 +2,7 @@ from typing import Optional
 
 from injector import inject
 
-from entity import Client
+from crm.client import Client
 from fastapi import Depends
 from sqlmodel import Session, select
 

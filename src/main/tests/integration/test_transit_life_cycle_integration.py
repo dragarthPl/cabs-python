@@ -8,16 +8,16 @@ from httpx import AsyncClient
 
 from carfleet.car_class import CarClass
 from core.database import create_db_and_tables, drop_db_and_tables
-from dto.transit_dto import TransitDTO
+from ride.details.status import Status
+from ride.transit_dto import TransitDTO
 from geolocation.address.address_dto import AddressDTO
-from entity import Transit
 from tests.common.address_matcher import AddressMatcher
 from tracking.driver_session_service import DriverSessionService
 from tracking.driver_tracking_service import DriverTrackingService
 from geolocation.geocoding_service import GeocodingService
-from service.transit_service import TransitService
+from ride.transit_service import TransitService
 from tests.common.fixtures import Fixtures, DependencyResolver
-from mockito import when, arg_that
+from mockito import when
 
 from cabs_application import CabsApplication
 
@@ -55,7 +55,7 @@ class TestTransitLifeCycleIntegration(IsolatedAsyncioTestCase):
         )
 
         # then
-        loaded = self.transit_service.load_transit(transit.id)
+        loaded = self.transit_service.load_transit_by_uuid(transit.request_id)
         self.assertIsNone(loaded.car_class)
         self.assertIsNone(loaded.claim_dto)
         self.assertIsNotNone(loaded.estimated_price)
@@ -68,14 +68,14 @@ class TestTransitLifeCycleIntegration(IsolatedAsyncioTestCase):
         self.assertEqual("Warszawa", loaded.address_to.city)
         self.assertEqual("Żytnia", loaded.address_to.street)
         self.assertEqual(25, loaded.address_to.building_number)
-        self.assertEqual(Transit.Status.DRAFT, loaded.status)
+        self.assertEqual(Status.DRAFT, loaded.status)
         self.assertIsNotNone(loaded.tariff)
         self.assertNotEqual(0, loaded.km_rate)
         self.assertIsNotNone(loaded.date_time)
 
     async def test_can_change_transit_destination(self):
         # given
-        pickup: AddressDTO = AddressDTO(country="Polska", city="Warszawa", street="Młynarska", building_number=20);
+        pickup: AddressDTO = AddressDTO(country="Polska", city="Warszawa", street="Młynarska", building_number=20)
         # and
         destination: AddressDTO = AddressDTO(country="Polska", city="Warszawa", street="Żytnia", building_number=25)
         # and
@@ -87,12 +87,12 @@ class TestTransitLifeCycleIntegration(IsolatedAsyncioTestCase):
         )
 
         # when
-        new_destination: AddressDTO = self.new_address("Polska", "Warszawa", "Mazowiecka", 30);
+        new_destination: AddressDTO = self.new_address("Polska", "Warszawa", "Mazowiecka", 30)
         # and
-        self.transit_service.change_transit_address_to(transit.id, new_destination)
+        self.transit_service.change_transit_address_to(transit.request_id, new_destination)
 
         # then
-        loaded = self.transit_service.load_transit(transit.id)
+        loaded = self.transit_service.load_transit_by_uuid(transit.request_id)
         self.assertEqual(30, loaded.address_to.building_number)
         self.assertEqual("Mazowiecka", loaded.address_to.street)
         self.assertIsNotNone(loaded.estimated_price)
@@ -111,18 +111,18 @@ class TestTransitLifeCycleIntegration(IsolatedAsyncioTestCase):
             destination
         )
         # and
-        self.transit_service.publish_transit(transit.id)
+        self.transit_service.publish_transit(transit.request_id)
         # and
-        self.transit_service.accept_transit(driver, transit.id)
+        self.transit_service.accept_transit(driver, transit.request_id)
         # and
-        self.transit_service.start_transit(driver, transit.id)
+        self.transit_service.start_transit(driver, transit.request_id)
         # and
-        self.transit_service.complete_transit(driver, transit.id, destination)
+        self.transit_service.complete_transit(driver, transit.request_id, destination)
 
         # expect
         with self.assertRaises(AttributeError):
             self.transit_service.change_transit_address_to(
-                transit.id,
+                transit.request_id,
                 self.new_address(country="Polska", city="Warszawa", street="Żytnia", building_number=23)
             )
 
@@ -139,18 +139,18 @@ class TestTransitLifeCycleIntegration(IsolatedAsyncioTestCase):
             destination,
         )
         # and
-        self.transit_service.publish_transit(transit.id)
+        self.transit_service.publish_transit(transit.request_id)
 
         # when
         new_pickup: AddressDTO = self.new_pickup_address_with_street("Puławska", 28)
         # and
         self.transit_service.change_transit_address_from(
-            transit.id,
+            transit.request_id,
             new_pickup
         )
 
         # then
-        loaded = self.transit_service.load_transit(transit.id)
+        loaded = self.transit_service.load_transit_by_uuid(transit.request_id)
         self.assertEqual(28, loaded.address_from.building_number)
         self.assertEqual("Puławska", loaded.address_from.street)
 
@@ -169,14 +169,14 @@ class TestTransitLifeCycleIntegration(IsolatedAsyncioTestCase):
         # and
         changed_to = self.new_pickup_address(10)
         # and
-        self.transit_service.publish_transit(transit.id)
+        self.transit_service.publish_transit(transit.request_id)
         # and
-        self.transit_service.accept_transit(driver, transit.id)
+        self.transit_service.accept_transit(driver, transit.request_id)
 
         # expect
         with self.assertRaises(AttributeError):
             self.transit_service.change_transit_address_from(
-                transit.id,
+                transit.request_id,
                 changed_to
             )
 
@@ -193,22 +193,22 @@ class TestTransitLifeCycleIntegration(IsolatedAsyncioTestCase):
             destination,
         )
         # and
-        self.transit_service.publish_transit(transit.id)
+        self.transit_service.publish_transit(transit.request_id)
 
         # and
         new_pickup_1: AddressDTO = self.new_pickup_address(10)
-        self.transit_service.change_transit_address_from(transit.id, new_pickup_1)
+        self.transit_service.change_transit_address_from(transit.request_id, new_pickup_1)
         # and
         new_pickup_2: AddressDTO = self.new_pickup_address(11)
-        self.transit_service.change_transit_address_from(transit.id, new_pickup_2)
+        self.transit_service.change_transit_address_from(transit.request_id, new_pickup_2)
         # and
         new_pickup_3: AddressDTO = self.new_pickup_address(12)
-        self.transit_service.change_transit_address_from(transit.id, new_pickup_3)
+        self.transit_service.change_transit_address_from(transit.request_id, new_pickup_3)
 
         # expect
         with self.assertRaises(AttributeError):
             self.transit_service.change_transit_address_from(
-                transit.id,
+                transit.request_id,
                 self.new_pickup_address(13)
             )
 
@@ -225,12 +225,12 @@ class TestTransitLifeCycleIntegration(IsolatedAsyncioTestCase):
             destination,
         )
         # and
-        self.transit_service.publish_transit(transit.id)
+        self.transit_service.publish_transit(transit.request_id)
 
         # expect
         with self.assertRaises(AttributeError):
             self.transit_service.change_transit_address_from(
-                transit.id,
+                transit.request_id,
                 self.far_away_address()
             )
 
@@ -248,11 +248,11 @@ class TestTransitLifeCycleIntegration(IsolatedAsyncioTestCase):
         )
 
         # when
-        self.transit_service.cancel_transit(transit.id)
+        self.transit_service.cancel_transit(transit.request_id)
 
         # then
-        loaded = self.transit_service.load_transit(transit.id)
-        self.assertEqual(loaded.status, Transit.Status.CANCELLED)
+        loaded = self.transit_service.load_transit_by_uuid(transit.request_id)
+        self.assertEqual(loaded.status, Status.CANCELLED)
 
     async def test_cannot_cancel_transit_after_it_was_started(self):
         # given
@@ -267,21 +267,21 @@ class TestTransitLifeCycleIntegration(IsolatedAsyncioTestCase):
             destination
         )
         # and
-        self.transit_service.publish_transit(transit.id)
+        self.transit_service.publish_transit(transit.request_id)
         # and
-        self.transit_service.accept_transit(driver, transit.id)
+        self.transit_service.accept_transit(driver, transit.request_id)
 
         # and
-        self.transit_service.start_transit(driver, transit.id)
+        self.transit_service.start_transit(driver, transit.request_id)
         # expect
         with self.assertRaises(AttributeError):
-            self.transit_service.cancel_transit(transit.id)
+            self.transit_service.cancel_transit(transit.request_id)
 
         # and
-        self.transit_service.complete_transit(driver, transit.id, destination)
+        self.transit_service.complete_transit(driver, transit.request_id, destination)
         # expect
         with self.assertRaises(AttributeError):
-            self.transit_service.cancel_transit(transit.id)
+            self.transit_service.cancel_transit(transit.request_id)
 
     async def test_can_publish_transit(self):
         # given
@@ -297,11 +297,11 @@ class TestTransitLifeCycleIntegration(IsolatedAsyncioTestCase):
         )
 
         # when
-        self.transit_service.publish_transit(transit.id)
+        self.transit_service.publish_transit(transit.request_id)
 
         # then
-        loaded = self.transit_service.load_transit(transit.id)
-        self.assertEqual(Transit.Status.WAITING_FOR_DRIVER_ASSIGNMENT, loaded.status)
+        loaded = self.transit_service.load_transit_by_uuid(transit.request_id)
+        self.assertEqual(Status.WAITING_FOR_DRIVER_ASSIGNMENT, loaded.status)
         self.assertIsNotNone(loaded.published)
 
     async def test_can_accept_transit(self):
@@ -317,14 +317,14 @@ class TestTransitLifeCycleIntegration(IsolatedAsyncioTestCase):
             destination,
         )
         # and
-        self.transit_service.publish_transit(transit.id)
+        self.transit_service.publish_transit(transit.request_id)
 
         # when
-        self.transit_service.accept_transit(driver, transit.id)
+        self.transit_service.accept_transit(driver, transit.request_id)
 
         # then
-        loaded = self.transit_service.load_transit(transit.id)
-        self.assertEqual(Transit.Status.TRANSIT_TO_PASSENGER, loaded.status)
+        loaded = self.transit_service.load_transit_by_uuid(transit.request_id)
+        self.assertEqual(Status.TRANSIT_TO_PASSENGER, loaded.status)
         self.assertIsNotNone(loaded.accepted_at)
 
     async def test_only_one_driver_can_accept_transit(self):
@@ -342,13 +342,13 @@ class TestTransitLifeCycleIntegration(IsolatedAsyncioTestCase):
         # and
         second_driver = self.a_nearby_driver(pickup)
         # and
-        self.transit_service.publish_transit(transit.id)
+        self.transit_service.publish_transit(transit.request_id)
         # and
-        self.transit_service.accept_transit(driver, transit.id)
+        self.transit_service.accept_transit(driver, transit.request_id)
 
         # when
         with self.assertRaises(AttributeError):
-            self.transit_service.accept_transit(second_driver, transit.id)
+            self.transit_service.accept_transit(second_driver, transit.request_id)
 
     async def test_transit_cannot_by_accepted_by_driver_who_already_rejected(self):
         # given
@@ -364,13 +364,13 @@ class TestTransitLifeCycleIntegration(IsolatedAsyncioTestCase):
         )
 
         # and
-        self.transit_service.publish_transit(transit.id)
+        self.transit_service.publish_transit(transit.request_id)
         # and
-        self.transit_service.reject_transit(driver, transit.id)
+        self.transit_service.reject_transit(driver, transit.request_id)
 
         # when
         with self.assertRaises(AttributeError):
-            self.transit_service.accept_transit(driver, transit.id)
+            self.transit_service.accept_transit(driver, transit.request_id)
 
     async def test_transit_cannot_by_accepted_by_driver_who_has_not_seen_proposal(self):
         # given
@@ -386,11 +386,11 @@ class TestTransitLifeCycleIntegration(IsolatedAsyncioTestCase):
         )
 
         # and
-        self.transit_service.publish_transit(transit.id)
+        self.transit_service.publish_transit(transit.request_id)
 
         # when
         with self.assertRaises(AttributeError):
-            self.transit_service.accept_transit(far_away_driver, transit.id)
+            self.transit_service.accept_transit(far_away_driver, transit.request_id)
 
     async def test_can_start_transit(self):
         # given
@@ -405,16 +405,16 @@ class TestTransitLifeCycleIntegration(IsolatedAsyncioTestCase):
             destination,
         )
         # and
-        self.transit_service.publish_transit(transit.id)
+        self.transit_service.publish_transit(transit.request_id)
         # and
-        self.transit_service.accept_transit(driver, transit.id)
+        self.transit_service.accept_transit(driver, transit.request_id)
 
         # when
-        self.transit_service.start_transit(driver, transit.id)
+        self.transit_service.start_transit(driver, transit.request_id)
 
         # then
-        loaded = self.transit_service.load_transit(transit.id)
-        self.assertEqual(Transit.Status.IN_TRANSIT, loaded.status)
+        loaded = self.transit_service.load_transit_by_uuid(transit.request_id)
+        self.assertEqual(Status.IN_TRANSIT, loaded.status)
         self.assertIsNotNone(loaded.started)
 
     async def test_cannot_start_not_accepted_transit(self):
@@ -431,11 +431,11 @@ class TestTransitLifeCycleIntegration(IsolatedAsyncioTestCase):
         )
 
         # and
-        self.transit_service.publish_transit(transit.id)
+        self.transit_service.publish_transit(transit.request_id)
 
         # when
         with self.assertRaises(AttributeError):
-            self.transit_service.start_transit(driver, transit.id)
+            self.transit_service.start_transit(driver, transit.request_id)
 
     async def test_can_complete_transit(self):
         # given
@@ -451,18 +451,18 @@ class TestTransitLifeCycleIntegration(IsolatedAsyncioTestCase):
         )
 
         # and
-        self.transit_service.publish_transit(transit.id)
+        self.transit_service.publish_transit(transit.request_id)
         # and
-        self.transit_service.accept_transit(driver, transit.id)
+        self.transit_service.accept_transit(driver, transit.request_id)
         # and
-        self.transit_service.start_transit(driver, transit.id)
+        self.transit_service.start_transit(driver, transit.request_id)
 
         # when
-        self.transit_service.complete_transit(driver, transit.id, destination)
+        self.transit_service.complete_transit(driver, transit.request_id, destination)
 
         # then
-        loaded = self.transit_service.load_transit(transit.id)
-        self.assertEqual(Transit.Status.COMPLETED, loaded.status)
+        loaded = self.transit_service.load_transit_by_uuid(transit.request_id)
+        self.assertEqual(Status.COMPLETED, loaded.status)
         self.assertIsNotNone(loaded.tariff)
         self.assertIsNotNone(loaded.price)
         self.assertIsNotNone(loaded.driver_fee)
@@ -482,13 +482,13 @@ class TestTransitLifeCycleIntegration(IsolatedAsyncioTestCase):
         )
 
         # and
-        self.transit_service.publish_transit(transit.id)
+        self.transit_service.publish_transit(transit.request_id)
         # and
-        self.transit_service.accept_transit(driver, transit.id)
+        self.transit_service.accept_transit(driver, transit.request_id)
 
         # when
         with self.assertRaises(AttributeError):
-            self.transit_service.complete_transit(driver, transit.id, address_to)
+            self.transit_service.complete_transit(driver, transit.request_id, address_to)
 
     async def test_can_reject_transit(self):
         # given
@@ -504,14 +504,14 @@ class TestTransitLifeCycleIntegration(IsolatedAsyncioTestCase):
         )
 
         # and
-        self.transit_service.publish_transit(transit.id)
+        self.transit_service.publish_transit(transit.request_id)
 
         # when
-        self.transit_service.reject_transit(driver, transit.id)
+        self.transit_service.reject_transit(driver, transit.request_id)
 
         # then
-        loaded = self.transit_service.load_transit(transit.id)
-        self.assertEqual(Transit.Status.WAITING_FOR_DRIVER_ASSIGNMENT, loaded.status)
+        loaded = self.transit_service.load_transit_by_uuid(transit.request_id)
+        self.assertEqual(Status.WAITING_FOR_DRIVER_ASSIGNMENT, loaded.status)
         self.assertIsNone(loaded.accepted_at)
 
     def new_address(self, country: str, city: str, street: str, building_number: int) -> AddressDTO:

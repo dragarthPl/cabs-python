@@ -1,18 +1,21 @@
 from datetime import datetime
 from typing import Any
+from uuid import UUID
 
 from carfleet.car_class import CarClass
 from geolocation.distance import Distance
 from geolocation.address.address_dto import AddressDTO
 from crm.client_dto import ClientDTO
-from entity import Transit
 from money import Money
-from transitdetails.transit_details import TransitDetails
+from ride.details.status import Status
+from ride.details.transit_details import TransitDetails
 
 
 class TransitDetailsDTO:
 
     transit_id: int
+
+    request_uuid: UUID
 
     date_time: datetime
 
@@ -38,7 +41,7 @@ class TransitDetailsDTO:
 
     estimated_price: Money
 
-    status: Transit.Status
+    status: Status
 
     published_at: datetime
 
@@ -53,6 +56,7 @@ class TransitDetailsDTO:
     def __init__(self, transit_details: TransitDetails = None, **data: Any):
         if transit_details:
             self.transit_id = transit_details.transit_id
+            self.request_uuid = transit_details.request_uuid
             self.date_time = transit_details.date_time
             self.completed_at = transit_details.complete_at
             self.client = ClientDTO(**transit_details.client.dict())

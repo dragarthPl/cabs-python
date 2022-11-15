@@ -8,9 +8,10 @@ from mockito import when
 
 from config.app_properties import AppProperties
 from core.database import create_db_and_tables, drop_db_and_tables
-from entity import Transit, Client
+from crm.client import Client
 from loyalty.awards_service import AwardsService
 from loyalty.awards_service_impl import AwardsServiceImpl
+from ride.transit import Transit
 
 from tests.common.fixtures import DependencyResolver, Fixtures
 

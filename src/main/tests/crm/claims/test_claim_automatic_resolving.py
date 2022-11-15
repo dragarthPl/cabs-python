@@ -3,8 +3,9 @@ from unittest import TestCase
 from crm.claims.claim import Claim
 from crm.claims.claims_resolver import ClaimsResolver
 from crm.claims.status import Status
-from entity import Transit, Client
+from crm.client import Client
 from money import Money
+from ride.transit import Transit
 
 
 class TestClaimAutomaticResolving(TestCase):
@@ -12,13 +13,13 @@ class TestClaimAutomaticResolving(TestCase):
         # given
         resolver = ClaimsResolver()
         # and
-        transit = self.a_transit(1, 39)
+        transit = self.a_transit(1)
         # and
-        claim: Claim = self.create_claim(transit)
+        claim: Claim = self.create_claim(transit, 39)
         # and
         resolver.resolve(claim, Client.Type.NORMAL, 40, 15, 10)
         # and
-        claim2: Claim = self.create_claim(transit)
+        claim2: Claim = self.create_claim(transit, 39)
 
         # when
         result: ClaimsResolver.Result = resolver.resolve(claim2, Client.Type.NORMAL, 40, 15, 10)
@@ -31,9 +32,9 @@ class TestClaimAutomaticResolving(TestCase):
         # given
         resolver = ClaimsResolver()
         # and
-        transit = self.a_transit(1, 39)
+        transit = self.a_transit(1)
         # and
-        claim: Claim = self.create_claim(transit)
+        claim: Claim = self.create_claim(transit, 39)
 
         # when
         result: ClaimsResolver.Result = resolver.resolve(claim, Client.Type.VIP, 40, 15, 10)
@@ -46,14 +47,14 @@ class TestClaimAutomaticResolving(TestCase):
         # given
         resolver = ClaimsResolver()
         # and
-        claim = self.create_claim(self.a_transit(1, 39))
+        claim = self.create_claim(self.a_transit(1), 39)
         resolver.resolve(claim, Client.Type.VIP, 40, 15, 10)
-        claim2 = self.create_claim(self.a_transit(2, 39))
+        claim2 = self.create_claim(self.a_transit(2), 39)
         resolver.resolve(claim2, Client.Type.VIP, 40, 15, 10)
-        claim3 = self.create_claim(self.a_transit(3, 39))
+        claim3 = self.create_claim(self.a_transit(3), 39)
         resolver.resolve(claim3, Client.Type.VIP, 40, 15, 10)
         # and
-        claim4 = self.create_client_claim(self.a_transit(4, 41), self.a_client(Client.Type.VIP))
+        claim4 = self.create_claim(self.a_transit(4), 41)
 
         # when
         result: ClaimsResolver.Result = resolver.resolve(claim4, Client.Type.VIP, 40, 15, 10)
@@ -66,15 +67,15 @@ class TestClaimAutomaticResolving(TestCase):
         # given
         resolver = ClaimsResolver()
         # and
-        claim = self.create_claim(self.a_transit(1, 39))
+        claim = self.create_claim(self.a_transit(1), 39)
         result1 = resolver.resolve(claim, Client.Type.NORMAL, 40, 15, 10)
-        claim2 = self.create_claim(self.a_transit(2, 39))
+        claim2 = self.create_claim(self.a_transit(2), 39)
         result2 = resolver.resolve(claim2, Client.Type.NORMAL, 40, 15, 10)
-        claim3 = self.create_claim(self.a_transit(3, 39))
+        claim3 = self.create_claim(self.a_transit(3), 39)
         result3 = resolver.resolve(claim3, Client.Type.NORMAL, 40, 15, 10)
 
         # when
-        claim4 = self.create_client_claim(self.a_transit(4, 41), self.a_client(Client.Type.NORMAL))
+        claim4 = self.create_claim(self.a_transit(4), 41)
         result4: ClaimsResolver.Result = resolver.resolve(claim4, Client.Type.NORMAL, 40, 4, 10)
 
         # then
@@ -91,14 +92,14 @@ class TestClaimAutomaticResolving(TestCase):
         # given
         resolver = ClaimsResolver()
         # and
-        claim = self.create_claim(self.a_transit(1, 39))
+        claim = self.create_claim(self.a_transit(1), 39)
         resolver.resolve(claim, Client.Type.NORMAL, 40, 15, 10)
-        claim2 = self.create_claim(self.a_transit(2, 39))
+        claim2 = self.create_claim(self.a_transit(2), 39)
         resolver.resolve(claim2, Client.Type.NORMAL, 40, 15, 10)
-        claim3 = self.create_claim(self.a_transit(3, 39))
+        claim3 = self.create_claim(self.a_transit(3), 39)
         resolver.resolve(claim3, Client.Type.NORMAL, 40, 15, 10)
         # and
-        claim4 = self.create_client_claim(self.a_transit(4, 39), self.a_client(Client.Type.NORMAL))
+        claim4 = self.create_claim(self.a_transit(4), 39)
 
         # when
         result: ClaimsResolver.Result = resolver.resolve(claim4, Client.Type.NORMAL, 40, 10, 9)
@@ -111,14 +112,14 @@ class TestClaimAutomaticResolving(TestCase):
         # given
         resolver = ClaimsResolver()
         # and
-        claim = self.create_claim(self.a_transit(1, 39))
+        claim = self.create_claim(self.a_transit(1), 39)
         resolver.resolve(claim, Client.Type.NORMAL, 40, 15, 10)
-        claim2 = self.create_claim(self.a_transit(2, 39))
+        claim2 = self.create_claim(self.a_transit(2), 39)
         resolver.resolve(claim2, Client.Type.NORMAL, 40, 15, 10)
-        claim3 = self.create_claim(self.a_transit(3, 39))
+        claim3 = self.create_claim(self.a_transit(3), 39)
         resolver.resolve(claim3, Client.Type.NORMAL, 40, 15, 10)
         # and
-        claim4 = self.create_client_claim(self.a_transit(4, 50), self.a_client(Client.Type.NORMAL))
+        claim4 = self.create_claim(self.a_transit(4), 50)
 
         # when
         result: ClaimsResolver.Result = resolver.resolve(claim4, Client.Type.NORMAL, 40, 12, 10)
@@ -131,14 +132,14 @@ class TestClaimAutomaticResolving(TestCase):
         # given
         resolver = ClaimsResolver()
         # and
-        claim = self.create_claim(self.a_transit(1, 39))
+        claim = self.create_claim(self.a_transit(1), 39)
         resolver.resolve(claim, Client.Type.NORMAL, 40, 15, 10)
-        claim2 = self.create_claim(self.a_transit(2, 39))
+        claim2 = self.create_claim(self.a_transit(2), 39)
         resolver.resolve(claim2, Client.Type.NORMAL, 40, 15, 10)
-        claim3 = self.create_claim(self.a_transit(3, 39))
+        claim3 = self.create_claim(self.a_transit(3), 39)
         resolver.resolve(claim3, Client.Type.NORMAL, 40, 15, 10)
         # and
-        claim4 = self.create_client_claim(self.a_transit(4, 50), self.a_client(Client.Type.NORMAL))
+        claim4 = self.create_claim(self.a_transit(4), 50)
 
         # when
         result: ClaimsResolver.Result = resolver.resolve(claim4, Client.Type.NORMAL, 40, 2, 10)
@@ -147,22 +148,14 @@ class TestClaimAutomaticResolving(TestCase):
         self.assertEqual(Status.ESCALATED, result.decision)
         self.assertEqual(ClaimsResolver.WhoToAsk.ASK_DRIVER, result.who_to_ask)
 
-    def a_transit(self, transit_id: int, price: int) -> Transit:
-        transit: Transit = Transit(id=transit_id)
-        transit.set_price(Money(price))
-        return transit
+    def a_transit(self, transit_id: int) -> Transit:
+        return Transit(id=transit_id)
 
-    def create_claim(self, transit: Transit) -> Claim:
+    def create_claim(self, transit: Transit, transit_price: int) -> Claim:
         claim = Claim()
         claim.set_transit(transit.id)
-        claim.set_transit_price(transit.get_price())
-        return claim
-
-    def create_client_claim(self, transit: Transit, client: Client) -> Claim:
-        claim = Claim()
-        claim.set_transit(transit.id)
-        claim.set_transit_price(transit.get_price())
-        claim.owner_id = client.id
+        claim.set_transit_price(Money(transit_price))
+        claim.owner_id = 1
         return claim
 
     def a_client(self, client_type: Client.Type) -> Client:

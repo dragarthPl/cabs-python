@@ -5,7 +5,7 @@ from typing import Optional, Set
 from common.base_entity import BaseEntity
 from crm.claims.claim import Claim
 from crm.claims.status import Status
-from entity import Client
+from crm.client import Client
 
 
 class WhoToAsk(enum.Enum):
@@ -50,7 +50,7 @@ class ClaimsResolver(BaseEntity, table=True):
             else:
                 return self.Result(WhoToAsk.ASK_DRIVER, Status.ESCALATED)
         else:
-            if (number_of_transits >= no_of_transits_for_claim_automatic_refund):
+            if number_of_transits >= no_of_transits_for_claim_automatic_refund:
                 if claim.get_transit_price().to_int() < automatic_refund_for_vip_threshold:
                     return self.Result(WhoToAsk.ASK_NOONE, Status.REFUNDED)
                 else:

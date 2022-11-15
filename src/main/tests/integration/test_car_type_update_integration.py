@@ -3,7 +3,6 @@ from unittest import TestCase
 from carfleet.car_class import CarClass
 from core.database import create_db_and_tables, drop_db_and_tables
 from carfleet.car_type_dto import CarTypeDTO
-from entity import CarType
 from carfleet.car_type_service import CarTypeService
 from tests.common.fixtures import DependencyResolver
 
