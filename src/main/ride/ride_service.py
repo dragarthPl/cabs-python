@@ -18,6 +18,8 @@ from geolocation.address.address_dto import AddressDTO
 from pricing.tariff import Tariff
 from pricing.tariffs import Tariffs
 from ride import transit
+from ride.change_destination_service import ChangeDestinationService
+from ride.change_pickup_service import ChangePickupService
 from ride.request_for_transit import RequestForTransit
 from ride.request_for_transit_repository import RequestForTransitRepository
 from ride.request_transit_service import RequestTransitService
@@ -45,6 +47,8 @@ from ride.details.transit_details_facade import TransitDetailsFacade
 #  If this class will still be here in 2022 I will quit.
 class RideService:
     request_transit_service: RequestTransitService
+    change_pickup_service: ChangePickupService
+    change_destination_service: ChangeDestinationService
     driver_repository: DriverRepositoryImp
     transit_repository: TransitRepositoryImp
     client_repository: ClientRepositoryImp
@@ -66,6 +70,8 @@ class RideService:
     def __init__(
         self,
         request_transit_service: RequestTransitService,
+        change_pickup_service: ChangePickupService,
+        change_destination_service: ChangeDestinationService,
         driver_repository: DriverRepositoryImp,
         transit_repository: TransitRepositoryImp,
         client_repository: ClientRepositoryImp,
@@ -84,6 +90,8 @@ class RideService:
         driver_service: DriverService,
     ):
         self.request_transit_service = request_transit_service
+        self.change_pickup_service = change_pickup_service
+        self.change_destination_service = change_destination_service
         self.driver_repository = driver_repository
         self.transit_repository = transit_repository
         self.client_repository = client_repository
@@ -143,51 +151,16 @@ class RideService:
         return self.address_repository.save(address)
 
     def _change_transit_address_from(self, request_uuid: UUID, new_address: Address) -> None:
-        new_address = self.address_repository.save(new_address)
-        transit_demand: TransitDemand = self.transit_demand_repository.find_by_transit_request_uuid(request_uuid)
-        if transit is None:
-            raise AttributeError("Transit does not exist, id = " + str(request_uuid))
         if self.driver_assignment_facade.is_driver_assigned(request_uuid):
             raise AttributeError("Driver already assigned, requestUUID = " + str(request_uuid))
+        new_address = self.address_repository.save(new_address)
         transit_details: TransitDetailsDTO = self.transit_details_facade.find_by_uuid(request_uuid)
-
-        # FIXME later: add some exceptions handling
-        geo_from_new: List[float] = self.geocoding_service.geocode_address(new_address)
-        geo_from_old: List[float] = self.geocoding_service.geocode_address(
-            transit_details.address_from.to_address_entity()
+        old_address: Address = transit_details.address_from.to_address_entity()
+        new_distance: Distance = self.change_pickup_service.change_transit_address_from(
+            request_uuid,
+            new_address,
+            old_address
         )
-
-        # https://www.geeksforgeeks.org/program-distance-two-points-earth/
-        # The math module contains a function
-        # named toRadians which converts from
-        # degrees to radians.
-        lon1: float = math.radians(geo_from_new[1])
-        lon2: float = math.radians(geo_from_old[1])
-        lat1: float = math.radians(geo_from_new[0])
-        lat2: float = math.radians(geo_from_old[0])
-
-        # Haversine formula
-        dlon: float = lon2 - lon1
-        dlat: float = lat2 - lat1
-        a: float = math.pow(math.sin(dlat / 2), 2) + math.cos(lat1) * math.cos(lat2) * math.pow(math.sin(dlon / 2), 2)
-
-        c = 2 * math.asin(math.sqrt(a))
-
-        # Radius of earth in kilometers. Use 3956 for miles
-        r = 6371
-
-        # calculate the result
-        distance_in_kmeters = c * r
-
-        new_distance = Distance.of_km(float(
-            self.distance_calculator.calculate_by_map(
-                geo_from_new[0],
-                geo_from_new[1],
-                geo_from_old[0],
-                geo_from_old[1]
-            )
-        ))
-        transit_demand.change_pickup(distance_in_kmeters)
         self.transit_details_facade.pickup_changed_to(request_uuid, new_address, new_distance)
         self.driver_assignment_facade.notify_proposed_drivers_about_changed_destination(request_uuid)
 
@@ -198,24 +171,19 @@ class RideService:
         self._change_transit_address_from(request_uuid, new_address.to_address_entity())
 
     def _change_transit_address_to(self, request_uuid: UUID, new_address: Address) -> None:
-        self.address_repository.save(new_address)
-        request_for_transit: RequestForTransit = self.request_for_transit_repository.find_by_request_uuid(request_uuid)
+        new_address = self.address_repository.save(new_address)
         transit_details: TransitDetailsDTO = self.transit_details_facade.find_by_uuid(request_uuid)
-        if request_for_transit is None:
+        if transit_details is None:
             raise AttributeError("Transit does not exist, id = " + str(request_uuid))
+        old_address: Address = transit_details.address_from.to_address_entity()
+        distance: Distance = self.change_destination_service.change_transit_address_to(
+            request_uuid,
+            new_address,
+            old_address
+        )
 
-        # FIXME later: add some exceptions handling
-        geo_from: List[float] = self.geocoding_service.geocode_address(transit_details.address_from.to_address_entity())
-        geo_to: List[float] = self.geocoding_service.geocode_address(new_address)
-
-        new_distance = Distance.of_km(float(
-            self.distance_calculator.calculate_by_map(geo_from[0], geo_from[1], geo_to[0], geo_to[1])
-        ))
-        transit: Transit = self.transit_repository.find_by_transit_request_uuid(request_uuid)
-        if transit:
-            transit.change_destination(new_distance)
         self.driver_assignment_facade.notify_assigned_driver_about_changed_destination(request_uuid)
-        self.transit_details_facade.destination_changed(request_uuid, new_address)
+        self.transit_details_facade.destination_changed(request_uuid, new_address, distance)
 
     def cancel_transit(self, request_uuid: UUID) -> None:
         transit: RequestForTransit = self.request_for_transit_repository.find_by_request_uuid(request_uuid)

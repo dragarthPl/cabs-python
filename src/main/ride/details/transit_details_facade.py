@@ -62,9 +62,9 @@ class TransitDetailsFacade:
         details: TransitDetails = self.load_by_uuid(request_id)
         details.pickup_changed_to(new_address, new_distance)
 
-    def destination_changed(self, request_id: UUID, new_address: Address):
+    def destination_changed(self, request_id: UUID, new_address: Address, new_distance: Distance):
         details: TransitDetails = self.load_by_uuid(request_id)
-        details.destination_changed_to(new_address)
+        details.destination_changed_to(new_address, new_distance)
 
     def transit_started(self, request_id: UUID, transit_id: int, when: datetime):
         details: TransitDetails = self.load_by_uuid(request_id)

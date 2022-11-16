@@ -529,7 +529,7 @@ class TestTransitLifeCycleIntegration(IsolatedAsyncioTestCase):
 
     def far_away_address(self):
         address_dto = AddressDTO(country="Dania", city="Kopenhaga", street="Mylve", building_number=2)
-        when(self.ride_service.geocoding_service).geocode_address(
+        when(self.ride_service.change_pickup_service.geocoding_service).geocode_address(
             AddressMatcher(dto=address_dto)
         ).thenReturn(
             [10000.0, 21211321.0]

@@ -138,8 +138,9 @@ class TransitDetails(BaseEntity, table=True):
         self.address_from = new_address
         self.distance = new_distance.to_km_in_float()
 
-    def destination_changed_to(self, new_address: Address):
+    def destination_changed_to(self, new_address: Address, new_distance: Distance):
         self.address_to = new_address
+        self.distance = new_distance.to_km_in_float()
 
     def involved_drivers_are(self, involved_drivers_summary: InvolvedDriversSummary):
         if involved_drivers_summary.status == AssignmentStatus.DRIVER_ASSIGNMENT_FAILED:
@@ -175,4 +176,3 @@ class TransitDetails(BaseEntity, table=True):
         self.tariff_name = tariff.name
         self.tariff_base_fee = tariff.base_fee
         self.tariff_km_rate = tariff.km_rate
-
