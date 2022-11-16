@@ -7,6 +7,7 @@ from mockito import ANY, when
 from carfleet.car_class import CarClass
 from driverfleet.driver import Driver
 from driverfleet.driver_fee import DriverFee
+from geolocation.address.address_dto import AddressDTO
 from geolocation.geocoding_service import GeocodingService
 from ride.transit_dto import TransitDTO
 from crm.client import Client
@@ -16,7 +17,7 @@ from geolocation.address.address_repository import AddressRepositoryImp
 from ride.transit import Transit
 from ride.transit_repository import TransitRepositoryImp
 from tracking.driver_session_service import DriverSessionService
-from ride.transit_service import TransitService
+from ride.ride_service import RideService
 from tests.common.car_type_fixture import CarTypeFixture
 from tests.common.driver_fixture import DriverFixture
 from tests.common.stubbed_transit_price import StubbedTransitPrice
@@ -24,7 +25,7 @@ from ride.details.transit_details_facade import TransitDetailsFacade
 
 
 class RideFixture:
-    transit_service: TransitService
+    ride_service: RideService
     transit_details_facade: TransitDetailsFacade
     transit_repository: TransitRepositoryImp
     address_repository: AddressRepositoryImp
@@ -37,7 +38,7 @@ class RideFixture:
     @inject
     def __init__(
             self,
-            transit_service: TransitService,
+            ride_service: RideService,
             transit_details_facade: TransitDetailsFacade,
             transit_repository: TransitRepositoryImp,
             address_repository: AddressRepositoryImp,
@@ -46,7 +47,7 @@ class RideFixture:
             stubbed_price: StubbedTransitPrice,
             driver_session_service: DriverSessionService,
     ):
-        self.transit_service = transit_service
+        self.ride_service = ride_service
         self.transit_details_facade = transit_details_facade
         self.transit_repository = transit_repository
         self.address_repository = address_repository
@@ -67,17 +68,17 @@ class RideFixture:
         address_from = self.address_repository.save(address_from)
         destination = self.address_repository.save(destination)
         self.car_type_fixture.an_active_car_category(CarClass.VAN)
-        transit_view: TransitDTO = self.transit_service.create_transit_transaction(
+        transit_view: TransitDTO = self.ride_service.create_transit_transaction(
             client.id,
-            address_from,
-            destination,
+            AddressDTO(address=address_from),
+            AddressDTO(address=destination),
             CarClass.VAN
         )
-        self.transit_service.publish_transit(transit_view.request_id)
-        self.transit_service.find_drivers_for_transit(transit_view.request_id)
-        self.transit_service.accept_transit(driver.id, transit_view.request_id)
-        self.transit_service.start_transit(driver.id, transit_view.request_id)
-        self.transit_service._complete_transit(driver.id, transit_view.request_id, destination)
+        self.ride_service.publish_transit(transit_view.request_id)
+        self.ride_service.find_drivers_for_transit(transit_view.request_id)
+        self.ride_service.accept_transit(driver.id, transit_view.request_id)
+        self.ride_service.start_transit(driver.id, transit_view.request_id)
+        self.ride_service._complete_transit(driver.id, transit_view.request_id, destination)
         transit_id: int = self.transit_details_facade.find_by_uuid(transit_view.request_id).transit_id
         return self.transit_repository.get_one(transit_id)
 
@@ -101,23 +102,23 @@ class RideFixture:
             self.stubbed_price.stub(Money(price))
 
             self.car_type_fixture.an_active_car_category(CarClass.VAN)
-            transit: TransitDTO = self.transit_service.create_transit_transaction(
+            transit: TransitDTO = self.ride_service.create_transit_transaction(
                 client.id,
-                address_from,
-                destination,
+                AddressDTO(address=address_from),
+                AddressDTO(address=destination),
                 CarClass.VAN
             )
-            self.transit_service.publish_transit(transit.request_id)
-            self.transit_service.find_drivers_for_transit(transit.request_id)
-            self.transit_service.accept_transit(driver.id, transit.request_id)
-            self.transit_service.start_transit(driver.id, transit.request_id)
+            self.ride_service.publish_transit(transit.request_id)
+            self.ride_service.find_drivers_for_transit(transit.request_id)
+            self.ride_service.accept_transit(driver.id, transit.request_id)
+            self.ride_service.start_transit(driver.id, transit.request_id)
         with freeze_time(completed_at):
-            self.transit_service._complete_transit(
+            self.ride_service._complete_transit(
                 driver.id,
                 transit.request_id,
                 destination
             )
-            return self.transit_service.load_transit_by_uuid(transit.request_id)
+            return self.ride_service.load_transit_by_uuid(transit.request_id)
 
     def driver_has_done_session_and_picks_someone_up_in_car(
         self,

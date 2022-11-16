@@ -9,7 +9,7 @@ from geolocation.address.address_dto import AddressDTO
 from crm.client_dto import ClientDTO
 from ride.transit_dto import TransitDTO
 from crm.client import Client
-from ride.transit_service import TransitService
+from ride.ride_service import RideService
 from tests.common.fixtures import Fixtures, DependencyResolver
 from ride.transit_controller import TransitController
 
@@ -18,7 +18,7 @@ dependency_resolver = DependencyResolver()
 class TestTariffRecognizingIntegration(TestCase):
     fixtures: Fixtures = dependency_resolver.resolve_dependency(Fixtures)
     transit_controller: TransitController = TransitController(
-        transit_service=dependency_resolver.resolve_dependency(TransitService)
+        ride_service=dependency_resolver.resolve_dependency(RideService)
     )
 
     def setUp(self):

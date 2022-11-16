@@ -1,4 +1,4 @@
-from typing import Optional
+from typing import Optional, Any
 
 from pydantic import BaseModel
 
@@ -15,6 +15,19 @@ class AddressDTO(BaseModel):
     postal_code: Optional[str]
     name: Optional[str]
     hash: Optional[int]
+
+    def __init__(self, *, address: Optional[Address] = None, **data: Any):
+        super().__init__(**data)
+        if address:
+            self.country = address.country
+            self.district = address.district
+            self.city = address.city
+            self.street = address.street
+            self.building_number = address.building_number
+            self.additional_number = address.additional_number
+            self.postal_code = address.postal_code
+            self.name = address.name
+            self.hash = address.hash
 
     def to_address_entity(self) -> Address:
         address = Address()

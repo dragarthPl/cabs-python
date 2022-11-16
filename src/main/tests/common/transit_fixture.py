@@ -17,13 +17,13 @@ from money import Money
 from pricing.tariff import Tariff
 from ride.transit import Transit
 from ride.transit_repository import TransitRepositoryImp
-from ride.transit_service import TransitService
+from ride.ride_service import RideService
 from tests.common.stubbed_transit_price import StubbedTransitPrice
 from ride.details.transit_details_facade import TransitDetailsFacade
 
 
 class TransitFixture:
-    transit_service: TransitService
+    ride_service: RideService
     transit_repository: TransitRepositoryImp
     transit_details_facade: TransitDetailsFacade
     stubbed_transit_price: StubbedTransitPrice
@@ -31,12 +31,12 @@ class TransitFixture:
     @inject
     def __init__(
         self,
-        transit_service: TransitService,
+        ride_service: RideService,
         transit_repository: TransitRepositoryImp,
         transit_details_facade: TransitDetailsFacade,
         stubbed_transit_price: StubbedTransitPrice,
     ):
-        self.transit_service = transit_service
+        self.ride_service = ride_service
         self.transit_repository = transit_repository
         self.transit_details_facade = transit_details_facade
         self.stubbed_transit_price = stubbed_transit_price

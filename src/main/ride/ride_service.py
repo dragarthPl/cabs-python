@@ -9,6 +9,7 @@ from assignment.driver_assignment_facade import DriverAssignmentFacade
 from assignment.involved_drivers_summary import InvolvedDriversSummary
 from carfleet.car_class import CarClass
 from common.application_event_publisher import ApplicationEventPublisher
+from crm.client import Client
 from driverfleet.driver_dto import DriverDTO
 from driverfleet.driver_service import DriverService
 from geolocation.address.address import Address
@@ -17,13 +18,12 @@ from geolocation.address.address_dto import AddressDTO
 from pricing.tariff import Tariff
 from pricing.tariffs import Tariffs
 from ride import transit
-from ride.details import transit_details
 from ride.request_for_transit import RequestForTransit
 from ride.request_for_transit_repository import RequestForTransitRepository
+from ride.request_transit_service import RequestTransitService
 from ride.transit import Transit
 from ride.transit_demand import TransitDemand
 from ride.transit_demand_repository import TransitDemandRepository
-from tracking.driver_position_dtov_2 import DriverPositionDTOV2
 from ride.transit_dto import TransitDTO
 from fastapi_events.dispatcher import dispatch
 
@@ -31,24 +31,20 @@ from ride.events.transit_completed import TransitCompleted
 from money import Money
 from geolocation.address.address_repository import AddressRepositoryImp
 from crm.client_repository import ClientRepositoryImp
-from tracking.driver_position_repository import DriverPositionRepositoryImp
 from driverfleet.driver_repository import DriverRepositoryImp
-from tracking.driver_session_repository import DriverSessionRepositoryImp
 from ride.transit_repository import TransitRepositoryImp
 from loyalty.awards_service import AwardsService
-from carfleet.car_type_service import CarTypeService
 from geolocation.distance_calculator import DistanceCalculator
 from driverfleet.driver_fee_service import DriverFeeService
-from crm.notification.driver_notification_service import DriverNotificationService
 from geolocation.geocoding_service import GeocodingService
 from invocing.invoice_generator import InvoiceGenerator
-from tracking.driver_tracking_service import DriverTrackingService
 from ride.details.transit_details_dto import TransitDetailsDTO
 from ride.details.transit_details_facade import TransitDetailsFacade
 
 
 #  If this class will still be here in 2022 I will quit.
-class TransitService:
+class RideService:
+    request_transit_service: RequestTransitService
     driver_repository: DriverRepositoryImp
     transit_repository: TransitRepositoryImp
     client_repository: ClientRepositoryImp
@@ -69,6 +65,7 @@ class TransitService:
     @inject
     def __init__(
         self,
+        request_transit_service: RequestTransitService,
         driver_repository: DriverRepositoryImp,
         transit_repository: TransitRepositoryImp,
         client_repository: ClientRepositoryImp,
@@ -86,6 +83,7 @@ class TransitService:
         tariffs: Tariffs,
         driver_service: DriverService,
     ):
+        self.request_transit_service = request_transit_service
         self.driver_repository = driver_repository
         self.transit_repository = transit_repository
         self.client_repository = client_repository
@@ -104,41 +102,29 @@ class TransitService:
         self.driver_service = driver_service
 
     def create_transit(self, transit_dto: TransitDTO) -> TransitDTO:
-        address_from = self.__address_from_dto(transit_dto.address_from)
-        address_to = self.__address_from_dto(transit_dto.address_to)
         return self.create_transit_transaction(
-            transit_dto.client_dto.id, address_from, address_to, transit_dto.car_class)
-
-    def __address_from_dto(self, address_dto: AddressDTO) -> Address:
-        address = address_dto.to_address_entity()
-        return self.address_repository.save(address)
+            transit_dto.client_dto.id,
+            transit_dto.address_from,
+            transit_dto.address_to,
+            transit_dto.car_class
+        )
 
     def create_transit_transaction(
-            self, client_id: int, address_from: Address, address_to: Address, car_class: CarClass) -> TransitDTO:
-        client = self.client_repository.get_one(client_id)
-        if client is None:
-            raise AttributeError("Client does not exist, id = " + str(client_id))
-
-        # FIXME later: add some exceptions handling
-        geo_from: List[float] = self.geocoding_service.geocode_address(address_from)
-        geo_to: List[float] = self.geocoding_service.geocode_address(address_to)
-        distance: Distance = Distance.of_km(float(self.distance_calculator.calculate_by_map(
-            geo_from[0],
-            geo_from[1],
-            geo_to[0],
-            geo_to[1]))
-        )
+            self, client_id: int, from_dto: AddressDTO, to_dto: AddressDTO, car_class: CarClass) -> TransitDTO:
+        client = self.__find_client(client_id)
+        address_from = self.__address_from_dto(from_dto)
+        address_to = self.__address_from_dto(to_dto)
         now: datetime = datetime.now()
-        tariff: Tariff = self.choose_tariff(now)
-        request_for_transit: RequestForTransit = self.request_for_transit_repository.save(
-            RequestForTransit(tariff=tariff, distance=distance)
+        request_for_transit: RequestForTransit = self.request_transit_service.create_request_for_transit(
+            address_from,
+            address_to,
         )
         self.transit_details_facade.transit_requested(
             now,
             request_for_transit.request_uuid,
             address_from,
             address_to,
-            distance,
+            request_for_transit.get_distance(),
             client,
             car_class,
             request_for_transit.get_estimated_price(),
@@ -146,8 +132,15 @@ class TransitService:
         )
         return self.load_transit_by_id(request_for_transit.id)
 
-    def choose_tariff(self, when: datetime) -> Tariff:
-        return self.tariffs.choose(when)
+    def __find_client(self, client_id: int) -> Client:
+        client: Client = self.client_repository.get_one(client_id)
+        if client is None:
+            raise AttributeError(f"Client does not exist, id = {client_id}")
+        return client
+
+    def __address_from_dto(self, address_dto: AddressDTO) -> Address:
+        address = address_dto.to_address_entity()
+        return self.address_repository.save(address)
 
     def _change_transit_address_from(self, request_uuid: UUID, new_address: Address) -> None:
         new_address = self.address_repository.save(new_address)
@@ -298,7 +291,7 @@ class TransitService:
             raise AttributeError("Driver not assigned, requestUUID = " + str(request_uuid))
 
         now = datetime.now()
-        transit: Transit = Transit(tariff=self.choose_tariff(now), transit_request_uuid=request_uuid)
+        transit: Transit = Transit(tariff=self.tariffs.choose(now), transit_request_uuid=request_uuid)
         self.transit_repository.save(transit)
         self.transit_details_facade.transit_started(request_uuid, transit.id, now)
 
