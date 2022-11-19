@@ -29,3 +29,6 @@ class DriverRepositoryImp:
         return self.session.query(Driver).where(
             Driver.id.in_(ids)
         ).all()
+
+    def find_by_id(self, driver_id) -> Optional[Driver]:
+        return self.session.query(Driver).where(Driver.id == driver_id).first()

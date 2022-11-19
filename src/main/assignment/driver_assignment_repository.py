@@ -15,12 +15,12 @@ class DriverAssignmentRepository:
     def __init__(self, session: Session):
         self.session = session
 
-    def find_by_request_id(self, request_id: UUID) -> DriverAssignment:
-        return self.session.query(DriverAssignment).where(DriverAssignment.request_id == request_id).first()
+    def find_by_request_uuid(self, request_uuid: UUID) -> DriverAssignment:
+        return self.session.query(DriverAssignment).where(DriverAssignment.request_uuid == request_uuid).first()
 
-    def find_by_request_id_and_status(self, transit_id: UUID, status: AssignmentStatus) -> DriverAssignment:
+    def find_by_request_uuid_and_status(self, request_uuid: UUID, status: AssignmentStatus) -> DriverAssignment:
         return self.session.query(DriverAssignment).where(
-            DriverAssignment.request_id == transit_id
+            DriverAssignment.request_uuid == request_uuid
         ).where(
             DriverAssignment.status == status
         ).first()

@@ -20,9 +20,12 @@ from pricing.tariffs import Tariffs
 from ride import transit
 from ride.change_destination_service import ChangeDestinationService
 from ride.change_pickup_service import ChangePickupService
+from ride.complete_transit_service import CompleteTransitService
+from ride.demand_service import DemandService
 from ride.request_for_transit import RequestForTransit
 from ride.request_for_transit_repository import RequestForTransitRepository
 from ride.request_transit_service import RequestTransitService
+from ride.start_transit_service import StartTransitService
 from ride.transit import Transit
 from ride.transit_demand import TransitDemand
 from ride.transit_demand_repository import TransitDemandRepository
@@ -49,21 +52,17 @@ class RideService:
     request_transit_service: RequestTransitService
     change_pickup_service: ChangePickupService
     change_destination_service: ChangeDestinationService
-    driver_repository: DriverRepositoryImp
-    transit_repository: TransitRepositoryImp
+    demand_service: DemandService
+    complete_transit_service: CompleteTransitService
+    start_transit_service: StartTransitService
     client_repository: ClientRepositoryImp
     invoice_generator: InvoiceGenerator
-    distance_calculator: DistanceCalculator
-    geocoding_service: GeocodingService
     address_repository: AddressRepositoryImp
     driver_fee_service: DriverFeeService
     awards_service: AwardsService
     transit_details_facade: TransitDetailsFacade
     events_publisher: ApplicationEventPublisher
     driver_assignment_facade: DriverAssignmentFacade
-    request_for_transit_repository: RequestForTransitRepository
-    transit_demand_repository: TransitDemandRepository
-    tariffs: Tariffs
     driver_service: DriverService
 
     @inject
@@ -72,41 +71,35 @@ class RideService:
         request_transit_service: RequestTransitService,
         change_pickup_service: ChangePickupService,
         change_destination_service: ChangeDestinationService,
-        driver_repository: DriverRepositoryImp,
+        demand_service: DemandService,
+        complete_transit_service: CompleteTransitService,
+        start_transit_service: StartTransitService,
         transit_repository: TransitRepositoryImp,
         client_repository: ClientRepositoryImp,
         invoice_generator: InvoiceGenerator,
-        distance_calculator: DistanceCalculator,
-        geocoding_service: GeocodingService,
         address_repository: AddressRepositoryImp,
         driver_fee_service: DriverFeeService,
         awards_service: AwardsService,
         transit_details_facade: TransitDetailsFacade,
         events_publisher: ApplicationEventPublisher,
         driver_assignment_facade: DriverAssignmentFacade,
-        request_for_transit_repository: RequestForTransitRepository,
-        transit_demand_repository: TransitDemandRepository,
-        tariffs: Tariffs,
         driver_service: DriverService,
     ):
         self.request_transit_service = request_transit_service
         self.change_pickup_service = change_pickup_service
         self.change_destination_service = change_destination_service
-        self.driver_repository = driver_repository
+        self.demand_service = demand_service
+        self.complete_transit_service = complete_transit_service
+        self.start_transit_service = start_transit_service
         self.transit_repository = transit_repository
         self.client_repository = client_repository
         self.invoice_generator = invoice_generator
-        self.distance_calculator = distance_calculator
-        self.geocoding_service = geocoding_service
         self.address_repository = address_repository
         self.driver_fee_service = driver_fee_service
         self.awards_service = awards_service
         self.transit_details_facade = transit_details_facade
         self.events_publisher = events_publisher
         self.driver_assignment_facade = driver_assignment_facade
-        self.request_for_transit_repository = request_for_transit_repository
-        self.transit_demand_repository = transit_demand_repository
-        self.tariffs = tariffs
         self.driver_service = driver_service
 
     def create_transit(self, transit_dto: TransitDTO) -> TransitDTO:
@@ -186,37 +179,27 @@ class RideService:
         self.transit_details_facade.destination_changed(request_uuid, new_address, distance)
 
     def cancel_transit(self, request_uuid: UUID) -> None:
-        transit: RequestForTransit = self.request_for_transit_repository.find_by_request_uuid(request_uuid)
-
-        if transit is None:
-            raise AttributeError("Transit does not exist, id = " + str(request_uuid))
-
-        transit_demand: TransitDemand = self.transit_demand_repository.find_by_transit_request_uuid(request_uuid)
-        if transit_demand is not None:
-            transit_demand.cancel()
-            self.driver_assignment_facade.cancel(request_uuid)
-
+        transit_details_dto: TransitDetailsDTO = self.transit_details_facade.find_by_uuid(request_uuid)
+        if transit_details_dto is None:
+            raise AttributeError(f"Transit does not exist, id = {request_uuid}")
+        self.demand_service.cancel_demand(request_uuid)
+        self.driver_assignment_facade.cancel(request_uuid)
         self.transit_details_facade.transit_cancelled(request_uuid)
 
-    def publish_transit(self, request_uuid: UUID) -> Transit:
-        request_for: RequestForTransit = self.request_for_transit_repository.find_by_request_uuid(request_uuid)
+    def publish_transit(self, request_uuid: UUID) -> None:
         transit_details_dto: TransitDetailsDTO = self.transit_details_facade.find_by_uuid(request_uuid)
-
-        if request_for is None:
-            raise AttributeError("Transit does not exist, id = " + str(request_uuid))
-
-        now: datetime = datetime.now()
-        self.transit_demand_repository.save(TransitDemand(request_for.request_uuid))
-        self.driver_assignment_facade.create_assignment(
+        if transit_details_dto is None:
+            raise AttributeError(f"Transit does not exist, id = {request_uuid}")
+        self.demand_service.publish_demand(request_uuid)
+        self.driver_assignment_facade.start_assigning_drivers(
             request_uuid,
             transit_details_dto.address_from,
             transit_details_dto.car_type,
-            now
+            datetime.now()
         )
-        self.transit_details_facade.transit_published(request_uuid, now)
-        return self.transit_repository.find_by_transit_request_uuid(request_uuid)
+        self.transit_details_facade.transit_published(request_uuid, datetime.now())
 
-    def find_drivers_for_transit(self, request_uuid: UUID) -> Transit:
+    def find_drivers_for_transit(self, request_uuid: UUID) -> TransitDetailsDTO:
         transit_details_dto: TransitDetailsDTO = self.transit_details_facade.find_by_uuid(request_uuid)
         involved_drivers_summary: InvolvedDriversSummary = self.driver_assignment_facade.search_for_possible_drivers(
             request_uuid,
@@ -224,51 +207,36 @@ class RideService:
             transit_details_dto.car_type
         )
         self.transit_details_facade.drivers_are_involved(request_uuid, involved_drivers_summary)
-        return self.transit_repository.find_by_transit_request_uuid(request_uuid)
+        return self.transit_details_facade.find_by_uuid(request_uuid)
 
     def accept_transit(self, driver_id: int, request_uuid: UUID):
-        driver = self.driver_repository.get_one(driver_id)
-        transit_demand: TransitDemand = self.transit_demand_repository.find_by_transit_request_uuid(request_uuid)
-
-        if driver is None:
-            raise AttributeError("Driver does not exist, id = " + str(driver_id))
+        if not self.driver_service.exists(driver_id) :
+            raise AttributeError(f"Driver does not exist, id = {driver_id}")
         else:
             if self.driver_assignment_facade.is_driver_assigned(request_uuid):
                 raise AttributeError(f"Driver already assigned, requestUUID = {request_uuid}")
-
-            if transit_demand is None:
-                raise AttributeError("Transit does not exist, id = " + str(request_uuid))
-            else:
-                now = datetime.now()
-                transit_demand.accepted()
-                self.driver_assignment_facade.accept_transit(request_uuid, driver)
-                self.transit_details_facade.transit_accepted(request_uuid, driver_id, now)
-                self.driver_repository.save(driver)
+            self.demand_service.accept_demand(request_uuid)
+            self.driver_assignment_facade.accept_transit(request_uuid, driver_id)
+            self.driver_service.mark_occupied(driver_id)
+            self.transit_details_facade.transit_accepted(request_uuid, driver_id, datetime.now())
 
     def start_transit(self, driver_id: int, request_uuid: UUID):
-        driver = self.driver_repository.get_one(driver_id)
+        if not self.driver_service.exists(driver_id):
+            raise AttributeError(f"Driver does not exist, id = {driver_id}")
 
-        if driver is None:
-            raise AttributeError("Driver does not exist, id = " + str(driver_id))
+        if not self.demand_service.exists_for(request_uuid):
+            raise AttributeError(f"Transit does not exist, id = {request_uuid}")
 
-        transit_demand: TransitDemand = self.transit_demand_repository.find_by_transit_request_uuid(request_uuid)
-
-        if transit_demand is None:
-            raise AttributeError("Transit does not exist, id = " + str(request_uuid))
         if not self.driver_assignment_facade.is_driver_assigned(request_uuid):
-            raise AttributeError("Driver not assigned, requestUUID = " + str(request_uuid))
+            raise AttributeError(f"Driver not assigned, requestUUID = {request_uuid}")
 
-        now = datetime.now()
-        transit: Transit = Transit(tariff=self.tariffs.choose(now), transit_request_uuid=request_uuid)
-        self.transit_repository.save(transit)
+        now: datetime = datetime.now()
+        transit: Transit = self.start_transit_service.start(request_uuid)
         self.transit_details_facade.transit_started(request_uuid, transit.id, now)
 
     def reject_transit(self, driver_id: int, request_uuid: UUID):
-        driver = self.driver_repository.get_one(driver_id)
-
-        if driver is None:
-            raise AttributeError("Driver does not exist, id = " + str(driver_id))
-
+        if not self.driver_service.exists(driver_id):
+            raise AttributeError(f"driver_does_not_exist, id = {driver_id}")
         self.driver_assignment_facade.reject_transit(request_uuid, driver_id)
 
     def complete_transit(self, driver_id: int, request_uuid: UUID, destination: AddressDTO):
@@ -276,48 +244,35 @@ class RideService:
 
     def _complete_transit(self, driver_id: int, request_uuid: UUID, destination_address: Address):
         destination_address = self.address_repository.save(destination_address)
-        driver = self.driver_repository.get_one(driver_id)
         transit_details: TransitDetailsDTO = self.transit_details_facade.find_by_uuid(request_uuid)
+        if not self.driver_service.exists(driver_id):
+            raise AttributeError(f"Driver does not exist, id = {driver_id}")
 
-        if driver is None:
-            raise AttributeError("Driver does not exist, id = " + str(driver_id))
-
-        transit: Transit = self.transit_repository.find_by_transit_request_uuid(request_uuid)
-
-        if transit is None:
-            raise AttributeError("Transit does not exist, id = " + str(request_uuid))
-
-        # FIXME later: add some exceptions handling
-        geo_from: List[float] = self.geocoding_service.geocode_address(
-            self.address_repository.get_by_hash(transit_details.address_from.hash))
-        geo_to: List[float] = self.geocoding_service.geocode_address(
-            self.address_repository.get_by_hash(transit_details.address_to.hash))
-        distance = Distance.of_km(
-            float(self.distance_calculator.calculate_by_map(geo_from[0], geo_from[1], geo_to[0], geo_to[1]))
+        address_from: Address = self.address_repository.get_by_hash(transit_details.address_from.hash)
+        address_to: Address = self.address_repository.get_by_hash(destination_address.hash)
+        final_price = self.complete_transit_service.complete_transit(
+            driver_id,
+            request_uuid,
+            address_from,
+            address_to
         )
-        now = datetime.now()
-        final_price: Money = transit.complete_ride_at(distance)
-
         driver_fee: Money = self.driver_fee_service.calculate_driver_fee(final_price, driver_id)
-        driver.is_occupied = False
-        self.driver_repository.save(driver)
-        self.awards_service.register_miles(transit_details.client.id, transit.id)
-        self.transit_repository.save(transit)
-        self.transit_details_facade.transit_completed(request_uuid, now, final_price, driver_fee)
+        self.driver_service.mark_not_occupied(driver_id)
+        self.transit_details_facade.transit_completed(request_uuid, datetime.now(), final_price, driver_fee)
+        self.awards_service.register_miles(transit_details.client.id, transit_details.transit_id)
         self.invoice_generator.generate(
-            final_price.to_int(), f"{transit_details.client.name} {transit_details.client.last_name}")
-        dispatch(
-            "add_transit_between_addresses",
-            payload=TransitCompleted(
-                transit_details.client.id,
-                transit.id,
-                transit_details.address_from.hash,
-                transit_details.address_to.hash,
-                transit_details.started,
-                now,
-                datetime.now()
-            ),
+            final_price.to_int(),
+            f"{transit_details.client.name} {transit_details.client.last_name}"
         )
+        self.events_publisher.publish_event_object(TransitCompleted(
+            transit_details.client.id,
+            transit_details.transit_id,
+            transit_details.address_from.hash,
+            destination_address.hash,
+            transit_details.started,
+            datetime.now(),
+            datetime.now()
+        ))
 
     def load_transit_by_uuid(self, request_uuid: UUID) -> TransitDTO:
         involved_drivers_summary: InvolvedDriversSummary = self.driver_assignment_facade.load_involved_drivers_uuid(
@@ -338,5 +293,5 @@ class RideService:
         request_uuid: UUID = self.get_request_uuid(request_id)
         return self.load_transit_by_uuid(request_uuid)
 
-    def get_request_uuid(self, request_uuid: int) -> UUID:
-        return self.request_for_transit_repository.get_one(request_uuid).request_uuid
+    def get_request_uuid(self, request_id: int) -> UUID:
+        return self.request_transit_service.find_calculation_uuid(request_id)

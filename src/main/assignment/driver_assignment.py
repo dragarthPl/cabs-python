@@ -14,7 +14,7 @@ from common.base_entity import BaseEntity
 class DriverAssignment(BaseEntity, table=True):
     __table_args__ = {'extend_existing': True}
 
-    request_id: Optional[UUID]
+    request_uuid: Optional[UUID]
     published_at: Optional[datetime]
     status: Optional[AssignmentStatus] = Field(
         default=AssignmentStatus.WAITING_FOR_DRIVER_ASSIGNMENT,
@@ -25,9 +25,9 @@ class DriverAssignment(BaseEntity, table=True):
     proposed_drivers: Optional[str]
     awaiting_drivers_responses: int = 0
 
-    def __init__(self, request_id: Optional[UUID] = None, published_at: Optional[datetime] = None, **data: Any):
+    def __init__(self, request_uuid: Optional[UUID] = None, published_at: Optional[datetime] = None, **data: Any):
         super().__init__(**data)
-        self.request_id = request_id
+        self.request_uuid = request_uuid
         self.published_at = published_at
 
     def cancel(self) -> None:

@@ -38,7 +38,7 @@ class TestTransitLifeCycleIntegration(IsolatedAsyncioTestCase):
 
         self.client = AsyncClient(app=app)
         self.fixtures.an_active_car_category(CarClass.VAN)
-        when(self.ride_service.geocoding_service).geocode_address(ANY).thenReturn([1.0, 1.0])
+        when(self.ride_service.complete_transit_service.geocoding_service).geocode_address(ANY).thenReturn([1.0, 1.0])
 
     async def test_can_create_transit(self):
         # given
@@ -522,7 +522,7 @@ class TestTransitLifeCycleIntegration(IsolatedAsyncioTestCase):
             street=street,
             building_number=building_number
         )
-        when(self.ride_service.geocoding_service).geocode_address(
+        when(self.ride_service.complete_transit_service.geocoding_service).geocode_address(
             AddressMatcher(dto=address_dto)
         ).thenReturn([1.0, 1.0])
         return address_dto
@@ -540,7 +540,7 @@ class TestTransitLifeCycleIntegration(IsolatedAsyncioTestCase):
         return self.fixtures.a_nearby_driver_default(self.geocoding_service, address_from.to_address_entity(), 1, 1).id
 
     def a_far_away_driver(self, address: AddressDTO) -> int:
-        when(self.ride_service.geocoding_service).geocode_address(
+        when(self.ride_service.complete_transit_service.geocoding_service).geocode_address(
             AddressMatcher(dto=address)
         ).thenReturn(
             [20000000.0, 100000000.0]
@@ -550,7 +550,7 @@ class TestTransitLifeCycleIntegration(IsolatedAsyncioTestCase):
         ).id
 
     def request_transit_from_to(self, pickup_dto: AddressDTO, destination: AddressDTO) -> TransitDTO:
-        when(self.ride_service.geocoding_service).geocode_address(
+        when(self.ride_service.complete_transit_service.geocoding_service).geocode_address(
             AddressMatcher(dto=destination)
         ).thenReturn([1.0, 1.0])
         return self.ride_service.create_transit(
@@ -560,7 +560,7 @@ class TestTransitLifeCycleIntegration(IsolatedAsyncioTestCase):
     def new_pickup_address(self, building_number: int) -> AddressDTO:
         new_pickup: AddressDTO = AddressDTO(
             country="Polska", city="Warszawa", street="Mazowiecka", building_number=building_number)
-        when(self.ride_service.geocoding_service).geocode_address(
+        when(self.ride_service.complete_transit_service.geocoding_service).geocode_address(
             AddressMatcher(dto=new_pickup)
         ).thenReturn([1, 1])
         return new_pickup
@@ -568,7 +568,7 @@ class TestTransitLifeCycleIntegration(IsolatedAsyncioTestCase):
     def new_pickup_address_with_street(self, street: str, building_number: int) -> AddressDTO:
         new_pickup: AddressDTO = AddressDTO(
             country="Polska", city="Warszawa", street=street, building_number=building_number)
-        when(self.ride_service.geocoding_service).geocode_address(
+        when(self.ride_service.complete_transit_service.geocoding_service).geocode_address(
             AddressMatcher(dto=new_pickup)
         ).thenReturn([1, 1])
         return new_pickup

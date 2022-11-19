@@ -35,7 +35,7 @@ class TransitDemand(BaseEntity, table=True):
             raise AttributeError(f"Address 'from' cannot be changed, id = {self.id}")
         self.pickup_address_change_counter = self.pickup_address_change_counter + 1
 
-    def accepted(self):
+    def accept(self):
         self.status = self.Status.TRANSIT_TO_PASSENGER
 
     def cancel(self):

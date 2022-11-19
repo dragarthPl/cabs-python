@@ -142,14 +142,25 @@ class DriverService:
             raise AttributeError("Driver does not exists, id = " + str(driver_id))
         return DriverDTO(**driver.dict())
 
+    def load_drivers(self, ids: List[int]) -> Set[DriverDTO]:
+        return set(map(
+            lambda x: DriverDTO(**x.dict()),
+            self.driver_repository.find_all_by_id(ids)
+        ))
+
     def add_attribute(self, driver_id: int, attr: DriverAttributeName, value: str) -> None:
         driver = self.driver_repository.get_one(driver_id)
         if driver is None:
             raise AttributeError("Driver does not exists, id = " + str(driver_id))
         self.driver_attribute_repository.save(DriverAttribute(driver=driver, name=attr, value=value))
 
-    def load_drivers(self, ids: List[int]) -> Set[DriverDTO]:
-        return set(map(
-            lambda x: DriverDTO(**x.dict()),
-            self.driver_repository.find_all_by_id(ids)
-        ))
+    def exists(self, driver_id: int) -> bool:
+        return self.driver_repository.find_by_id(driver_id) is not None
+
+    def mark_occupied(self, driver_id: int) -> None:
+        driver: Driver = self.driver_repository.get_one(driver_id)
+        driver.is_occupied = True
+
+    def mark_not_occupied(self, driver_id: int) -> None:
+        driver: Driver = self.driver_repository.get_one(driver_id)
+        driver.is_occupied = False

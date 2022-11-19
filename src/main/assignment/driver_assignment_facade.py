@@ -37,7 +37,7 @@ class DriverAssignmentFacade:
         self.driver_tracking_service = driver_tracking_service
         self.driver_notification_service = driver_notification_service
 
-    def create_assignment(
+    def start_assigning_drivers(
         self,
         transit_request_uuid: UUID,
         address_from: AddressDTO,
@@ -110,10 +110,9 @@ class DriverAssignmentFacade:
             car_classes.extend(active_car_classes)
         return car_classes
 
-    def accept_transit(self, transit_request_uuid: UUID, driver: Driver) -> InvolvedDriversSummary:
+    def accept_transit(self, transit_request_uuid: UUID, driver_id: int) -> InvolvedDriversSummary:
         driver_assignment: DriverAssignment = self.find(transit_request_uuid)
-        driver_assignment.accept_by(driver.id)
-        driver.is_occupied = True
+        driver_assignment.accept_by(driver_id)
         return self.load_involved_drivers(driver_assignment)
 
     def reject_transit(self, transit_request_uuid: UUID, driver_id: int) -> InvolvedDriversSummary:
@@ -124,7 +123,7 @@ class DriverAssignmentFacade:
         return self.load_involved_drivers(driver_assignment)
 
     def is_driver_assigned(self, transit_request_uuid: UUID) -> bool:
-        return self.driver_assignment_repository.find_by_request_id_and_status(
+        return self.driver_assignment_repository.find_by_request_uuid_and_status(
             transit_request_uuid,
             AssignmentStatus.ON_THE_WAY
         ) is not None
@@ -150,7 +149,7 @@ class DriverAssignmentFacade:
         return self.load_involved_drivers(driver_assignment)
 
     def find(self, transit_request_uuid: UUID) -> DriverAssignment:
-        return self.driver_assignment_repository.find_by_request_id(transit_request_uuid)
+        return self.driver_assignment_repository.find_by_request_uuid(transit_request_uuid)
 
     def notify_assigned_driver_about_changed_destination(self, transit_request_uuid: UUID):
         driver_assignment: DriverAssignment = self.find(transit_request_uuid)

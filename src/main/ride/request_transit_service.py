@@ -1,5 +1,6 @@
 from datetime import datetime
 from typing import List
+from uuid import UUID
 
 from injector import inject
 
@@ -48,3 +49,9 @@ class RequestTransitService:
 
     def choose_tariff(self, when: datetime) -> Tariff:
         return self.tariffs.choose(when)
+
+    def find_calculation_uuid(self, request_id: int) -> UUID:
+        return self.request_for_transit_repository.get_one(request_id).request_uuid
+
+    def find_tariff(self, request_uuid: UUID) -> Tariff:
+        return self.request_for_transit_repository.find_by_request_uuid(request_uuid).get_tariff()
